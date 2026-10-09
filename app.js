@@ -342,6 +342,7 @@
       return;
     }
     hentikanSuara();
+    batalUlang();
     bersihkanKoreksi();
     const r = { aktif: true, rec: null, sesiLalu: [], sesiIni: [], galat: '' };
     rekam = r;
@@ -434,6 +435,82 @@
 
   const kelasNilai = n => (n >= 85 ? 'benar' : n >= 60 ? 'sedang' : 'salah');
 
+  // ---------- Latihan ulang per kata ----------
+  // Penilaian satu kata dari beberapa alternatif pengenal suara: cocok di alternatif
+  // pertama = keyakinan pengenal (paling rendah 60); cocok di alternatif lain = 70
+  // (pengenal lebih condong ke kata lain); tidak cocok = kemiripan (paling tinggi 84).
+  function nilaiSatuKata(target, alternatif) {
+    let terbaik = 0;
+    for (let a = 0; a < alternatif.length; a++) {
+      const kata = kataUcapan([alternatif[a]]);
+      if (kata.some(x => sama(target, x.w))) {
+        const y = alternatif[a].yakin;
+        return a === 0 ? (y > 0 ? Math.max(60, Math.round(y * 100)) : 100) : 70;
+      }
+      for (const x of kata) terbaik = Math.max(terbaik, kemiripan(target, x.w));
+    }
+    return Math.min(84, Math.round(terbaik * 100));
+  }
+
+  let ulang = null;           // { rec, baris, batas }
+  function aturTombolUlang(baris, aktif) {
+    const t = baris.querySelector('[data-ulang]');
+    t.classList.toggle('aktif', aktif);
+    t.textContent = aktif ? '● Ucapkan sekarang…' : '🎤 Ucapkan lagi';
+  }
+  function batalUlang() {
+    if (!ulang) return;
+    const u = ulang;
+    ulang = null;
+    clearTimeout(u.batas);
+    try { u.rec.abort(); } catch (e) { /* abaikan */ }
+    if (u.baris.isConnected) aturTombolUlang(u.baris, false);
+  }
+
+  function ulangKata(baris) {
+    if (!SR || rekam) return;
+    const sebelumnya = ulang && ulang.baris;
+    batalUlang();
+    if (sebelumnya === baris) return;   // tekan lagi = batal
+    hentikanSuara();
+    const target = baris.dataset.norm;
+    const keluaran = baris.querySelector('.latih-baru');
+    const r = new SR();
+    r.lang = 'en-US';
+    r.continuous = false;
+    r.interimResults = false;
+    r.maxAlternatives = 5;
+    const u = { rec: r, baris, batas: 0 };
+    ulang = u;
+    aturTombolUlang(baris, true);
+    keluaran.textContent = '';
+    let alternatif = null, galat = '';
+    r.onresult = e => {
+      const h = e.results[e.results.length - 1];
+      alternatif = Array.from(h, a => ({ teks: a.transcript, yakin: a.confidence }));
+    };
+    r.onerror = e => { galat = e.error; };
+    r.onend = () => {
+      if (ulang !== u) return;
+      ulang = null;
+      clearTimeout(u.batas);
+      aturTombolUlang(baris, false);
+      if (!alternatif || !alternatif.length) {
+        keluaran.innerHTML = `<small class="latih-pesan">${esc(PESAN_GALAT[galat] || 'Tidak terdengar. Tekan 🎤 lalu ucapkan katanya dengan jelas.')}</small>`;
+        return;
+      }
+      const n = nilaiSatuKata(target, alternatif);
+      const terbaik = Math.max(n, +(baris.dataset.terbaik || 0));
+      baris.dataset.terbaik = terbaik;
+      baris.classList.toggle('lulus', terbaik >= 85);
+      keluaran.innerHTML = `<b class="latih-nilai ${kelasNilai(n)}">${n}%</b>${n >= 85 ? ' ✓ Bagus!' : ''}
+        <small>terdengar: “${esc(alternatif[0].teks.trim())}”${terbaik > n ? ` · terbaik ${terbaik}%` : ''}</small>`;
+    };
+    // Pengaman: hentikan bila tidak ada suara dalam beberapa detik.
+    u.batas = setTimeout(() => { try { r.stop(); } catch (e) { /* abaikan */ } }, 6000);
+    try { r.start(); } catch (e) { batalUlang(); }
+  }
+
   function selesaiRekam() {
     if (!rekam) return;
     const r = rekam;
@@ -468,6 +545,7 @@
       if (n < 85 && !latih.some(x => x.w.norm === w.norm)) latih.push({ w, n });
     });
     latih.sort((a, b) => a.n - b.n);
+    latih.splice(10);   // cukup 10 kata terlemah agar latihan tidak terlalu panjang
     $('#teks').classList.add('dinilai');
 
     const total = kini.kata.length;
@@ -489,8 +567,14 @@
       <h2>Akurasi pelafalan</h2>
       <div class="skor ${kelas}"><b>${persen}%</b><span>${pujian}</span></div>
       <p>${tepat} dari ${dibaca} kata yang kamu baca dikenali dengan tepat.${sisa > 0 ? ` <b>${sisa} kata di akhir belum dibaca.</b>` : ''}${rekor ? ' 🏅 Skor terbaik baru!' : ''}</p>
-      ${latih.length ? `<p>Latih kata berikut (ketuk untuk mendengar):</p>
-        <div class="chip-daftar">${latih.map(x => `<button class="chip ${kelasNilai(x.n)}" data-ucap="${esc(x.w.asli)}">${esc(bersihKata(x.w.asli))} <small>${x.n}%</small></button>`).join('')}</div>`
+      ${latih.length ? `<p>Latih kata berikut: tekan 🔊 untuk mendengar contoh, lalu 🎤 untuk mengucapkannya dan dinilai ulang.</p>
+        <div class="latih-daftar">${latih.map(x => `<div class="latih-baris" data-norm="${esc(x.w.norm)}">
+          <span class="latih-kata">${esc(bersihKata(x.w.asli))}</span>
+          <span class="latih-awal ${kelasNilai(x.n)}" title="Nilai saat membaca paragraf">${x.n}%</span>
+          <button class="tombol kecil" data-ucap="${esc(x.w.asli)}" aria-label="Dengarkan contoh">🔊</button>
+          <button class="tombol kecil rekam" data-ulang>🎤 Ucapkan</button>
+          <span class="latih-baru"></span>
+        </div>`).join('')}</div>`
         : (dibaca ? '<p>Semua kata yang kamu baca terdengar tepat. 👏</p>' : '')}
       <details><summary>Yang terdengar oleh aplikasi</summary><p>${esc(teksUcap)}</p></details>
       <p class="catatan">Angka di bawah tiap kata adalah perkiraan dari pengenal suara otomatis: kata yang dikenali memakai
@@ -631,13 +715,16 @@
     };
     $('#hasil').onclick = e => {
       const c = e.target.closest('[data-ucap]');
-      if (c) ucapKata(c.dataset.ucap);
+      if (c) { batalUlang(); ucapKata(c.dataset.ucap); return; }
+      const u = e.target.closest('[data-ulang]');
+      if (u) ulangKata(u.closest('.latih-baris'));
     };
   }
 
   function rute() {
     hentikanSuara();
     batalkanRekam();
+    batalUlang();
     const m = location.hash.match(/^#baca\/(.+)$/);
     const id = m ? decodeURIComponent(m[1]) : '';
     const b = window.BACAAN.find(x => x.id === id);

@@ -107,11 +107,21 @@ button { cursor: pointer; border: 0; background: none; }
 .skor b { font-family: var(--huruf-judul); font-size: 44px; line-height: 1; }
 .skor.baik b { color: var(--hijau); } .skor.sedang b { color: var(--emas-tua); } .skor.kurang b { color: var(--merah); }
 .hasil p { margin: 8px 0; }
-.chip-daftar { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
-.chip { padding: 6px 12px; border-radius: 99px; background: var(--merah-muda); color: var(--merah-tua); font-weight: 700; border: 1px solid #F3C3C1; }
-.chip::before { content: "🔊 "; }
-.chip.sedang { background: var(--emas-muda); color: #7A5A12; border-color: #EBD48F; }
-.chip small { font-weight: 800; opacity: .8; }
+.latih-daftar { display: grid; gap: 8px; margin: 8px 0; }
+.latih-baris { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 8px 10px; border: 1px solid var(--garis); border-radius: var(--r1); background: #FBFCFE; }
+.latih-baris.lulus { border-color: var(--hijau); background: var(--hijau-muda); }
+.latih-kata { font-family: var(--huruf-judul); font-weight: 700; font-size: 20px; color: var(--gelap); min-width: 90px; }
+.latih-awal { font-size: 13px; font-weight: 800; padding: 2px 8px; border-radius: 99px; }
+.latih-awal.sedang { background: var(--emas-muda); color: #7A5A12; }
+.latih-awal.salah { background: var(--merah-muda); color: var(--merah-tua); }
+.latih-baris .tombol.kecil { min-height: 38px; padding: 4px 12px; }
+.latih-baris .tombol.rekam.aktif { animation: denyut 1.2s infinite; }
+.latih-baru { flex-basis: 100%; font-size: 15px; }
+.latih-baru:empty { display: none; }
+.latih-baru small { color: var(--tinta-2); margin-left: 6px; }
+.latih-nilai { font-family: var(--huruf-judul); font-size: 20px; }
+.latih-nilai.benar { color: var(--hijau); } .latih-nilai.sedang { color: var(--emas-tua); } .latih-nilai.salah { color: var(--merah); }
+.latih-pesan { color: var(--merah-tua) !important; margin: 0 !important; }
 .hasil details { margin-top: 10px; font-size: 15px; color: var(--tinta-2); }
 .hasil summary { cursor: pointer; font-weight: 700; }
 .catatan { font-size: 13px; color: var(--tinta-3); }
