@@ -28,7 +28,7 @@
   function tulis(kunci, nilai) {
     try { localStorage.setItem(kunci, JSON.stringify(nilai)); } catch (e) { /* abaikan */ }
   }
-  const setelan = Object.assign({ suara: '', laju: 0.9, tampilArti: false, tanpaGrafik: false }, baca('er_setelan', {}));
+  const setelan = Object.assign({ suara: '', laju: 0.9, tampilArti: false, tanpaGrafik: false, syaratBaca: 75 }, baca('er_setelan', {}));
   delete setelan.arti;          // pengaturan lama (terjemahan tampil); diganti tampilArti
   const simpanSetelan = () => tulis('er_setelan', setelan);
   const skorTerbaik = baca('er_skor', {});   // pelafalan terbaik per level
@@ -508,7 +508,7 @@
     }
     const s = syaratLevel(b);
     const kurang = [];
-    if (s.sub && !sudahBaca(b)) kurang.push(`🎤 baca teksnya dengan Baca & Koreksi sampai selesai, akurasi ≥ ${SYARAT_BACA}%`);
+    if (s.sub && !sudahBaca(b)) kurang.push(`🎤 baca teksnya dengan Baca & Koreksi sampai selesai, akurasi ≥ ${syaratBaca()}%`);
     if (s.sub) kurang.push(`🧩 lulus ${SUB.length} sub level Latihan bertahap (sudah ${jumlahLulusSub(b)})`);
     if (s.ucap && !(skorTerbaik[b.id] >= TUNTAS)) {
       kurang.push(`🎤 pelafalan ≥ ${TUNTAS}%${skorTerbaik[b.id] != null ? ` (terbaikmu ${skorTerbaik[b.id]}%)` : ''}`);
@@ -808,7 +808,7 @@
     if (elSub) elSub.outerHTML = subHTML(kini.b);
     const syaratBaca = !punyaSub(kini.b) || bacaSebelum ? ''
       : baruTerbuka ? `<p class="lanjut">🔓 Latihan bertahap sudah terbuka. <a href="#latih/${encodeURIComponent(kini.b.id)}/1">Mulai sub level 1 →</a></p>`
-      : `<p class="lanjut">Latihan bertahap terbuka setelah kamu membaca sampai selesai dengan akurasi minimal ${SYARAT_BACA}%.${lengkap ? ' Dengarkan contohnya, latih kata yang masih merah, lalu coba lagi.' : ''}</p>`;
+      : `<p class="lanjut">Latihan bertahap terbuka setelah kamu membaca sampai selesai dengan akurasi minimal ${syaratBaca()}%.${lengkap ? ' Dengarkan contohnya, latih kata yang masih merah, lalu coba lagi.' : ''}</p>`;
 
     $('#legenda').hidden = false;
     hasilEl.innerHTML = `<div class="hasil">
@@ -876,10 +876,12 @@
   const lulusSub = (b, n) => { const d = skorSub[b.id]; return !!d && (!!d.lama || d.s[n - 1] >= TUNTAS); };
   const jumlahLulusSub = b => SUB.filter((_, i) => lulusSub(b, i + 1)).length;
   // Sebelum sub level 1, teks level dibaca dulu dengan Baca & Koreksi sampai selesai, akurasi
-  // ≥ SYARAT_BACA (9 Okt 2026). Dikecualikan: browser tanpa pengenal suara (tidak bisa dinilai),
+  // ≥ syaratBaca() (9 Okt 2026; bawaan 75%, diubah di Pengaturan halaman utama, 0 = tanpa syarat,
+  // tersimpan per perangkat). Dikecualikan: browser tanpa pengenal suara (tidak bisa dinilai),
   // level yang tuntas sebelumnya, dan siswa yang sudah mulai mengerjakan sub level sebelum aturan ini.
-  const SYARAT_BACA = 75;
-  const sudahBaca = b => !SR || skorTerbaik[b.id] >= SYARAT_BACA ||
+  const PILIHAN_SYARAT_BACA = [0, 50, 60, 70, 75, 80, 85, 90];
+  const syaratBaca = () => (PILIHAN_SYARAT_BACA.includes(setelan.syaratBaca) ? setelan.syaratBaca : 75);
+  const sudahBaca = b => !SR || !syaratBaca() || skorTerbaik[b.id] >= syaratBaca() ||
     (skorSub[b.id] && (skorSub[b.id].lama || skorSub[b.id].s.some(x => x != null)));
   const terbukaSub = (b, n) => (n === 1 ? sudahBaca(b) : lulusSub(b, n - 1));
   // Level yang sudah tuntas lewat Baca & Koreksi sebelum sub level dipasang dianggap lulus semua.
@@ -1319,7 +1321,7 @@
       <p class="petunjuk">Pelajari ${b.pola ? 'polanya dan contoh kalimatnya' : b.kosakata ? 'kata-katanya' : 'teksnya (dengarkan dan baca)'} di atas, lalu kerjakan ${daftarSub(b).length} sub level secara berurutan. Tiap sub level lulus bila
         ≥ ${TUNTAS}% benar; soalnya diacak sehingga berbeda tiap kali dikerjakan.${d.lama ? ' Level ini sudah kamu tuntaskan sebelumnya, jadi semua sub level terbuka untuk mengulang.' : ''}</p>
       ${sudahBaca(b) ? '' : `<p class="sub-syarat">🔒 Baca dulu ${b.kosakata ? 'semua kata dan contohnya' : b.pola ? 'contoh kalimatnya' : 'teksnya'} di atas dengan
-        <b>🎤 Baca &amp; Koreksi</b> sampai selesai, dengan akurasi minimal <b>${SYARAT_BACA}%</b>. Setelah itu sub level 1 terbuka.${skorTerbaik[b.id] != null ? ` Akurasi terbaikmu sekarang ${skorTerbaik[b.id]}%.` : ''}</p>`}
+        <b>🎤 Baca &amp; Koreksi</b> sampai selesai, dengan akurasi minimal <b>${syaratBaca()}%</b>. Setelah itu sub level 1 terbuka.${skorTerbaik[b.id] != null ? ` Akurasi terbaikmu sekarang ${skorTerbaik[b.id]}%.` : ''}</p>`}
       <div class="sub-daftar">${daftarSub(b).map((s, i) => {
         const n = i + 1, buka = terbukaSub(b, n), sk = d.s[i], ok = sk >= TUNTAS;
         const isi = `<span class="sub-no">${ok ? '✓' : buka ? n : '🔒'}</span>
@@ -1327,7 +1329,7 @@
           <span class="kartu-info">${esc(s.ket)}${sk != null ? ` · terbaik <b>${sk}%</b>` : ''}</span></span>`;
         return buka
           ? `<a class="sub-kartu${ok ? ' lulus' : ''}" href="#latih/${encodeURIComponent(b.id)}/${n}">${isi}</a>`
-          : `<span class="sub-kartu kunci" title="${n === 1 ? `Baca dulu dengan Baca & Koreksi, akurasi ≥ ${SYARAT_BACA}%` : `Luluskan sub level ${n - 1} dulu`}">${isi}</span>`;
+          : `<span class="sub-kartu kunci" title="${n === 1 ? `Baca dulu dengan Baca & Koreksi, akurasi ≥ ${syaratBaca()}%` : `Luluskan sub level ${n - 1} dulu`}">${isi}</span>`;
       }).join('')}</div>
     </section>`;
   }
@@ -1424,7 +1426,13 @@
               <span class="kartu-info"><span class="jenis jenis-${jenis.kunci}">${jenis.nama}</span> Level ${i + 1} · ${ukuran}${punyaSub(b) ? ` · 🧩 <b>${jumlahLulusSub(b)}/${SUB.length}</b> sub level` : ''}${s != null ? ` · 🎤 <b>${s}%</b>` : ''}${sp != null ? ` · 📝 <b>${sp}%</b>` : ''}${soalDari(b) && sp == null && !punyaSub(b) ? ` · ${soalDari(b).length} soal` : ''}</span></span></a>`;
           }).join('')}</div></section>`;
       }).join('') +
-      (bisaSuara ? '' : '<div class="pesan">Browser ini tidak bisa membacakan teks. Gunakan Google Chrome versi terbaru.</div>');
+      (bisaSuara ? '' : '<div class="pesan">Browser ini tidak bisa membacakan teks. Gunakan Google Chrome versi terbaru.</div>') +
+      `<details class="pengaturan"><summary>⚙️ Pengaturan</summary>
+        <label>Akurasi membaca minimal untuk membuka Latihan bertahap
+          <select id="pilih-syarat-baca">${PILIHAN_SYARAT_BACA.map(v => `<option value="${v}"${v === syaratBaca() ? ' selected' : ''}>${v ? v + '%' : 'Tanpa syarat'}</option>`).join('')}</select></label>
+        <p>Sebelum mengerjakan sub level 1, teks level dibaca dulu dengan 🎤 Baca &amp; Koreksi sampai selesai dengan akurasi ini.
+          Bawaan 75%. Pengaturan tersimpan di perangkat ini saja.</p></details>`;
+    $('#pilih-syarat-baca').onchange = e => { setelan.syaratBaca = +e.target.value; simpanSetelan(); };
   }
 
   const jenisLevel = b => (b.kosakata ? { kunci: 'kosakata', nama: 'Kosakata' }

@@ -284,3 +284,10 @@ a.sub-kartu:hover { border-color: var(--biru); }
 .lt-ubin-kal .lt-kata { text-align: left; font-size: 16px; font-weight: 700; line-height: 1.4; padding: 8px 12px; }
 .lt-urutan { margin: 6px 0 0; padding-left: 22px; font-weight: 700; }
 .sub-syarat { margin: 4px 0 12px; padding: 10px 14px; border-radius: var(--r2); background: var(--emas-muda); border: 1px solid #EBD48F; color: #5E4610; font-size: 15px; }
+
+/* ---------- Pengaturan (halaman utama) ---------- */
+.pengaturan { margin-top: 26px; padding: 12px 16px; border: 1px solid var(--garis); border-radius: var(--r2); background: var(--kertas); font-size: 15px; color: var(--tinta-2); }
+.pengaturan summary { cursor: pointer; font-weight: 800; color: var(--gelap); }
+.pengaturan label { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; font-weight: 700; color: var(--tinta); }
+.pengaturan select { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--garis-2); background: var(--kertas); font-size: 15px; }
+.pengaturan p { margin: 8px 0 0; font-size: 14px; }
