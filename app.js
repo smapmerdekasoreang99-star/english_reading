@@ -816,7 +816,7 @@
   }
 
   // ---------- Latihan bertahap (sub level kosakata) ----------
-  // Aktif di level kosakata yang punya data situasi (percontohan: Greetings). Soal dibuat
+  // Aktif di level kosakata yang punya data situasi (semua 17 kelompok Tahap 0). Soal dibuat
   // acak dari kata, arti, contoh kalimat (+ contohLain) dan situasi: arah soal, pengecoh,
   // kalimat, dan urutan selalu berganti. Tiap sesi 10 soal (satu per kata; sub level
   // Situasi 10 situasi acak). Jawaban salah diulang di akhir sesi dengan soal baru untuk
@@ -825,7 +825,7 @@
   const SUB = [
     { nama: 'Kenali', ikon: '👀', ket: 'Kata ↔ arti' },
     { nama: 'Dengar', ikon: '👂', ket: 'Pilih yang kamu dengar' },
-    { nama: 'Situasi', ikon: '💬', ket: 'Ungkapan yang tepat' },
+    { nama: 'Situasi', ikon: '💬', ket: 'Kata yang tepat untuk situasinya' },
     { nama: 'Lengkapi & susun', ikon: '🧩', ket: 'Kalimat rumpang, susun kata' },
     { nama: 'Ucapkan', ikon: '🎤', ket: 'Ingat dan ucapkan sendiri' }
   ];
@@ -849,6 +849,18 @@
     if (ubah) { tulis('er_sub_cek', cek); simpanSub(); }
   })();
 
+  // Kata sebunyi: pengenal suara bisa menuliskan salah satunya (mis. "to" → "two").
+  const HOMOFON = {
+    'i': ['eye', 'aye'], 'to': ['two', 'too'], 'two': ['to', 'too'], 'four': ['for'], 'one': ['won'], 'eight': ['ate'],
+    'our': ['hour', 'are'], 'hour': ['our'], 'right': ['write'], 'write': ['right'], 'see': ['sea'], 'know': ['no'],
+    'son': ['sun'], 'in': ['inn'], 'or': ['oar', 'ore'], 'so': ['sew', 'sow'], 'we': ['wee'], 'you': ['u'], 'tea': ['tee'],
+    'new': ['knew'], 'week': ['weak'], 'whose': ["who's"], 'which': ['witch'], 'where': ['wear'], 'hear': ['here'],
+    'red': ['read'], 'read': ['red', 'reed'], 'night': ['knight'], 'aunt': ['ant'], 'cannot': ['can not'], 'then': ['than'],
+    'bread': ['bred'], 'do': ['due', 'dew']
+  };
+  const terimaUcap = daftar => [...new Set(daftar.flatMap(t => [t, ...(HOMOFON[normFrasa(t)] || [])]))];
+  // Kata yang terjemahannya sama (mis. he/she = "dia") tidak saling menjadi pengecoh kalimat rumpang.
+  const miripDengan = (b, k) => ((b.mirip || []).find(m => m.includes(k)) || []).filter(x => x !== k);
   const ambil = a => a[Math.floor(Math.random() * a.length)];
   const kocok = a => acak(a.length).map(i => a[i]);
   const huruf1 = s => s.charAt(0).toUpperCase() + s.slice(1);
@@ -896,7 +908,8 @@
       const token = c[0].split(/\s+/);
       const bisaSusun = token.length >= 3 && token.length <= 8;
       if (r && (!bisaSusun || Math.random() < 0.5)) {
-        return { w, jenis: 'pilih', tanya: 'Lengkapi kalimatnya.', besar: r, kecil: c[1], suaraKunci: c[0], ...pilihan(k[0], kata) };
+        const calon = kata.filter(x => !miripDengan(b, k[0]).includes(x));
+        return { w, jenis: 'pilih', tanya: 'Lengkapi kalimatnya.', besar: r, kecil: c[1], suaraKunci: c[0], ...pilihan(k[0], calon) };
       }
       if (bisaSusun) return { w, jenis: 'susun', tanya: 'Susun kata-kata ini menjadi kalimat.', kecil: c[1], token, suaraKunci: c[0] };
       return { w, jenis: 'pilih', tanya: 'Apa bahasa Inggrisnya?', besar: k[1], suaraKunci: k[0], ...pilihan(k[0], kata) };
@@ -905,8 +918,8 @@
     const sit = b.situasi.filter(s => s.j === k[0]);
     const s = sit.length && Math.random() < 0.5 ? ambil(sit) : null;
     return s
-      ? { w, jenis: 'ucap', tanya: s.s, target: k[0], terima: [k[0], ...(s.juga || [])], petunjuk: 'Ucapkan ungkapan yang tepat dalam bahasa Inggris.' }
-      : { w, jenis: 'ucap', tanya: 'Ucapkan dalam bahasa Inggris:', besar: k[1], target: k[0], terima: [k[0]] };
+      ? { w, jenis: 'ucap', tanya: s.s, target: k[0], terima: terimaUcap([k[0], ...(s.juga || [])]), petunjuk: 'Ucapkan kata yang tepat dalam bahasa Inggris.' }
+      : { w, jenis: 'ucap', tanya: 'Ucapkan dalam bahasa Inggris:', besar: k[1], target: k[0], terima: terimaUcap([k[0]]) };
   }
 
   let latih = null;   // { b, n, antre: [soal], i, benar, awal, sudah, rec }
@@ -959,6 +972,7 @@
         <div class="kendali"><button class="tombol utama" id="lt-cek" disabled>Periksa</button></div>`;
     } else {
       if (q.petunjuk) isi += `<p class="lt-kecil">${esc(q.petunjuk)}</p>`;
+      if (SR && q.target.length <= 4) isi += '<p class="lt-kecil">Kata pendek lebih mudah dikenali bila diucapkan dalam kalimat, mis. “I can swim”.</p>';
       isi += SR
         ? '<div class="kendali"><button class="tombol rekam" id="lt-rekam">🎤 Ucapkan</button></div><p class="lt-dengar" id="lt-dengar"></p>'
         : `<form class="lt-ketik" id="lt-ketik"><input id="lt-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ketik dalam bahasa Inggris" aria-label="Jawaban">
@@ -1050,8 +1064,8 @@
     if (L.sudah) return;
     const v = normFrasa($('#lt-input').value || '');
     if (!v) return;
-    const t = q.terima.map(normFrasa).find(x => x === v) ||
-      q.terima.map(normFrasa).find(x => kemiripan(v.replace(/ /g, ''), x.replace(/ /g, '')) >= 0.85);
+    const boleh = q.terima.filter(x => !Object.values(HOMOFON).flat().includes(x) || x === q.target).map(normFrasa);
+    const t = boleh.find(x => x === v) || boleh.find(x => kemiripan(v.replace(/ /g, ''), x.replace(/ /g, '')) >= 0.85);
     const ok = !!t;
     $('#lt-input').disabled = true;
     nilaiSoal(ok, ok ? (v === t ? '' : `Hampir tepat. Tulisannya: <b>${esc(t)}</b>`) : `Yang tepat: <b>${esc(huruf1(q.target))}</b>`);

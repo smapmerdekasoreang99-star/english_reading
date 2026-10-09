@@ -69,14 +69,14 @@ Skor terbaik disimpan di perangkat (`er_paham`).
 
 ## Latihan bertahap (sub level kosakata)
 
-Percontohan 9 Okt 2026 di **Greetings**. Aktif otomatis di level kosakata yang punya
-`situasi` di `bacaan.js`; level lain tetap seperti semula sampai datanya ditambahkan.
+Percontohan di **Greetings** (9 Okt 2026), lalu dipasang di ke-17 kelompok kosakata Tahap 0.
+Aktif otomatis di level kosakata yang punya `situasi` di `bacaan.js`.
 
 | Sub level | Bentuk soal |
 |---|---|
 | 1 Kenali | kata → pilih arti, atau arti → pilih kata |
 | 2 Dengar | kata dibacakan → pilih tulisannya; kalimat dibacakan → pilih artinya |
-| 3 Situasi | situasi berbahasa Indonesia → pilih ungkapan yang tepat |
+| 3 Situasi | situasi/konteks berbahasa Indonesia → pilih kata yang tepat |
 | 4 Lengkapi & susun | kalimat rumpang (dengan artinya) atau susun kata acak |
 | 5 Ucapkan | arti atau situasi → siswa mengucapkan bahasa Inggrisnya (pengenal suara ≥ 70%; diketik bila browser tanpa pengenal suara) |
 
@@ -90,5 +90,9 @@ Percontohan 9 Okt 2026 di **Greetings**. Aktif otomatis di level kosakata yang p
   sub level 5 juga masuk (kotak 1).
 - Level yang sudah tuntas lewat Baca & Koreksi sebelum sub level dipasang dianggap lulus semua
   sub levelnya (dicatat sekali di `er_sub_cek`). Skor sub level: `er_sub` di perangkat.
+- `mirip` (opsional, per level): kata yang terjemahannya sama, mis. `[['he', 'she']]` ("dia"),
+  tidak saling dijadikan pengecoh kalimat rumpang.
+- Sub level 5 menerima kata sebunyi (`HOMOFON` di `app.js`, mis. to/two, our/hour) karena
+  pengenal suara bisa menuliskan salah satunya; kata pendek disarankan diucapkan dalam kalimat.
 - Menambah ke level lain: isi `contohLain` dan `situasi` seperti di Greetings. Contoh kalimat
   sebaiknya memuat kata/frasanya utuh (untuk kalimat rumpang) dan 3–8 kata (untuk susun kata).

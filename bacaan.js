@@ -88,6 +88,35 @@ window.BACAAN = [
       ['my', 'milik saya', 'My bag is blue.', 'Tas saya biru.'],
       ['your', 'milikmu', 'Is this your pen?', 'Apakah ini pulpenmu?'],
       ['our', 'milik kami, milik kita', 'Our school is big.', 'Sekolah kami besar.']
+    ],
+    mirip: [['he', 'she']],
+    contohLain: {
+      'I': [['I like apples.', 'Saya suka apel.'], ['I live in Soreang.', 'Saya tinggal di Soreang.']],
+      'you': [['You are very kind.', 'Kamu sangat baik hati.'], ['Are you hungry?', 'Apakah kamu lapar?']],
+      'he': [['He is my father.', 'Dia ayahku.'], ['He is a good boy.', 'Dia anak laki-laki yang baik.']],
+      'she': [['She is my mother.', 'Dia ibuku.'], ['She is a smart girl.', 'Dia anak perempuan yang pintar.']],
+      'it': [['It is a big house.', 'Itu rumah yang besar.'], ['Where is my book? It is on the table.', 'Di mana bukuku? Buku itu ada di atas meja.']],
+      'we': [['We are good friends.', 'Kami teman baik.'], ['We go to school together.', 'Kami pergi ke sekolah bersama.']],
+      'they': [['They are my classmates.', 'Mereka teman sekelasku.'], ['They live in Bandung.', 'Mereka tinggal di Bandung.']],
+      'my': [['This is my house.', 'Ini rumahku.'], ['My name is Dina.', 'Namaku Dina.']],
+      'your': [['What is your name?', 'Siapa namamu?'], ['Your shoes are new.', 'Sepatumu baru.']],
+      'our': [['Our teacher is kind.', 'Guru kami baik hati.'], ['This is our classroom.', 'Ini kelas kami.']]
+    },
+    situasi: [
+      { s: 'Kamu berbicara tentang dirimu sendiri: "… am a student."', j: 'I' },
+      { s: 'Kamu berbicara kepada temanmu: "… are my best friend."', j: 'you' },
+      { s: 'Kamu bertanya kepada guru: "Are … busy, sir?"', j: 'you' },
+      { s: 'Kamu membicarakan ayahmu: "… is a farmer."', j: 'he' },
+      { s: 'Kamu membicarakan kakekmu: "… is seventy years old."', j: 'he' },
+      { s: 'Kamu membicarakan ibumu: "… is a teacher."', j: 'she' },
+      { s: 'Kamu membicarakan adik perempuanmu: "… likes to sing."', j: 'she' },
+      { s: 'Kamu menunjuk seekor kucing: "… is very cute."', j: 'it' },
+      { s: 'Di luar sedang hujan: "… is raining."', j: 'it' },
+      { s: 'Kamu dan teman-temanmu satu kelas: "… are in class ten."', j: 'we' },
+      { s: 'Kamu membicarakan dua orang tetanggamu: "… are very kind."', j: 'they' },
+      { s: 'Tas itu milikmu sendiri: "This is … bag."', j: 'my' },
+      { s: 'Kamu bertanya apakah pulpen itu milik temanmu: "Is this … pen?"', j: 'your' },
+      { s: 'Sekolah itu milik kamu dan teman-temanmu: "… school is clean."', j: 'our' }
     ]
   },
   {
@@ -103,6 +132,34 @@ window.BACAAN = [
       ['eight', 'delapan', 'A spider has eight legs.', 'Laba-laba punya delapan kaki.'],
       ['nine', 'sembilan', 'My sister is nine years old.', 'Adik perempuanku berumur sembilan tahun.'],
       ['ten', 'sepuluh', 'I have ten fingers.', 'Saya punya sepuluh jari.']
+    ],
+    contohLain: {
+      'one': [['I have one cat.', 'Saya punya satu kucing.'], ['One plus one is two.', 'Satu tambah satu sama dengan dua.']],
+      'two': [['I have two eyes.', 'Saya punya dua mata.'], ['Two birds are in the tree.', 'Dua burung ada di pohon.']],
+      'three': [['My cat has three kittens.', 'Kucingku punya tiga anak kucing.'], ['I eat three times a day.', 'Saya makan tiga kali sehari.']],
+      'four': [['A table has four legs.', 'Meja punya empat kaki.'], ['There are four people in my family.', 'Ada empat orang di keluargaku.']],
+      'five': [['My brother is five years old.', 'Adikku berumur lima tahun.'], ['I have five fingers on one hand.', 'Saya punya lima jari di satu tangan.']],
+      'six': [['An insect has six legs.', 'Serangga punya enam kaki.'], ['I have six pencils.', 'Saya punya enam pensil.']],
+      'seven': [['I wake up at seven.', 'Saya bangun pukul tujuh.'], ['There are seven colors in a rainbow.', 'Ada tujuh warna pada pelangi.']],
+      'eight': [['An octopus has eight arms.', 'Gurita punya delapan lengan.'], ['I sleep for eight hours.', 'Saya tidur selama delapan jam.']],
+      'nine': [['Five plus four is nine.', 'Lima tambah empat sama dengan sembilan.'], ['There are nine students in the room.', 'Ada sembilan siswa di ruangan itu.']],
+      'ten': [['I have ten toes.', 'Saya punya sepuluh jari kaki.'], ['Ten minus one is nine.', 'Sepuluh kurang satu sama dengan sembilan.']]
+    },
+    situasi: [
+      { s: 'Berapa jumlah hidung di wajahmu?', j: 'one' },
+      { s: 'Berapa jumlah matahari di langit kita?', j: 'one' },
+      { s: 'Berapa jumlah kaki seekor ayam?', j: 'two' },
+      { s: 'Berapa jumlah roda sepeda?', j: 'two' },
+      { s: 'Berapa jumlah sisi segitiga?', j: 'three' },
+      { s: 'Berapa jumlah warna lampu lalu lintas?', j: 'three' },
+      { s: 'Berapa jumlah kaki seekor kucing?', j: 'four' },
+      { s: 'Berapa jumlah jari pada satu tangan?', j: 'five' },
+      { s: 'Berapa jumlah kaki seekor semut?', j: 'six' },
+      { s: 'Tiga ditambah tiga sama dengan …', j: 'six' },
+      { s: 'Berapa jumlah hari dalam satu minggu?', j: 'seven' },
+      { s: 'Berapa jumlah kaki seekor laba-laba?', j: 'eight' },
+      { s: 'Lima ditambah empat sama dengan …', j: 'nine' },
+      { s: 'Berapa jumlah jari pada kedua tanganmu?', j: 'ten' }
     ]
   },
   {
@@ -118,6 +175,34 @@ window.BACAAN = [
       ['purple', 'ungu', 'She has a purple bag.', 'Dia punya tas ungu.'],
       ['brown', 'cokelat', 'The table is brown.', 'Meja itu berwarna cokelat.'],
       ['pink', 'merah muda', 'My sister likes pink.', 'Adik perempuanku suka warna merah muda.']
+    ],
+    contohLain: {
+      'red': [['Her dress is red.', 'Gaunnya merah.'], ['I like red roses.', 'Saya suka mawar merah.']],
+      'blue': [['My bag is blue.', 'Tasku biru.'], ['The sea is blue.', 'Laut berwarna biru.']],
+      'green': [['The grass is green.', 'Rumputnya hijau.'], ['He has a green bicycle.', 'Dia punya sepeda hijau.']],
+      'yellow': [['The sun is yellow.', 'Matahari berwarna kuning.'], ['I have a yellow pencil.', 'Saya punya pensil kuning.']],
+      'black': [['The cat is black.', 'Kucing itu hitam.'], ['He wears black shoes.', 'Dia memakai sepatu hitam.']],
+      'white': [['Milk is white.', 'Susu berwarna putih.'], ['The clouds are white.', 'Awan-awan berwarna putih.']],
+      'orange': [['The carrot is orange.', 'Wortel itu oranye.'], ['My cat is orange.', 'Kucingku berwarna oranye.']],
+      'purple': [['The flower is purple.', 'Bunga itu ungu.'], ['Grapes can be purple.', 'Anggur bisa berwarna ungu.']],
+      'brown': [['Coffee is brown.', 'Kopi berwarna cokelat.'], ['My dog is brown.', 'Anjingku berwarna cokelat.']],
+      'pink': [['Her shoes are pink.', 'Sepatunya merah muda.'], ['I have a pink book.', 'Saya punya buku merah muda.']]
+    },
+    situasi: [
+      { s: 'Warna langit pada siang yang cerah.', j: 'blue' },
+      { s: 'Warna daun yang segar.', j: 'green' },
+      { s: 'Lampu lalu lintas yang berarti boleh jalan.', j: 'green' },
+      { s: 'Warna pisang yang matang.', j: 'yellow' },
+      { s: 'Warna susu.', j: 'white' },
+      { s: 'Warna bagian bawah bendera Indonesia.', j: 'white' },
+      { s: 'Warna arang.', j: 'black' },
+      { s: 'Warna tomat yang matang.', j: 'red' },
+      { s: 'Lampu lalu lintas yang berarti berhenti.', j: 'red' },
+      { s: 'Warna wortel.', j: 'orange' },
+      { s: 'Merah dicampur kuning menjadi …', j: 'orange' },
+      { s: 'Warna terong.', j: 'purple' },
+      { s: 'Warna batang pohon.', j: 'brown' },
+      { s: 'Merah dicampur putih menjadi …', j: 'pink' }
     ]
   },
   {
@@ -133,6 +218,34 @@ window.BACAAN = [
       ['grandmother', 'nenek', 'My grandmother tells good stories.', 'Nenekku pandai bercerita.'],
       ['uncle', 'paman', 'My uncle has a big car.', 'Pamanku punya mobil besar.'],
       ['aunt', 'bibi', 'My aunt is a nurse.', 'Bibiku seorang perawat.']
+    ],
+    contohLain: {
+      'father': [['My father works in an office.', 'Ayahku bekerja di kantor.'], ['My father reads the newspaper.', 'Ayahku membaca koran.']],
+      'mother': [['My mother is kind.', 'Ibuku baik hati.'], ['I help my mother in the kitchen.', 'Saya membantu ibuku di dapur.']],
+      'brother': [['I have an older brother.', 'Saya punya seorang kakak laki-laki.'], ['My little brother is five years old.', 'Adik laki-lakiku berumur lima tahun.']],
+      'sister': [['My sister is a student.', 'Saudara perempuanku seorang pelajar.'], ['I play with my little sister.', 'Saya bermain dengan adik perempuanku.']],
+      'son': [['Budi is their son.', 'Budi anak laki-laki mereka.'], ['My uncle has a son.', 'Pamanku punya seorang anak laki-laki.']],
+      'daughter': [['Rina is their daughter.', 'Rina anak perempuan mereka.'], ['My aunt has a daughter.', 'Bibiku punya seorang anak perempuan.']],
+      'grandfather': [['My grandfather is a farmer.', 'Kakekku seorang petani.'], ['I visit my grandfather every Sunday.', 'Saya mengunjungi kakekku setiap hari Minggu.']],
+      'grandmother': [['My grandmother makes cakes.', 'Nenekku membuat kue.'], ['My grandmother is seventy years old.', 'Nenekku berumur tujuh puluh tahun.']],
+      'uncle': [['My uncle is a driver.', 'Pamanku seorang sopir.'], ['My uncle lives in Jakarta.', 'Pamanku tinggal di Jakarta.']],
+      'aunt': [['My aunt bakes bread.', 'Bibiku membuat roti.'], ['My aunt is my mother\'s sister.', 'Bibiku adalah saudara perempuan ibuku.']]
+    },
+    situasi: [
+      { s: 'Suami ibumu adalah …', j: 'father' },
+      { s: 'Orang yang melahirkanmu adalah …', j: 'mother' },
+      { s: 'Anak laki-laki ayah dan ibumu (selain kamu) adalah …', j: 'brother', juga: ['son'] },
+      { s: 'Anak perempuan ayah dan ibumu (selain kamu) adalah …', j: 'sister', juga: ['daughter'] },
+      { s: 'Pak Budi punya anak laki-laki bernama Andi. Andi adalah … Pak Budi.', j: 'son' },
+      { s: 'Bagi kakekmu, ayahmu adalah …', j: 'son' },
+      { s: 'Bu Sari punya anak perempuan bernama Rina. Rina adalah … Bu Sari.', j: 'daughter' },
+      { s: 'Ayah dari ayahmu adalah …', j: 'grandfather' },
+      { s: 'Ibu dari ibumu adalah …', j: 'grandmother' },
+      { s: 'Istri kakekmu adalah …', j: 'grandmother' },
+      { s: 'Adik laki-laki ibumu adalah …', j: 'uncle' },
+      { s: 'Suami bibimu adalah …', j: 'uncle' },
+      { s: 'Kakak perempuan ayahmu adalah …', j: 'aunt' },
+      { s: 'Istri pamanmu adalah …', j: 'aunt' }
     ]
   },
   {
@@ -148,6 +261,32 @@ window.BACAAN = [
       ['bed', 'tempat tidur', 'My cat sleeps on my bed.', 'Kucingku tidur di tempat tidurku.'],
       ['phone', 'telepon', 'My phone is in my bag.', 'Teleponku ada di dalam tas.'],
       ['cup', 'cangkir', 'I drink tea from a cup.', 'Saya minum teh dari cangkir.']
+    ],
+    contohLain: {
+      'book': [['I read a book every night.', 'Saya membaca buku setiap malam.'], ['Open your book, please.', 'Tolong buka bukumu.']],
+      'pen': [['I write with a pen.', 'Saya menulis dengan pulpen.'], ['My pen is black.', 'Pulpenku hitam.']],
+      'bag': [['Put your book in your bag.', 'Masukkan bukumu ke dalam tasmu.'], ['Her bag is new.', 'Tasnya baru.']],
+      'table': [['We eat at the table.', 'Kami makan di meja.'], ['The table is clean.', 'Meja itu bersih.']],
+      'chair': [['This chair is broken.', 'Kursi ini rusak.'], ['There is a cat under the chair.', 'Ada kucing di bawah kursi.']],
+      'door': [['Someone is at the door.', 'Ada seseorang di pintu.'], ['The door is open.', 'Pintunya terbuka.']],
+      'window': [['The window is closed.', 'Jendelanya tertutup.'], ['I can see the garden from the window.', 'Saya bisa melihat kebun dari jendela.']],
+      'bed': [['My bed is soft.', 'Tempat tidurku empuk.'], ['I make my bed every morning.', 'Saya merapikan tempat tidurku setiap pagi.']],
+      'phone': [['My phone is ringing.', 'Teleponku berdering.'], ['Can I use your phone?', 'Boleh saya pakai teleponmu?']],
+      'cup': [['This cup is hot.', 'Cangkir ini panas.'], ['I want a cup of tea.', 'Saya mau secangkir teh.']]
+    },
+    situasi: [
+      { s: 'Benda yang kamu baca.', j: 'book' },
+      { s: 'Benda untuk menulis dengan tinta.', j: 'pen' },
+      { s: 'Benda untuk membawa buku ke sekolah.', j: 'bag' },
+      { s: 'Benda tempat menaruh buku saat belajar atau piring saat makan.', j: 'table' },
+      { s: 'Benda untuk duduk.', j: 'chair' },
+      { s: 'Kamu masuk ke kelas melalui …', j: 'door' },
+      { s: 'Ketuk dulu sebelum membukanya.', j: 'door' },
+      { s: 'Kamu melihat ke luar rumah melalui benda berkaca ini.', j: 'window' },
+      { s: 'Udara segar dan cahaya matahari masuk melalui …', j: 'window', juga: ['door'] },
+      { s: 'Benda tempat kamu tidur.', j: 'bed' },
+      { s: 'Benda untuk menelepon dan mengirim pesan.', j: 'phone' },
+      { s: 'Benda kecil bertangkai untuk minum teh atau kopi.', j: 'cup' }
     ]
   },
   {
@@ -163,6 +302,32 @@ window.BACAAN = [
       ['read', 'membaca', 'She reads a book.', 'Dia membaca buku.'],
       ['write', 'menulis', 'Write your name here.', 'Tulis namamu di sini.'],
       ['speak', 'berbicara', 'I want to speak English.', 'Saya ingin berbicara bahasa Inggris.']
+    ],
+    contohLain: {
+      'go': [['Let us go to the park.', 'Ayo kita pergi ke taman.'], ['I go to the market with my mother.', 'Saya pergi ke pasar bersama ibuku.']],
+      'come': [['Come here, please.', 'Tolong datang ke sini.'], ['Can you come to my party?', 'Bisakah kamu datang ke pestaku?']],
+      'eat': [['I eat an apple.', 'Saya makan apel.'], ['Do not eat too much candy.', 'Jangan makan terlalu banyak permen.']],
+      'drink': [['I drink milk every morning.', 'Saya minum susu setiap pagi.'], ['Cats drink water.', 'Kucing minum air.']],
+      'sleep': [['I sleep at nine.', 'Saya tidur pukul sembilan.'], ['Babies sleep a lot.', 'Bayi banyak tidur.']],
+      'see': [['I see a big tree.', 'Saya melihat pohon besar.'], ['Can you see the moon?', 'Bisakah kamu melihat bulan?']],
+      'hear': [['I hear a bird singing.', 'Saya mendengar burung bernyanyi.'], ['I cannot hear you.', 'Saya tidak bisa mendengarmu.']],
+      'read': [['I read the newspaper.', 'Saya membaca koran.'], ['Please read this page.', 'Tolong baca halaman ini.']],
+      'write': [['I write a letter to my friend.', 'Saya menulis surat untuk temanku.'], ['Please write your name.', 'Tolong tulis namamu.']],
+      'speak': [['Can you speak English?', 'Bisakah kamu berbicara bahasa Inggris?'], ['Please speak slowly.', 'Tolong bicara pelan-pelan.']]
+    },
+    situasi: [
+      { s: 'Pukul enam pagi kamu berangkat: "I … to school."', j: 'go' },
+      { s: 'Temanmu memanggilmu: "… here, please!"', j: 'come' },
+      { s: 'Ada tamu di depan pintu. Kamu berkata, "Please … in."', j: 'come' },
+      { s: 'Kegiatan saat kamu lapar.', j: 'eat' },
+      { s: 'Kegiatan saat kamu haus.', j: 'drink' },
+      { s: 'Ibu berkata: "… your milk."', j: 'drink' },
+      { s: 'Kegiatan saat kamu mengantuk di malam hari.', j: 'sleep' },
+      { s: 'Kegiatan dengan mata, misalnya memandang pelangi.', j: 'see' },
+      { s: 'Kegiatan dengan telinga.', j: 'hear' },
+      { s: 'Di perpustakaan kamu duduk dan … buku cerita.', j: 'read' },
+      { s: 'Guru berkata: "… your name on the paper."', j: 'write' },
+      { s: 'Kegiatan dengan mulut saat bercakap-cakap.', j: 'speak' }
     ]
   },
   {
@@ -178,6 +343,32 @@ window.BACAAN = [
       ['take', 'membawa, mengambil', 'Take your umbrella.', 'Bawalah payungmu.'],
       ['know', 'tahu', 'I know his name.', 'Saya tahu namanya.'],
       ['help', 'membantu', 'Can you help me?', 'Bisakah kamu membantuku?']
+    ],
+    contohLain: {
+      'have': [['I have two sisters.', 'Saya punya dua saudara perempuan.'], ['We have a big garden.', 'Kami punya kebun yang besar.']],
+      'like': [['I like cats.', 'Saya suka kucing.'], ['Do you like football?', 'Apakah kamu suka sepak bola?']],
+      'want': [['I want a new bicycle.', 'Saya ingin sepeda baru.'], ['Do you want some water?', 'Apakah kamu ingin air?']],
+      'need': [['I need your help.', 'Saya butuh bantuanmu.'], ['Plants need water.', 'Tanaman butuh air.']],
+      'make': [['I make a kite.', 'Saya membuat layang-layang.'], ['Let us make a cake.', 'Ayo kita membuat kue.']],
+      'do': [['I do my homework.', 'Saya mengerjakan PR saya.'], ['Do your best.', 'Lakukan yang terbaik.']],
+      'give': [['Give me some water, please.', 'Tolong beri saya air.'], ['I give a gift to my mother.', 'Saya memberi hadiah kepada ibuku.']],
+      'take': [['Take a pen from my bag.', 'Ambil pulpen dari tasku.'], ['I take the bus to school.', 'Saya naik bus ke sekolah.']],
+      'know': [['I know the answer.', 'Saya tahu jawabannya.'], ['Do you know my name?', 'Apakah kamu tahu namaku?']],
+      'help': [['Please help me.', 'Tolong bantu saya.'], ['I help my father in the garden.', 'Saya membantu ayahku di kebun.']]
+    },
+    situasi: [
+      { s: 'Kamu memiliki sepeda: "I … a bicycle."', j: 'have' },
+      { s: 'Kamu senang sekali makan bakso: "I … meatballs."', j: 'like', juga: ['want'] },
+      { s: 'Kamu haus dan ingin minum: "I … some water."', j: 'want', juga: ['need'] },
+      { s: 'Ujian besok, kamu harus punya pensil: "I … a pencil."', j: 'need', juga: ['want', 'have'] },
+      { s: 'Ibu mengajakmu ke dapur: "Let us … a cake."', j: 'make' },
+      { s: 'Guru mengingatkan PR: "Please … your homework."', j: 'do' },
+      { s: 'Kamu menyerahkan buku kepada temanmu: "I … you this book."', j: 'give' },
+      { s: 'Hujan turun. Ibu berkata: "… your umbrella."', j: 'take' },
+      { s: 'Kamu yakin dengan jawabanmu: "I … the answer."', j: 'know', juga: ['have'] },
+      { s: 'Kamu tersesat dan tidak tahu jalan: "I do not … the way."', j: 'know' },
+      { s: 'Temanmu kesulitan membawa tas berat: "Can I … you?"', j: 'help' },
+      { s: 'Kamu berterima kasih: "Thank you for your …"', j: 'help' }
     ]
   },
   {
@@ -193,6 +384,32 @@ window.BACAAN = [
       ['cold', 'dingin', 'The water is cold.', 'Air itu dingin.'],
       ['new', 'baru', 'I have new shoes.', 'Saya punya sepatu baru.'],
       ['old', 'tua, lama', 'My grandfather is old.', 'Kakekku sudah tua.']
+    ],
+    contohLain: {
+      'big': [['Our house is big.', 'Rumah kami besar.'], ['I have a big dog.', 'Saya punya anjing besar.']],
+      'small': [['My room is small.', 'Kamarku kecil.'], ['An ant is very small.', 'Semut sangat kecil.']],
+      'good': [['You are a good student.', 'Kamu siswa yang baik.'], ['This food is good.', 'Makanan ini enak.']],
+      'bad': [['That is a bad idea.', 'Itu ide yang buruk.'], ['Smoking is bad for you.', 'Merokok buruk bagimu.']],
+      'happy': [['We are happy at school.', 'Kami senang di sekolah.'], ['Happy birthday!', 'Selamat ulang tahun!']],
+      'sad': [['Why are you sad?', 'Mengapa kamu sedih?'], ['The movie is sad.', 'Film itu sedih.']],
+      'hot': [['It is hot today.', 'Hari ini panas.'], ['Be careful, the soup is hot.', 'Hati-hati, supnya panas.']],
+      'cold': [['I want cold water.', 'Saya mau air dingin.'], ['It is cold at night.', 'Malam hari dingin.']],
+      'new': [['This is my new phone.', 'Ini telepon baruku.'], ['We have a new teacher.', 'Kami punya guru baru.']],
+      'old': [['This house is very old.', 'Rumah ini sangat tua.'], ['My bag is old.', 'Tasku sudah lama.']]
+    },
+    situasi: [
+      { s: 'Gajah dibandingkan semut: gajah itu …', j: 'big' },
+      { s: 'Semut dibandingkan gajah: semut itu …', j: 'small' },
+      { s: 'Nilai ujianmu seratus. Nilai itu …', j: 'good' },
+      { s: 'Temanmu suka menolong orang lain. Dia anak yang …', j: 'good', juga: ['happy'] },
+      { s: 'Hujan badai dan petir sepanjang hari. Cuacanya …', j: 'bad', juga: ['cold'] },
+      { s: 'Kamu mendapat hadiah ulang tahun. Kamu merasa …', j: 'happy' },
+      { s: 'Kucingmu hilang. Kamu merasa …', j: 'sad' },
+      { s: 'Api terasa …', j: 'hot' },
+      { s: 'Teh yang baru diseduh dengan air mendidih itu …', j: 'hot' },
+      { s: 'Es batu terasa …', j: 'cold' },
+      { s: 'Sepatu yang baru dibeli kemarin itu …', j: 'new' },
+      { s: 'Kakek berumur delapan puluh tahun. Kakek sudah …', j: 'old' }
     ]
   },
   {
@@ -208,6 +425,32 @@ window.BACAAN = [
       ['whose', 'milik siapa', 'Whose book is this?', 'Buku siapa ini?'],
       ['how many', 'berapa banyak', 'How many brothers do you have?', 'Berapa saudara laki-laki yang kamu punya?'],
       ['how much', 'berapa (harga, jumlah)', 'How much is this shirt?', 'Berapa harga kemeja ini?']
+    ],
+    contohLain: {
+      'what': [['What is this?', 'Apa ini?'], ['What do you want?', 'Apa yang kamu inginkan?']],
+      'where': [['Where is my bag?', 'Di mana tasku?'], ['Where is the library?', 'Di mana perpustakaan?']],
+      'when': [['When do you go to school?', 'Kapan kamu pergi ke sekolah?'], ['When is the test?', 'Kapan ujiannya?']],
+      'who': [['Who is your teacher?', 'Siapa gurumu?'], ['Who is at the door?', 'Siapa yang di pintu?']],
+      'why': [['Why are you late?', 'Mengapa kamu terlambat?'], ['Why do you like cats?', 'Mengapa kamu suka kucing?']],
+      'how': [['How do you make tea?', 'Bagaimana cara kamu membuat teh?'], ['How is the weather today?', 'Bagaimana cuaca hari ini?']],
+      'which': [['Which color do you like?', 'Warna mana yang kamu suka?'], ['Which one is yours?', 'Yang mana milikmu?']],
+      'whose': [['Whose bag is this?', 'Tas siapa ini?'], ['Whose phone is ringing?', 'Telepon siapa yang berdering?']],
+      'how many': [['How many books do you have?', 'Berapa banyak buku yang kamu punya?'], ['How many students are in your class?', 'Berapa banyak siswa di kelasmu?']],
+      'how much': [['How much is the bread?', 'Berapa harga roti itu?'], ['How much water do you drink?', 'Berapa banyak air yang kamu minum?']]
+    },
+    situasi: [
+      { s: 'Kamu ingin tahu nama sebuah benda: "… is this?"', j: 'what' },
+      { s: 'Kamu ingin tahu letak toilet: "… is the toilet?"', j: 'where' },
+      { s: 'Kamu ingin tahu tanggal ulang tahun temanmu: "… is your birthday?"', j: 'when' },
+      { s: 'Kamu ingin tahu jam kedatangan kereta: "… does the train come?"', j: 'when' },
+      { s: 'Kamu ingin tahu orang yang berdiri di depan kelas: "… is that man?"', j: 'who' },
+      { s: 'Kamu ingin tahu alasan temanmu menangis: "… are you crying?"', j: 'why' },
+      { s: 'Kamu ingin tahu cara membuat layang-layang: "… do you make a kite?"', j: 'how' },
+      { s: 'Ada dua tas di meja. Kamu bertanya: "… bag is yours?"', j: 'which', juga: ['whose'] },
+      { s: 'Kamu menemukan pulpen dan ingin tahu pemiliknya: "… pen is this?"', j: 'whose', juga: ['which'] },
+      { s: 'Kamu ingin tahu jumlah saudara temanmu: "… brothers do you have?"', j: 'how many' },
+      { s: 'Kamu ingin tahu jumlah apel di keranjang: "… apples are there?"', j: 'how many' },
+      { s: 'Kamu ingin tahu harga baju di toko: "… is this shirt?"', j: 'how much' }
     ]
   },
   {
@@ -223,6 +466,32 @@ window.BACAAN = [
       ['Sunday', 'Minggu', 'We go to the market on Sunday.', 'Kami pergi ke pasar pada hari Minggu.'],
       ['week', 'minggu, pekan', 'I play football every week.', 'Saya bermain sepak bola setiap minggu.'],
       ['hour', 'jam', 'I study for one hour.', 'Saya belajar selama satu jam.']
+    ],
+    contohLain: {
+      'today': [['It is sunny today.', 'Hari ini cerah.'], ['What day is it today?', 'Hari apa hari ini?']],
+      'tomorrow': [['I will go to Bandung tomorrow.', 'Saya akan pergi ke Bandung besok.'], ['Tomorrow is Sunday.', 'Besok hari Minggu.']],
+      'yesterday': [['Yesterday was Monday.', 'Kemarin hari Senin.'], ['I visited my grandmother yesterday.', 'Saya mengunjungi nenekku kemarin.']],
+      'morning': [['I drink milk in the morning.', 'Saya minum susu pada pagi hari.'], ['The morning air is fresh.', 'Udara pagi segar.']],
+      'night': [['The stars shine at night.', 'Bintang bersinar pada malam hari.'], ['I study at night.', 'Saya belajar pada malam hari.']],
+      'Monday': [['School starts on Monday.', 'Sekolah dimulai pada hari Senin.'], ['Monday is the first school day.', 'Senin adalah hari sekolah pertama.']],
+      'Friday': [['We clean the class on Friday.', 'Kami membersihkan kelas pada hari Jumat.'], ['Friday comes after Thursday.', 'Jumat datang setelah Kamis.']],
+      'Sunday': [['Sunday is a holiday.', 'Minggu adalah hari libur.'], ['I do not go to school on Sunday.', 'Saya tidak sekolah pada hari Minggu.']],
+      'week': [['See you next week.', 'Sampai jumpa minggu depan.'], ['There are seven days in a week.', 'Ada tujuh hari dalam seminggu.']],
+      'hour': [['One hour has sixty minutes.', 'Satu jam ada enam puluh menit.'], ['I watch TV for one hour.', 'Saya menonton TV selama satu jam.']]
+    },
+    situasi: [
+      { s: 'Hari yang sedang kamu jalani sekarang.', j: 'today' },
+      { s: 'Hari sesudah hari ini.', j: 'tomorrow' },
+      { s: 'Hari sebelum hari ini.', j: 'yesterday' },
+      { s: 'Waktu matahari terbit.', j: 'morning' },
+      { s: 'Waktu kamu sarapan.', j: 'morning' },
+      { s: 'Waktu bulan dan bintang terlihat.', j: 'night' },
+      { s: 'Hari sesudah Minggu.', j: 'Monday' },
+      { s: 'Hari upacara bendera di awal pekan sekolah.', j: 'Monday' },
+      { s: 'Hari sesudah Kamis.', j: 'Friday' },
+      { s: 'Hari sesudah Sabtu.', j: 'Sunday' },
+      { s: 'Tujuh hari disebut satu …', j: 'week' },
+      { s: 'Enam puluh menit disebut satu …', j: 'hour' }
     ]
   },
   {
@@ -238,6 +507,32 @@ window.BACAAN = [
       ['water', 'air', 'Drink more water.', 'Minumlah lebih banyak air.'],
       ['milk', 'susu', 'The baby drinks milk.', 'Bayi itu minum susu.'],
       ['tea', 'teh', 'Would you like some tea?', 'Maukah kamu minum teh?']
+    ],
+    contohLain: {
+      'rice': [['Fried rice is delicious.', 'Nasi goreng enak.'], ['I eat rice with fish.', 'Saya makan nasi dengan ikan.']],
+      'bread': [['This bread is soft.', 'Roti ini lembut.'], ['I buy bread at the bakery.', 'Saya membeli roti di toko roti.']],
+      'egg': [['I eat a boiled egg.', 'Saya makan telur rebus.'], ['The hen lays an egg.', 'Ayam betina bertelur.']],
+      'chicken': [['We have chicken soup.', 'Kami makan sup ayam.'], ['The chicken is in the garden.', 'Ayam itu ada di kebun.']],
+      'fish': [['I like grilled fish.', 'Saya suka ikan bakar.'], ['Fish live in water.', 'Ikan hidup di air.']],
+      'fruit': [['Mango is my favorite fruit.', 'Mangga adalah buah kesukaanku.'], ['We buy fruit at the market.', 'Kami membeli buah di pasar.']],
+      'vegetables': [['Carrots are vegetables.', 'Wortel adalah sayuran.'], ['My mother cooks vegetables.', 'Ibuku memasak sayuran.']],
+      'water': [['The water is clean.', 'Airnya bersih.'], ['I am thirsty. I need water.', 'Saya haus. Saya butuh air.']],
+      'milk': [['I drink a glass of milk.', 'Saya minum segelas susu.'], ['Cows give us milk.', 'Sapi memberi kita susu.']],
+      'tea': [['I drink hot tea.', 'Saya minum teh panas.'], ['My grandmother likes sweet tea.', 'Nenekku suka teh manis.']]
+    },
+    situasi: [
+      { s: 'Makanan pokok orang Indonesia, dimasak dari beras.', j: 'rice' },
+      { s: 'Makanan dari tepung yang dipanggang, sering untuk sarapan.', j: 'bread' },
+      { s: 'Ayam betina menghasilkan ini.', j: 'egg' },
+      { s: 'Hewan yang berkokok di pagi hari.', j: 'chicken' },
+      { s: 'Bahan utama sate ayam.', j: 'chicken' },
+      { s: 'Hewan yang hidup dan berenang di air, bisa dimakan.', j: 'fish' },
+      { s: 'Mangga, pisang, dan jeruk termasuk …', j: 'fruit' },
+      { s: 'Wortel, bayam, dan kangkung termasuk …', j: 'vegetables' },
+      { s: 'Minuman bening yang paling sehat saat haus.', j: 'water' },
+      { s: 'Minuman putih dari sapi.', j: 'milk' },
+      { s: 'Minuman hangat dari daun yang diseduh.', j: 'tea' },
+      { s: 'Bahan utama nasi goreng.', j: 'rice' }
     ]
   },
   {
@@ -253,6 +548,32 @@ window.BACAAN = [
       ['right', 'kanan', 'The bank is on the right.', 'Bank itu ada di sebelah kanan.'],
       ['near', 'dekat', 'The shop is near here.', 'Toko itu dekat dari sini.'],
       ['far', 'jauh', 'My village is far from the city.', 'Desaku jauh dari kota.']
+    ],
+    contohLain: {
+      'home': [['Let us go home.', 'Ayo pulang.'], ['I stay at home on Sunday.', 'Saya tinggal di rumah pada hari Minggu.']],
+      'school': [['I walk to school.', 'Saya berjalan kaki ke sekolah.'], ['Our school has a big field.', 'Sekolah kami punya lapangan besar.']],
+      'market': [['The market is busy in the morning.', 'Pasar ramai pada pagi hari.'], ['We buy vegetables at the market.', 'Kami membeli sayuran di pasar.']],
+      'mosque': [['My father prays at the mosque.', 'Ayahku salat di masjid.'], ['The mosque is very beautiful.', 'Masjid itu sangat indah.']],
+      'hospital': [['Doctors work at the hospital.', 'Dokter bekerja di rumah sakit.'], ['My uncle is in the hospital.', 'Pamanku ada di rumah sakit.']],
+      'library': [['The library is quiet.', 'Perpustakaan itu tenang.'], ['I borrow books from the library.', 'Saya meminjam buku dari perpustakaan.']],
+      'left': [['Turn left here.', 'Belok kiri di sini.'], ['The school is on the left.', 'Sekolah itu ada di sebelah kiri.']],
+      'right': [['Turn right at the mosque.', 'Belok kanan di masjid.'], ['My house is on the right.', 'Rumahku ada di sebelah kanan.']],
+      'near': [['My house is near the school.', 'Rumahku dekat sekolah.'], ['Is the market near here?', 'Apakah pasar dekat dari sini?']],
+      'far': [['Is your house far?', 'Apakah rumahmu jauh?'], ['The beach is far from here.', 'Pantai jauh dari sini.']]
+    },
+    situasi: [
+      { s: 'Tempat kamu tinggal bersama keluarga.', j: 'home' },
+      { s: 'Tempat kamu belajar bersama guru dan teman.', j: 'school' },
+      { s: 'Tempat membeli sayur, ikan, dan buah.', j: 'market' },
+      { s: 'Tempat umat Islam salat berjamaah.', j: 'mosque' },
+      { s: 'Tempat orang sakit dirawat oleh dokter dan perawat.', j: 'hospital' },
+      { s: 'Tempat meminjam dan membaca buku.', j: 'library' },
+      { s: 'Lawan kata kanan.', j: 'left' },
+      { s: 'Lawan kata kiri.', j: 'right' },
+      { s: 'Kebanyakan orang menulis dengan tangan …', j: 'right' },
+      { s: 'Lawan kata jauh.', j: 'near' },
+      { s: 'Rumahmu hanya lima menit berjalan kaki dari sekolah. Rumahmu … sekolah.', j: 'near' },
+      { s: 'Perjalanan ke kota itu butuh sepuluh jam. Kota itu …', j: 'far' }
     ]
   },
   {
@@ -268,6 +589,32 @@ window.BACAAN = [
       ['at', 'di (tempat, waktu)', 'I am at home.', 'Saya ada di rumah.'],
       ['from', 'dari', 'I am from Soreang.', 'Saya dari Soreang.'],
       ['to', 'ke', 'We go to the beach.', 'Kami pergi ke pantai.']
+    ],
+    contohLain: {
+      'in': [['My book is in my bag.', 'Bukuku ada di dalam tasku.'], ['The fish are in the water.', 'Ikan-ikan ada di dalam air.']],
+      'on': [['The cat is on the bed.', 'Kucing itu ada di atas tempat tidur.'], ['Put the plate on the table.', 'Taruh piring di atas meja.']],
+      'under': [['My shoes are under the bed.', 'Sepatuku ada di bawah tempat tidur.'], ['The ball is under the table.', 'Bola itu ada di bawah meja.']],
+      'next to': [['Sit next to me.', 'Duduklah di sebelahku.'], ['The bank is next to the market.', 'Bank itu ada di sebelah pasar.']],
+      'behind': [['Who is behind you?', 'Siapa di belakangmu?'], ['The ball is behind the door.', 'Bola itu ada di belakang pintu.']],
+      'in front of': [['Stand in front of the class.', 'Berdirilah di depan kelas.'], ['There is a tree in front of my house.', 'Ada pohon di depan rumahku.']],
+      'between': [['I sit between Ani and Budi.', 'Saya duduk di antara Ani dan Budi.'], ['The cat is between the boxes.', 'Kucing itu ada di antara kotak-kotak.']],
+      'at': [['I am at school.', 'Saya ada di sekolah.'], ['We meet at the park.', 'Kami bertemu di taman.']],
+      'from': [['This letter is from my friend.', 'Surat ini dari temanku.'], ['She comes from Bandung.', 'Dia berasal dari Bandung.']],
+      'to': [['I walk to the mosque.', 'Saya berjalan ke masjid.'], ['Give this book to Rina.', 'Berikan buku ini kepada Rina.']]
+    },
+    situasi: [
+      { s: 'Buku dimasukkan ke dalam tas: "The book is … the bag."', j: 'in' },
+      { s: 'Ikan berenang di dalam akuarium: "The fish is … the tank."', j: 'in' },
+      { s: 'Gelas diletakkan di permukaan meja: "The glass is … the table."', j: 'on' },
+      { s: 'Kucing bersembunyi di kolong kursi: "The cat is … the chair."', j: 'under' },
+      { s: 'Rina duduk tepat di samping Budi: "Rina sits … Budi."', j: 'next to' },
+      { s: 'Kebun ada di bagian belakang rumah: "The garden is … the house."', j: 'behind' },
+      { s: 'Mobil diparkir di depan sekolah: "The car is … the school."', j: 'in front of' },
+      { s: 'Rumahmu terletak di antara masjid dan pasar: "My house is … the mosque and the market."', j: 'between' },
+      { s: 'Kamu sedang berada di sekolah: "I am … school."', j: 'at', juga: ['in'] },
+      { s: 'Kamu berasal dari Soreang: "I come … Soreang."', j: 'from' },
+      { s: 'Kamu berjalan menuju pasar: "I go … the market."', j: 'to' },
+      { s: 'Topi dipakai di atas kepala: "The hat is … my head."', j: 'on' }
     ]
   },
   {
@@ -283,6 +630,32 @@ window.BACAAN = [
       ['clean', 'membersihkan', 'We clean our classroom every Friday.', 'Kami membersihkan kelas setiap hari Jumat.'],
       ['watch', 'menonton', 'I watch a movie on Saturday.', 'Saya menonton film pada hari Sabtu.'],
       ['go to bed', 'pergi tidur', 'I go to bed at nine.', 'Saya tidur pukul sembilan.']
+    ],
+    contohLain: {
+      'wake up': [['I wake up at five.', 'Saya bangun pukul lima.'], ['Please wake up, it is morning.', 'Bangunlah, sudah pagi.']],
+      'take a bath': [['I take a bath in the morning.', 'Saya mandi pada pagi hari.'], ['Take a bath before dinner.', 'Mandilah sebelum makan malam.']],
+      'have breakfast': [['I have breakfast at six.', 'Saya sarapan pukul enam.'], ['Do you have breakfast every day?', 'Apakah kamu sarapan setiap hari?']],
+      'go to school': [['We go to school on foot.', 'Kami pergi ke sekolah berjalan kaki.'], ['I go to school at six thirty.', 'Saya pergi ke sekolah pukul setengah tujuh.']],
+      'study': [['Let us study together.', 'Ayo kita belajar bersama.'], ['I study math at night.', 'Saya belajar matematika pada malam hari.']],
+      'play': [['Can I play with you?', 'Boleh aku bermain denganmu?'], ['We play football after school.', 'Kami bermain sepak bola sepulang sekolah.']],
+      'cook': [['I can cook noodles.', 'Saya bisa memasak mi.'], ['My mother likes to cook.', 'Ibuku suka memasak.']],
+      'clean': [['Please clean the board.', 'Tolong bersihkan papan tulis.'], ['I clean my room on Sunday.', 'Saya membersihkan kamarku pada hari Minggu.']],
+      'watch': [['I like to watch cartoons.', 'Saya suka menonton kartun.'], ['We watch the news at night.', 'Kami menonton berita pada malam hari.']],
+      'go to bed': [['Go to bed early.', 'Tidurlah lebih awal.'], ['I go to bed after I study.', 'Saya tidur setelah belajar.']]
+    },
+    situasi: [
+      { s: 'Hal pertama yang kamu lakukan saat alarm pagi berbunyi.', j: 'wake up' },
+      { s: 'Kegiatan dengan sabun dan air di kamar mandi.', j: 'take a bath' },
+      { s: 'Makan pagi sebelum berangkat.', j: 'have breakfast' },
+      { s: 'Pukul enam pagi kamu berangkat dengan seragam dan tas.', j: 'go to school' },
+      { s: 'Membaca buku pelajaran dan mengerjakan latihan soal.', j: 'study' },
+      { s: 'Sebelum ujian, kamu … dengan sungguh-sungguh.', j: 'study' },
+      { s: 'Bersenang-senang bersama teman di lapangan, misalnya sepak bola.', j: 'play' },
+      { s: 'Ibu menggoreng ikan dan membuat sayur di dapur.', j: 'cook' },
+      { s: 'Menyapu lantai dan merapikan kamar.', j: 'clean' },
+      { s: 'Duduk di depan televisi melihat film.', j: 'watch' },
+      { s: 'Pukul sembilan malam kamu mematikan lampu kamar dan berbaring.', j: 'go to bed' },
+      { s: 'Piket kelas setiap Jumat: menyapu dan mengepel.', j: 'clean' }
     ]
   },
   {
@@ -298,6 +671,32 @@ window.BACAAN = [
       ['then', 'lalu', 'I eat breakfast, then I go to school.', 'Saya sarapan, lalu pergi ke sekolah.'],
       ['after', 'setelah', 'I play after school.', 'Saya bermain setelah sekolah.'],
       ['before', 'sebelum', 'Wash your hands before you eat.', 'Cuci tanganmu sebelum makan.']
+    ],
+    contohLain: {
+      'and': [['I have a cat and a dog.', 'Saya punya kucing dan anjing.'], ['Rina and Budi are friends.', 'Rina dan Budi berteman.']],
+      'but': [['I am tired but happy.', 'Saya lelah tetapi senang.'], ['I like cats, but my sister likes dogs.', 'Saya suka kucing, tetapi adikku suka anjing.']],
+      'or': [['Is it big or small?', 'Apakah itu besar atau kecil?'], ['You can walk or ride a bike.', 'Kamu bisa berjalan atau naik sepeda.']],
+      'because': [['I eat because I am hungry.', 'Saya makan karena saya lapar.'], ['She is happy because it is her birthday.', 'Dia senang karena hari ini ulang tahunnya.']],
+      'so': [['I was hungry, so I ate.', 'Saya lapar, jadi saya makan.'], ['It is late, so I go home.', 'Sudah larut, jadi saya pulang.']],
+      'if': [['Call me if you need help.', 'Telepon aku jika kamu butuh bantuan.'], ['If you are tired, take a rest.', 'Jika kamu lelah, beristirahatlah.']],
+      'when': [['I was happy when I won.', 'Saya senang ketika saya menang.'], ['Be quiet when the teacher speaks.', 'Tenanglah ketika guru berbicara.']],
+      'then': [['Wash your hands, then eat.', 'Cuci tanganmu, lalu makan.'], ['I take a bath, then I sleep.', 'Saya mandi, lalu saya tidur.']],
+      'after': [['I sleep after lunch.', 'Saya tidur setelah makan siang.'], ['We go home after school.', 'Kami pulang setelah sekolah.']],
+      'before': [['Pray before you eat.', 'Berdoalah sebelum makan.'], ['Brush your teeth before bed.', 'Sikat gigimu sebelum tidur.']]
+    },
+    situasi: [
+      { s: 'Menggabungkan dua hal: "I like rice … fish."', j: 'and' },
+      { s: 'Dua hal yang berlawanan: "The house is small … clean."', j: 'but', juga: ['and'] },
+      { s: 'Memberi pilihan: "Do you want milk … tea?"', j: 'or' },
+      { s: 'Memberi pilihan: "Is your bag red … blue?"', j: 'or' },
+      { s: 'Memberi alasan: "I am sad … my cat is sick."', j: 'because' },
+      { s: 'Memberi alasan: "She stays home … she is sick."', j: 'because' },
+      { s: 'Menyatakan akibat: "It is raining, … I take my umbrella."', j: 'so' },
+      { s: 'Menyatakan syarat: "… you study hard, you will pass."', j: 'if', juga: ['when'] },
+      { s: 'Menyatakan waktu kejadian: "I was sleeping … the phone rang."', j: 'when' },
+      { s: 'Urutan kegiatan: "I wake up, … I take a bath."', j: 'then' },
+      { s: 'Sepulang sekolah: "I play football … school."', j: 'after' },
+      { s: 'Sebelum tidur: "I brush my teeth … I sleep."', j: 'before' }
     ]
   },
   {
@@ -313,6 +712,33 @@ window.BACAAN = [
       ['does', 'kata bantu tanya untuk dia', 'Does she live here?', 'Apakah dia tinggal di sini?'],
       ['did', 'kata bantu lampau', 'Did you eat breakfast?', 'Apakah kamu sudah sarapan?'],
       ['is', 'adalah (untuk dia, itu)', 'She is my friend.', 'Dia temanku.']
+    ],
+    mirip: [['do', 'does', 'did'], ['can', 'may']],
+    contohLain: {
+      'can': [['Birds can fly.', 'Burung bisa terbang.'], ['I can ride a bicycle.', 'Saya bisa naik sepeda.']],
+      'cannot': [['I cannot swim.', 'Saya tidak bisa berenang.'], ['Fish cannot walk.', 'Ikan tidak bisa berjalan.']],
+      'will': [['We will go to the beach.', 'Kami akan pergi ke pantai.'], ['It will rain tomorrow.', 'Besok akan hujan.']],
+      'must': [['We must wear a uniform.', 'Kami harus memakai seragam.'], ['You must be on time.', 'Kamu harus tepat waktu.']],
+      'should': [['You should sleep early.', 'Kamu sebaiknya tidur lebih awal.'], ['We should help our friends.', 'Kita sebaiknya membantu teman kita.']],
+      'may': [['May I come in?', 'Bolehkah saya masuk?'], ['You may sit here.', 'Kamu boleh duduk di sini.']],
+      'do': [['Do you have a pen?', 'Apakah kamu punya pulpen?'], ['Do they live here?', 'Apakah mereka tinggal di sini?']],
+      'does': [['Does he like football?', 'Apakah dia suka sepak bola?'], ['Does your cat eat fish?', 'Apakah kucingmu makan ikan?']],
+      'did': [['Did you see my bag?', 'Apakah tadi kamu melihat tasku?'], ['Did she come yesterday?', 'Apakah dia datang kemarin?']],
+      'is': [['The sky is blue.', 'Langit berwarna biru.'], ['He is a doctor.', 'Dia seorang dokter.']]
+    },
+    situasi: [
+      { s: 'Kamu mampu berenang: "I … swim."', j: 'can' },
+      { s: 'Burung mampu terbang: "Birds … fly."', j: 'can' },
+      { s: 'Kamu tidak mampu terbang: "I … fly."', j: 'cannot' },
+      { s: 'Ikan tidak mampu berjalan: "Fish … walk."', j: 'cannot' },
+      { s: 'Rencanamu besok: "I … visit my grandmother tomorrow."', j: 'will' },
+      { s: 'Aturan wajib di jalan: "You … stop at the red light."', j: 'must', juga: ['should'] },
+      { s: 'Saran untuk teman yang sakit: "You … see a doctor."', j: 'should', juga: ['must', 'can'] },
+      { s: 'Minta izin dengan sopan kepada guru: "… I go to the toilet?"', j: 'may', juga: ['can'] },
+      { s: 'Bertanya tentang kebiasaan temanmu: "… you like fried rice?"', j: 'do' },
+      { s: 'Bertanya tentang kebiasaan Budi: "… Budi play football?"', j: 'does' },
+      { s: 'Bertanya tentang kejadian kemarin: "… you go to school yesterday?"', j: 'did' },
+      { s: 'Menjelaskan seseorang: "My mother … a teacher."', j: 'is' }
     ]
   },
 
