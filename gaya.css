@@ -61,22 +61,42 @@ button { cursor: pointer; border: 0; background: none; }
 .setelan select { padding: 4px 6px; border-radius: 8px; border: 1px solid var(--garis-2); background: var(--kertas); max-width: 240px; font-size: 14px; }
 
 .petunjuk { font-size: 14px; color: var(--tinta-2); margin: 10px 0; min-height: 1.5em; }
+.tautan { color: var(--biru-tua); font-weight: 700; font-size: 14px; padding: 4px 0; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- Grafik suara ---------- */
+.kotak-grafik { background: var(--gelap); border-radius: var(--r2); padding: 10px 12px 8px; margin: 0 0 12px; }
+.kotak-grafik canvas { display: block; width: 100%; height: 72px; }
+.status-grafik { color: #DCE6F2; font-size: 13px; font-weight: 700; margin-top: 4px; }
+
 .petunjuk.rekam { color: var(--merah-tua); font-weight: 700; }
 
 .teks { background: var(--kertas); border: 1px solid var(--garis); border-radius: var(--r3); box-shadow: var(--bayang);
-  padding: 20px 22px; font-size: 21px; line-height: 2; }
-.kal { border-radius: 6px; transition: background .2s; }
+  padding: 14px 16px; }
+.kal { border-radius: var(--r1); padding: 6px 8px; transition: background .2s; }
+.kal + .kal { margin-top: 4px; }
+.kal-en { font-size: 21px; line-height: 1.9; }
+.kal-id { font-size: 15px; line-height: 1.45; color: var(--tinta-2); font-style: italic; margin: 0 0 4px; }
+.arti-utuh { margin: 12px 8px 4px; padding-top: 10px; border-top: 1px dashed var(--garis-2); }
+.teks.tanpa-arti .kal-id { display: none; }
 .kal.dibaca { background: var(--emas-muda); }
 .kata { cursor: pointer; border-radius: 4px; padding: 1px 1px; }
 .kata:hover { background: var(--biru-muda); }
 .kata.aktif { background: var(--emas); color: #3A2A06; }
 .kata.benar { color: var(--hijau-tua); background: var(--hijau-muda); }
+.kata.sedang { color: #7A5A12; background: var(--emas-muda); }
 .kata.salah { color: var(--merah-tua); background: var(--merah-muda); text-decoration: underline wavy var(--merah); text-underline-offset: 4px; }
 .kata.lewat { color: var(--tinta-3); }
+/* Setelah dinilai: persentase tampil di bawah tiap kata */
+.k-skor { display: none; }
+.teks.dinilai .kata { display: inline-flex; flex-direction: column; align-items: center; vertical-align: top; line-height: 1.25; padding: 2px 3px; margin-bottom: 6px; }
+.teks.dinilai .k-skor { display: block; font-size: 11px; font-weight: 800; text-decoration: none; letter-spacing: .02em; }
+.teks.dinilai .kata.salah .k-teks { text-decoration: underline wavy var(--merah); text-underline-offset: 3px; }
+.teks.dinilai .kata.salah { text-decoration: none; }
 
 .legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: var(--tinta-2); margin: 8px 2px 0; }
 .legenda span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
 .legenda .l-benar::before { background: var(--hijau-muda); border: 1px solid var(--hijau); }
+.legenda .l-sedang::before { background: var(--emas-muda); border: 1px solid var(--emas-tua); }
 .legenda .l-salah::before { background: var(--merah-muda); border: 1px solid var(--merah); }
 .legenda .l-lewat::before { background: var(--kertas); border: 1px solid var(--tinta-3); }
 
@@ -90,16 +110,16 @@ button { cursor: pointer; border: 0; background: none; }
 .chip-daftar { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
 .chip { padding: 6px 12px; border-radius: 99px; background: var(--merah-muda); color: var(--merah-tua); font-weight: 700; border: 1px solid #F3C3C1; }
 .chip::before { content: "🔊 "; }
+.chip.sedang { background: var(--emas-muda); color: #7A5A12; border-color: #EBD48F; }
+.chip small { font-weight: 800; opacity: .8; }
 .hasil details { margin-top: 10px; font-size: 15px; color: var(--tinta-2); }
 .hasil summary { cursor: pointer; font-weight: 700; }
 .catatan { font-size: 13px; color: var(--tinta-3); }
 .pesan { margin-top: 16px; padding: 14px 18px; border-radius: var(--r2); background: var(--merah-muda); color: var(--merah-tua); }
 
-.arti { margin-top: 16px; background: var(--kertas); border: 1px solid var(--garis); border-radius: var(--r2); padding: 12px 18px; }
-.arti summary { cursor: pointer; font-weight: 700; color: var(--biru-tua); }
-.arti p { margin: 10px 0 2px; color: var(--tinta-2); }
 
 @media (max-width: 480px) {
-  .teks { padding: 16px; font-size: 19px; }
+  .teks { padding: 10px; }
+  .kal-en { font-size: 19px; }
   .tombol { flex: 1 1 auto; }
 }

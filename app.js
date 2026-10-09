@@ -1,6 +1,7 @@
 /* English Reading — dengarkan paragraf, lalu baca sendiri dan dikoreksi per kata.
    Suara: speechSynthesis (bawaan browser). Koreksi: SpeechRecognition (Chrome),
-   hasil pengenalan dicocokkan dengan teks memakai LCS per kata. */
+   hasil pengenalan dicocokkan dengan teks memakai LCS per kata. Grafik suara
+   memakai getUserMedia + AnalyserNode, terpisah dari pengenal suara. */
 (function () {
   'use strict';
 
@@ -11,6 +12,7 @@
   const android = /Android/i.test(navigator.userAgent);
   const TINGKAT = ['Dasar', 'Menengah', 'Lanjut'];
   const LAJU = [[0.6, 'Sangat pelan'], [0.75, 'Pelan'], [0.9, 'Sedang'], [1, 'Normal']];
+  const RE_KALIMAT = /[^.!?]+[.!?]+["'”’]?|[^.!?]+$/g;
 
   function baca(kunci, awal) {
     try { const v = localStorage.getItem(kunci); return v === null ? awal : JSON.parse(v); } catch (e) { return awal; }
@@ -18,7 +20,8 @@
   function tulis(kunci, nilai) {
     try { localStorage.setItem(kunci, JSON.stringify(nilai)); } catch (e) { /* abaikan */ }
   }
-  const setelan = Object.assign({ suara: '', laju: 0.9 }, baca('er_setelan', {}));
+  const setelan = Object.assign({ suara: '', laju: 0.9, arti: true, tanpaGrafik: false }, baca('er_setelan', {}));
+  const simpanSetelan = () => tulis('er_setelan', setelan);
   const skorTerbaik = baca('er_skor', {});
 
   function esc(s) {
@@ -27,6 +30,7 @@
   function norm(w) {
     return w.toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z0-9']/g, '').replace(/^'+|'+$/g, '');
   }
+  const bersihKata = w => w.replace(/[^A-Za-z0-9'’-]/g, '');
 
   // ---------- Suara (text to speech) ----------
   let suaraInggris = [];
@@ -58,9 +62,10 @@
 
   // ---------- Pemecahan teks ----------
   // Kata bertanda hubung ("single-use") dipecah dua agar cocok dengan hasil pengenal suara.
-  function pecah(teks) {
+  function pecah(teks, arti) {
     const kata = [];
-    const kalimat = (teks.match(/[^.!?]+[.!?]+["'”’]?|[^.!?]+$/g) || []).map(s => s.trim()).filter(Boolean).map((s, k) => {
+    const daftarArti = (arti.match(RE_KALIMAT) || []).map(s => s.trim()).filter(Boolean);
+    const kalimat = (teks.match(RE_KALIMAT) || []).map(s => s.trim()).filter(Boolean).map((s, k) => {
       const daftar = [];
       const re = /[^\s-]+-?|-/g;
       let m;
@@ -69,22 +74,34 @@
         if (w.norm) { w.i = kata.length; kata.push(w); }
         daftar.push(w);
       }
-      return { teks: s, kata: daftar };
+      return { teks: s, kata: daftar, arti: '' };
     });
-    return { kalimat, kata };
+    // Terjemahan per kalimat hanya bila jumlah kalimatnya sama; selain itu tampil utuh di bawah paragraf.
+    const sejajar = daftarArti.length === kalimat.length;
+    if (sejajar) kalimat.forEach((kal, k) => { kal.arti = daftarArti[k]; });
+    return { kalimat, kata, sejajar };
   }
 
   // ---------- Pencocokan bacaan ----------
   const ANGKA = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
     'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
-  function kataUcapan(transkrip) {
-    return transkrip.replace(/-/g, ' ').split(/\s+/).map(norm).filter(Boolean)
-      .map(w => (/^\d+$/.test(w) && ANGKA[+w]) ? ANGKA[+w] : w);
+  // segmen: [{ teks, yakin }] → [{ w, yakin }]; yakin 0 = tidak diketahui.
+  function kataUcapan(segmen) {
+    const hasil = [];
+    for (const s of segmen) {
+      for (let w of s.teks.replace(/-/g, ' ').split(/\s+/)) {
+        w = norm(w);
+        if (!w) continue;
+        if (/^\d+$/.test(w) && ANGKA[+w]) w = ANGKA[+w];
+        hasil.push({ w, yakin: s.yakin || 0 });
+      }
+    }
+    return hasil;
   }
   function sama(a, b) {
     return a === b || a.replace(/'/g, '') === b.replace(/'/g, '');
   }
-  // LCS: tandai kata teks mana yang muncul berurutan di ucapan.
+  // LCS: untuk tiap kata teks, indeks kata ucapan pasangannya (-1 bila tidak ada).
   function cocokkan(target, ucap) {
     const n = target.length, m = ucap.length;
     const dp = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
@@ -93,18 +110,50 @@
         dp[i][j] = sama(target[i], ucap[j]) ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
       }
     }
-    const hasil = new Array(n).fill(false);
+    const pasangan = new Array(n).fill(-1);
     let i = 0, j = 0;
     while (i < n && j < m) {
-      if (sama(target[i], ucap[j]) && dp[i][j] === dp[i + 1][j + 1] + 1) { hasil[i] = true; i++; j++; }
+      if (sama(target[i], ucap[j]) && dp[i][j] === dp[i + 1][j + 1] + 1) { pasangan[i] = j; i++; j++; }
       else if (dp[i + 1][j] >= dp[i][j + 1]) i++;
       else j++;
     }
-    return hasil;
+    return pasangan;
+  }
+  function kemiripan(a, b) {
+    a = a.replace(/'/g, ''); b = b.replace(/'/g, '');
+    if (!a || !b) return 0;
+    let lalu = Array.from({ length: b.length + 1 }, (_, j) => j);
+    for (let i = 1; i <= a.length; i++) {
+      const kini = [i];
+      for (let j = 1; j <= b.length; j++) {
+        kini[j] = Math.min(lalu[j] + 1, kini[j - 1] + 1, lalu[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      }
+      lalu = kini;
+    }
+    return 1 - lalu[b.length] / Math.max(a.length, b.length);
+  }
+  // Perkiraan akurasi per kata (0–100), null = belum dibaca.
+  // Kata yang dikenali: keyakinan pengenal suara (paling rendah 60).
+  // Kata yang tidak dikenali: kemiripan dengan kata yang terdengar di celah yang sama (paling tinggi 84).
+  function nilaiKata(target, ucap, pasangan) {
+    const akhir = pasangan.reduce((a, j, i) => (j >= 0 ? i : a), -1);
+    return target.map((t, i) => {
+      if (pasangan[i] >= 0) {
+        const y = ucap[pasangan[i]].yakin;
+        return y > 0 ? Math.max(60, Math.round(y * 100)) : 100;
+      }
+      if (i > akhir) return null;
+      let kiri = -1, kanan = ucap.length;
+      for (let x = i - 1; x >= 0; x--) if (pasangan[x] >= 0) { kiri = pasangan[x]; break; }
+      for (let x = i + 1; x < target.length; x++) if (pasangan[x] >= 0) { kanan = pasangan[x]; break; }
+      let terbaik = 0;
+      for (let j = kiri + 1; j < kanan; j++) terbaik = Math.max(terbaik, kemiripan(t, ucap[j].w));
+      return Math.min(84, Math.round(terbaik * 100));
+    });
   }
 
   // ---------- Keadaan halaman baca ----------
-  let kini = null;            // { b, kalimat, kata, pilihK }
+  let kini = null;            // { b, kalimat, kata, pilihK, sejajar }
   const putar = { token: 0 };
   let kataAktif = null;
   let rekam = null;           // { aktif, rec, sesiLalu, sesiIni, galat }
@@ -162,7 +211,7 @@
     if (!bisaSuara) return;
     hentikanSuara();
     const token = putar.token;
-    const u = ucapan(teks.replace(/[^A-Za-z0-9'’-]/g, ''), Math.min(setelan.laju, 0.8));
+    const u = ucapan(bersihKata(teks), Math.min(setelan.laju, 0.8));
     if (w) sorotKata(w);
     u.onend = () => { if (token === putar.token) sorotKata(null); };
     speechSynthesis.speak(u);
@@ -174,12 +223,94 @@
     if (p) p.textContent = k > 0 ? `▶ Dengarkan dari kalimat ${k + 1}` : '▶ Dengarkan';
   }
 
+  // ---------- Grafik suara ----------
+  let grafik = null;          // { stream, ac, an, buf, raf, level, waktu }
+  const warna = {};
+
+  function statusGrafik(teks) {
+    const el = $('#status-grafik');
+    if (el) el.textContent = teks;
+  }
+
+  async function mulaiGrafik() {
+    const kotak = $('#kotak-grafik');
+    kotak.hidden = false;
+    statusGrafik('Menyiapkan mikrofon…');
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (setelan.tanpaGrafik || !AC || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      statusGrafik('Grafik suara tidak tersedia di perangkat ini.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      const ac = new AC();
+      if (ac.state === 'suspended') ac.resume().catch(() => {});
+      const an = ac.createAnalyser();
+      an.fftSize = 1024;
+      ac.createMediaStreamSource(stream).connect(an);
+      const css = getComputedStyle(document.documentElement);
+      warna.suara = css.getPropertyValue('--biru').trim();
+      warna.pelan = css.getPropertyValue('--garis-2').trim();
+      grafik = { stream, ac, an, buf: new Float32Array(an.fftSize), raf: 0, level: [], waktu: 0 };
+      langkahGrafik();
+    } catch (e) {
+      statusGrafik('Grafik suara tidak bisa dinyalakan; koreksi tetap berjalan.');
+    }
+  }
+  function langkahGrafik(t) {
+    if (!grafik) return;
+    grafik.raf = requestAnimationFrame(langkahGrafik);
+    if (t && t - grafik.waktu < 50) return;
+    grafik.waktu = t || 0;
+    grafik.an.getFloatTimeDomainData(grafik.buf);
+    let jumlah = 0;
+    for (const v of grafik.buf) jumlah += v * v;
+    const rms = Math.sqrt(jumlah / grafik.buf.length);
+    grafik.level.push(Math.min(1, Math.sqrt(rms) * 2.2));
+    if (grafik.level.length > 600) grafik.level.shift();
+    gambarGrafik(grafik.level);
+    const baru = grafik.level.slice(-30);
+    const puncak = Math.max(...baru);
+    statusGrafik(puncak >= 0.35 ? '🎙️ Suara tertangkap dengan baik'
+      : puncak >= 0.15 ? '🔉 Suara agak pelan, bacalah lebih keras' : '… Belum ada suara');
+  }
+  function gambarGrafik(level) {
+    const cv = $('#grafik');
+    if (!cv) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    const g = cv.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, w, h);
+    const lebar = 4;
+    const data = level.slice(-Math.floor(w / lebar));
+    data.forEach((v, i) => {
+      const tinggi = Math.max(2, v * h * 0.95);
+      g.fillStyle = v >= 0.15 ? warna.suara : warna.pelan;
+      g.fillRect(w - (data.length - i) * lebar, (h - tinggi) / 2, lebar - 1, tinggi);
+    });
+  }
+  // Grafik terakhir dibiarkan tampil (beku) sebagai catatan bacaan.
+  function hentikanGrafik() {
+    if (!grafik) return;
+    cancelAnimationFrame(grafik.raf);
+    grafik.stream.getTracks().forEach(t => t.stop());
+    grafik.ac.close().catch(() => {});
+    grafik = null;
+  }
+
   // ---------- Koreksi bacaan ----------
   function bersihkanKoreksi() {
     if (!kini) return;
-    kini.kata.forEach(w => w.el.classList.remove('benar', 'salah', 'lewat'));
+    kini.kata.forEach(w => {
+      w.el.classList.remove('benar', 'sedang', 'salah', 'lewat');
+      w.el.querySelector('.k-skor').textContent = '';
+    });
+    $('#teks').classList.remove('dinilai');
     $('#hasil').innerHTML = '';
     $('#legenda').hidden = true;
+    $('#kotak-grafik').hidden = true;
   }
   function tombolRekam(aktif) {
     const t = $('#t-rekam');
@@ -198,15 +329,19 @@
     }
   }
 
-  function mulaiRekam() {
+  async function mulaiRekam() {
     if (!SR) {
       $('#hasil').innerHTML = '<div class="pesan">Koreksi bacaan membutuhkan pengenal suara. Gunakan <b>Google Chrome</b> (Android atau komputer) atau Safari terbaru, dan pastikan tersambung ke internet.</div>';
       return;
     }
     hentikanSuara();
     bersihkanKoreksi();
-    rekam = { aktif: true, rec: null, sesiLalu: [], sesiIni: '', galat: '' };
+    const r = { aktif: true, rec: null, sesiLalu: [], sesiIni: [], galat: '' };
+    rekam = r;
     tombolRekam(true);
+    await mulaiGrafik();
+    if (rekam !== r) { hentikanGrafik(); return; }
+    if (!r.aktif) { selesaiRekam(); return; }
     jalankanPengenal();
   }
 
@@ -220,22 +355,35 @@
     r.interimResults = true;
     r.maxAlternatives = 1;
     rekam.rec = r;
-    rekam.sesiIni = '';
+    rekam.sesiIni = [];
     r.onresult = e => {
       if (!rekam || rekam.rec !== r) return;
-      let t = '';
-      for (let i = 0; i < e.results.length; i++) t += ' ' + e.results[i][0].transcript;
-      rekam.sesiIni = t;
+      const seg = [];
+      for (let i = 0; i < e.results.length; i++) {
+        const h = e.results[i];
+        seg.push({ teks: h[0].transcript, yakin: h.isFinal ? h[0].confidence : 0 });
+      }
+      rekam.sesiIni = seg;
       tandaiLangsung();
     };
     r.onerror = e => {
       if (!rekam || rekam.rec !== r) return;
-      if (e.error !== 'no-speech' && e.error !== 'aborted') rekam.galat = e.error;
+      if (e.error === 'no-speech' || e.error === 'aborted') return;
+      // Sebagian HP tidak bisa memakai mikrofon untuk grafik dan pengenal suara sekaligus:
+      // matikan grafik (dan ingat), lalu pengenal dinyalakan ulang di onend.
+      if (e.error === 'audio-capture' && grafik) {
+        hentikanGrafik();
+        setelan.tanpaGrafik = true;
+        simpanSetelan();
+        statusGrafik('Grafik suara dimatikan agar mikrofon bisa dipakai pengenal suara.');
+        return;
+      }
+      rekam.galat = e.error;
     };
     r.onend = () => {
       if (!rekam || rekam.rec !== r) return;
-      if (rekam.sesiIni.trim()) rekam.sesiLalu.push(rekam.sesiIni);
-      rekam.sesiIni = '';
+      rekam.sesiLalu.push(...rekam.sesiIni);
+      rekam.sesiIni = [];
       if (rekam.aktif && !rekam.galat) {
         try { jalankanPengenal(); return; } catch (err) { rekam.galat = 'gagal-mulai'; }
       }
@@ -244,25 +392,25 @@
     try { r.start(); } catch (err) { rekam.galat = 'gagal-mulai'; selesaiRekam(); }
   }
 
-  function transkrip(r) {
-    return (r.sesiLalu.join(' ') + ' ' + r.sesiIni).replace(/\s+/g, ' ').trim();
-  }
+  const segmenRekam = r => r.sesiLalu.concat(r.sesiIni);
 
   function tandaiLangsung() {
-    const cocok = cocokkan(kini.kata.map(w => w.norm), kataUcapan(transkrip(rekam)));
-    kini.kata.forEach((w, i) => w.el.classList.toggle('benar', cocok[i]));
+    const pasangan = cocokkan(kini.kata.map(w => w.norm), kataUcapan(segmenRekam(rekam)).map(x => x.w));
+    kini.kata.forEach((w, i) => w.el.classList.toggle('benar', pasangan[i] >= 0));
   }
 
   function hentikanRekam() {
     if (!rekam) return;
     rekam.aktif = false;
+    if (!rekam.rec) return;   // grafik masih disiapkan; mulaiRekam yang menutup
     try { rekam.rec.stop(); } catch (e) { selesaiRekam(); }
   }
   function batalkanRekam() {
+    hentikanGrafik();
     if (!rekam) return;
     const r = rekam;
     rekam = null;
-    try { r.rec.abort(); } catch (e) { /* abaikan */ }
+    try { if (r.rec) r.rec.abort(); } catch (e) { /* abaikan */ }
     tombolRekam(false);
   }
 
@@ -275,38 +423,47 @@
     'gagal-mulai': 'Pengenal suara gagal dinyalakan. Muat ulang halaman, lalu coba lagi.'
   };
 
+  const kelasNilai = n => (n >= 85 ? 'benar' : n >= 60 ? 'sedang' : 'salah');
+
   function selesaiRekam() {
     if (!rekam) return;
     const r = rekam;
     rekam = null;
+    hentikanGrafik();
+    statusGrafik('Rekaman suara bacaanmu');
     tombolRekam(false);
     const hasilEl = $('#hasil');
-    const teksUcap = transkrip(r);
-    const ucap = kataUcapan(teksUcap);
+    const segmen = segmenRekam(r);
+    const teksUcap = segmen.map(s => s.teks).join(' ').replace(/\s+/g, ' ').trim();
+    const ucap = kataUcapan(segmen);
     if (!ucap.length) {
       kini.kata.forEach(w => w.el.classList.remove('benar'));
       hasilEl.innerHTML = `<div class="pesan">${esc(PESAN_GALAT[r.galat] || (r.galat ? 'Pengenal suara berhenti (' + r.galat + '). Coba lagi.' : 'Tidak ada suara yang terdengar. Dekatkan mikrofon dan bacalah lebih keras.'))}</div>`;
       return;
     }
 
-    const cocok = cocokkan(kini.kata.map(w => w.norm), ucap);
-    const akhir = cocok.lastIndexOf(true);
-    // Kata setelah kata terakhir yang dikenali dianggap belum dibaca, bukan salah.
-    const dibaca = akhir + 1;
-    let benar = 0;
-    const salah = [];
+    const target = kini.kata.map(w => w.norm);
+    const pasangan = cocokkan(target, ucap.map(x => x.w));
+    const nilai = nilaiKata(target, ucap, pasangan);
+    let tepat = 0, dibaca = 0, jumlah = 0;
+    const latih = [];
     kini.kata.forEach((w, i) => {
-      const ok = cocok[i];
-      const lewat = !ok && i > akhir;
-      w.el.classList.toggle('benar', ok);
-      w.el.classList.toggle('salah', !ok && !lewat);
-      w.el.classList.toggle('lewat', lewat);
-      if (ok) benar++;
-      else if (!lewat && !salah.some(x => x.norm === w.norm)) salah.push(w);
+      const n = nilai[i];
+      w.el.classList.remove('benar', 'sedang', 'salah', 'lewat');
+      w.el.classList.add(n == null ? 'lewat' : kelasNilai(n));
+      w.el.querySelector('.k-skor').textContent = n == null ? '' : n + '%';
+      if (n == null) return;
+      dibaca++;
+      jumlah += n;
+      if (pasangan[i] >= 0) tepat++;
+      if (n < 85 && !latih.some(x => x.w.norm === w.norm)) latih.push({ w, n });
     });
+    latih.sort((a, b) => a.n - b.n);
+    $('#teks').classList.add('dinilai');
+
     const total = kini.kata.length;
     const sisa = total - dibaca;
-    const persen = dibaca ? Math.round(benar * 100 / dibaca) : 0;
+    const persen = dibaca ? Math.round(jumlah / dibaca) : 0;
     // Skor terbaik hanya dicatat bila paragraf dibaca (hampir) sampai akhir.
     const lengkap = sisa <= Math.max(2, Math.round(total * 0.05));
     let rekor = false;
@@ -320,15 +477,16 @@
 
     $('#legenda').hidden = false;
     hasilEl.innerHTML = `<div class="hasil">
-      <h2>Hasil bacaan</h2>
+      <h2>Akurasi pelafalan</h2>
       <div class="skor ${kelas}"><b>${persen}%</b><span>${pujian}</span></div>
-      <p>${benar} dari ${dibaca} kata yang kamu baca terdengar tepat.${sisa > 0 ? ` <b>${sisa} kata di akhir belum dibaca.</b>` : ''}${rekor ? ' 🏅 Skor terbaik baru!' : ''}</p>
-      ${salah.length ? `<p>Latih kata berikut (ketuk untuk mendengar):</p>
-        <div class="chip-daftar">${salah.map(w => `<button class="chip" data-ucap="${esc(w.asli)}">${esc(w.asli.replace(/[^A-Za-z0-9'’-]/g, ''))}</button>`).join('')}</div>`
+      <p>${tepat} dari ${dibaca} kata yang kamu baca dikenali dengan tepat.${sisa > 0 ? ` <b>${sisa} kata di akhir belum dibaca.</b>` : ''}${rekor ? ' 🏅 Skor terbaik baru!' : ''}</p>
+      ${latih.length ? `<p>Latih kata berikut (ketuk untuk mendengar):</p>
+        <div class="chip-daftar">${latih.map(x => `<button class="chip ${kelasNilai(x.n)}" data-ucap="${esc(x.w.asli)}">${esc(bersihKata(x.w.asli))} <small>${x.n}%</small></button>`).join('')}</div>`
         : (dibaca ? '<p>Semua kata yang kamu baca terdengar tepat. 👏</p>' : '')}
       <details><summary>Yang terdengar oleh aplikasi</summary><p>${esc(teksUcap)}</p></details>
-      <p class="catatan">Koreksi memakai pengenal suara otomatis. Kata merah berarti tidak dikenali sebagai kata yang benar,
-        bisa karena pelafalan, membaca terlalu cepat, atau suara kurang jelas. Dengarkan contohnya lalu coba lagi.</p>
+      <p class="catatan">Angka di bawah tiap kata adalah perkiraan dari pengenal suara otomatis: kata yang dikenali memakai
+        tingkat keyakinan pengenal, kata yang tidak dikenali memakai kemiripan dengan kata yang terdengar. Belum menilai tekanan
+        dan intonasi. Dengarkan contohnya lalu coba lagi.</p>
     </div>`;
   }
 
@@ -350,15 +508,21 @@
       (bisaSuara ? '' : '<div class="pesan">Browser ini tidak bisa membacakan teks. Gunakan Google Chrome versi terbaru.</div>');
   }
 
+  function terapkanArti() {
+    $('#teks').classList.toggle('tanpa-arti', !setelan.arti);
+    $('#t-arti').textContent = setelan.arti ? 'Sembunyikan terjemahan' : 'Tampilkan terjemahan';
+  }
+
   function tampilBaca(b) {
-    const p = pecah(b.teks);
-    kini = { b, kalimat: p.kalimat, kata: p.kata, pilihK: 0 };
-    const teksHTML = p.kalimat.map((kal, k) => `<span class="kal" data-k="${k}">` +
+    const p = pecah(b.teks, b.arti);
+    kini = { b, kalimat: p.kalimat, kata: p.kata, pilihK: 0, sejajar: p.sejajar };
+    const teksHTML = p.kalimat.map((kal, k) => `<div class="kal" data-k="${k}"><div class="kal-en">` +
       kal.kata.map((w, j) => {
-        const isi = w.i >= 0 ? `<span class="kata" data-w="${w.i}">${esc(w.asli)}</span>` : esc(w.asli);
+        const isi = w.i >= 0 ? `<span class="kata" data-w="${w.i}"><span class="k-teks">${esc(w.asli)}</span><span class="k-skor"></span></span>` : esc(w.asli);
         const jeda = j < kal.kata.length - 1 && !w.asli.endsWith('-') ? ' ' : '';
         return isi + jeda;
-      }).join('') + '</span>').join(' ');
+      }).join('') + `</div>${kal.arti ? `<div class="kal-id">${esc(kal.arti)}</div>` : ''}</div>`).join('') +
+      (p.sejajar ? '' : `<div class="kal-id arti-utuh">${esc(b.arti)}</div>`);
 
     layar.innerHTML = `
       <div class="bar-atas"><a href="#" class="kembali">← Daftar bacaan</a><span class="label-tingkat">${esc(b.tingkat)}</span></div>
@@ -371,23 +535,29 @@
       <div class="setelan">
         <label>Kecepatan <select id="pilih-laju">${LAJU.map(([v, t]) => `<option value="${v}"${v === setelan.laju ? ' selected' : ''}>${t}</option>`).join('')}</select></label>
         <label>Suara <select id="pilih-suara"></select></label>
+        <button id="t-arti" class="tautan"></button>
       </div>
       <p class="petunjuk" id="petunjuk">Ketuk sebuah kata untuk mendengar cara membacanya.</p>
+      <div class="kotak-grafik" id="kotak-grafik" hidden>
+        <canvas id="grafik" aria-label="Grafik suara yang tertangkap mikrofon"></canvas>
+        <div class="status-grafik" id="status-grafik"></div>
+      </div>
       <div class="teks" id="teks">${teksHTML}</div>
-      <div class="legenda" id="legenda" hidden><span class="l-benar">tepat</span><span class="l-salah">perlu dilatih</span><span class="l-lewat">belum dibaca</span></div>
-      <div id="hasil"></div>
-      <details class="arti"><summary>Terjemahan (Bahasa Indonesia)</summary><p>${esc(b.arti)}</p></details>`;
+      <div class="legenda" id="legenda" hidden><span class="l-benar">≥ 85% baik</span><span class="l-sedang">60–84% cukup</span><span class="l-salah">&lt; 60% perlu dilatih</span><span class="l-lewat">belum dibaca</span></div>
+      <div id="hasil"></div>`;
 
     p.kalimat.forEach((kal, k) => { kal.el = layar.querySelector(`.kal[data-k="${k}"]`); });
     p.kata.forEach(w => { w.el = layar.querySelector(`.kata[data-w="${w.i}"]`); });
     if (bisaSuara) isiPilihSuara($('#pilih-suara'));
     else $('#pilih-suara').closest('label').hidden = true;
+    terapkanArti();
 
     $('#t-putar').onclick = () => mulaiPutar(kini.pilihK);
     $('#t-henti').onclick = hentikanSuara;
     $('#t-rekam').onclick = () => (rekam ? hentikanRekam() : mulaiRekam());
-    $('#pilih-laju').onchange = e => { setelan.laju = +e.target.value; tulis('er_setelan', setelan); };
-    $('#pilih-suara').onchange = e => { setelan.suara = e.target.value; tulis('er_setelan', setelan); };
+    $('#t-arti').onclick = () => { setelan.arti = !setelan.arti; simpanSetelan(); terapkanArti(); };
+    $('#pilih-laju').onchange = e => { setelan.laju = +e.target.value; simpanSetelan(); };
+    $('#pilih-suara').onchange = e => { setelan.suara = e.target.value; simpanSetelan(); };
     $('#teks').onclick = e => {
       const el = e.target.closest('.kata');
       if (!el || rekam) return;
