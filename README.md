@@ -70,6 +70,11 @@ Skor terbaik disimpan di perangkat (`er_paham`).
 
 ## Latihan bertahap (sub level kosakata)
 
+**Syarat membaca dulu (9 Okt 2026):** di semua level yang punya latihan bertahap, sub level 1 baru
+terbuka setelah teks level itu dibaca dengan Baca & Koreksi sampai selesai dengan akurasi ≥ 75%
+(`SYARAT_BACA` di `app.js`). Dikecualikan: browser tanpa pengenal suara, level yang sudah tuntas
+sebelumnya, dan siswa yang sudah mulai mengerjakan sub level sebelum aturan ini.
+
 Percontohan di **Greetings** (9 Okt 2026), lalu dipasang di ke-17 kelompok kosakata Tahap 0.
 Aktif otomatis di level kosakata yang punya `situasi` di `bacaan.js`.
 

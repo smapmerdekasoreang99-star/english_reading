@@ -283,3 +283,4 @@ a.sub-kartu:hover { border-color: var(--biru); }
 .lt-ubin-kal { flex-direction: column; align-items: stretch; }
 .lt-ubin-kal .lt-kata { text-align: left; font-size: 16px; font-weight: 700; line-height: 1.4; padding: 8px 12px; }
 .lt-urutan { margin: 6px 0 0; padding-left: 22px; font-weight: 700; }
+.sub-syarat { margin: 4px 0 12px; padding: 10px 14px; border-radius: var(--r2); background: var(--emas-muda); border: 1px solid #EBD48F; color: #5E4610; font-size: 15px; }
