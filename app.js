@@ -9,7 +9,14 @@
   const layar = $('#layar');
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const bisaSuara = 'speechSynthesis' in window;
-  const android = /Android/i.test(navigator.userAgent);
+  const ua = navigator.userAgent;
+  const android = /Android/i.test(ua);
+  const ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  // Browser di dalam aplikasi (WA, IG, FB, TikTok, WebView Android); di iOS tanpa token "Safari/".
+  const dalamAplikasi = /FBAN|FBAV|FB_IAB|Instagram|WhatsApp|Line\/|MicroMessenger|TikTok|musical_ly|Snapchat|Twitter|; wv\)/i.test(ua) ||
+    (ios && !/Safari\//.test(ua));
+  const brave = !!navigator.brave;
+  const browserSaran = ios ? 'Safari' : 'Google Chrome';
   const TINGKAT = ['Dasar', 'Menengah', 'Lanjut'];
   const LAJU = [[0.6, 'Sangat pelan'], [0.75, 'Pelan'], [0.9, 'Sedang'], [1, 'Normal']];
   const RE_KALIMAT = /[^.!?]+[.!?]+["'”’]?|[^.!?]+$/g;
@@ -331,7 +338,7 @@
 
   async function mulaiRekam() {
     if (!SR) {
-      $('#hasil').innerHTML = '<div class="pesan">Koreksi bacaan membutuhkan pengenal suara. Gunakan <b>Google Chrome</b> (Android atau komputer) atau Safari terbaru, dan pastikan tersambung ke internet.</div>';
+      $('#hasil').innerHTML = `<div class="pesan">Koreksi bacaan membutuhkan pengenal suara. Buka tautan ini di <b>${browserSaran}</b> dan pastikan tersambung ke internet.</div>`;
       return;
     }
     hentikanSuara();
@@ -416,7 +423,9 @@
 
   const PESAN_GALAT = {
     'not-allowed': 'Izin mikrofon ditolak. Izinkan mikrofon untuk halaman ini (ikon gembok di samping alamat), lalu coba lagi.',
-    'service-not-allowed': 'Pengenal suara tidak diizinkan di browser ini. Gunakan Google Chrome.',
+    'service-not-allowed': ios
+      ? 'Pengenal suara tidak aktif. Di iPhone: Pengaturan → Umum → Papan Ketik → nyalakan Aktifkan Dikte, lalu buka halaman ini di Safari.'
+      : 'Pengenal suara tidak diizinkan di browser ini. Gunakan Google Chrome.',
     'audio-capture': 'Mikrofon tidak ditemukan. Periksa mikrofon atau headset.',
     'network': 'Pengenal suara membutuhkan internet. Periksa sambungan (atau matikan VPN), lalu coba lagi.',
     'language-not-supported': 'Bahasa Inggris tidak didukung pengenal suara di perangkat ini.',
@@ -488,6 +497,61 @@
         tingkat keyakinan pengenal, kata yang tidak dikenali memakai kemiripan dengan kata yang terdengar. Belum menilai tekanan
         dan intonasi. Dengarkan contohnya lalu coba lagi.</p>
     </div>`;
+  }
+
+  // ---------- Saran browser ----------
+  // Tampil di atas halaman bila koreksi suara tidak akan berjalan di browser ini.
+  function saranBrowser() {
+    let judul, isi;
+    if (dalamAplikasi) {
+      judul = 'Buka di ' + browserSaran + ' agar koreksi suara berjalan';
+      isi = ios
+        ? 'Halaman ini terbuka di dalam aplikasi (WA, IG, dll.). Ketuk ikon <b>⋯</b> atau <b>Bagikan</b>, lalu pilih <b>Buka di Safari</b>. Bisa juga salin tautan lalu tempel di Safari.'
+        : 'Halaman ini terbuka di dalam aplikasi (WA, IG, dll.). Ketuk <b>⋮</b> di pojok kanan atas, lalu pilih <b>Buka di Chrome</b> atau <b>Buka di browser</b>.';
+    } else if (brave) {
+      judul = 'Brave memblokir pengenal suara';
+      isi = 'Fitur Dengarkan tetap bisa dipakai, tetapi Baca &amp; Koreksi tidak berjalan di Brave. Buka tautan ini di <b>' + browserSaran + '</b>.';
+    } else if (!SR) {
+      judul = 'Browser ini belum mendukung koreksi suara';
+      isi = 'Fitur Dengarkan tetap bisa dipakai. Untuk Baca &amp; Koreksi, buka tautan ini di <b>' + browserSaran + '</b>.';
+    } else return;
+    try { if (sessionStorage.getItem('er_tutup_saran')) return; } catch (e) { /* abaikan */ }
+
+    const url = location.origin + location.pathname;
+    const el = document.createElement('div');
+    el.className = 'saran-browser';
+    el.setAttribute('role', 'note');
+    el.innerHTML = `<b class="saran-judul">⚠️ ${judul}</b><p>${isi}</p><div class="saran-tombol">
+      ${android && dalamAplikasi ? `<a class="tombol kecil utama" href="intent://${location.host}${location.pathname}#Intent;scheme=https;package=com.android.chrome;end">Buka di Chrome</a>` : ''}
+      <button class="tombol kecil" data-aksi="salin">📋 Salin tautan</button>
+      <button class="tombol kecil" data-aksi="tutup">Tutup</button></div>`;
+    el.onclick = e => {
+      const a = e.target.closest('[data-aksi]');
+      if (!a) return;
+      if (a.dataset.aksi === 'tutup') {
+        el.remove();
+        try { sessionStorage.setItem('er_tutup_saran', '1'); } catch (er) { /* abaikan */ }
+      } else {
+        salinTeks(url).then(ok => { a.textContent = ok ? '✓ Tautan tersalin' : url; });
+      }
+    };
+    layar.before(el);
+  }
+  function salinTeks(t) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(t).then(() => true, () => salinLama(t));
+    return Promise.resolve(salinLama(t));
+  }
+  function salinLama(t) {
+    const ta = document.createElement('textarea');
+    ta.value = t;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { /* abaikan */ }
+    ta.remove();
+    return ok;
   }
 
   // ---------- Tampilan ----------
@@ -581,6 +645,7 @@
     window.scrollTo(0, 0);
   }
   window.addEventListener('hashchange', rute);
+  saranBrowser();
   // Chrome kadang tetap bersuara setelah halaman ditinggalkan.
   window.addEventListener('pagehide', () => { if (bisaSuara) speechSynthesis.cancel(); });
   rute();

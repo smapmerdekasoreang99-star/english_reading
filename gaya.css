@@ -123,3 +123,12 @@ button { cursor: pointer; border: 0; background: none; }
   .kal-en { font-size: 19px; }
   .tombol { flex: 1 1 auto; }
 }
+
+/* ---------- Saran browser ---------- */
+.saran-browser { max-width: 728px; margin: 12px max(16px, calc((100% - 728px) / 2)) 0; padding: 12px 16px; border-radius: var(--r2);
+  background: var(--emas-muda); border: 1px solid #EBD48F; color: #5E4610; font-size: 15px; }
+.saran-judul { display: block; font-size: 16px; }
+.saran-browser p { margin: 4px 0 10px; }
+.saran-tombol { display: flex; flex-wrap: wrap; gap: 8px; }
+.tombol.kecil { min-height: 40px; padding: 6px 14px; font-size: 16px; text-decoration: none; color: inherit; }
+.tombol.kecil.utama { color: #3A2A06; }
