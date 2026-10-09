@@ -279,3 +279,7 @@ a.sub-kartu:hover { border-color: var(--biru); }
 .hasil .kendali { margin-top: 12px; }
 .hasil .kendali .tombol { text-decoration: none; color: inherit; }
 .hasil .kendali .tombol.utama { color: #3A2A06; }
+.lt-kalimat { margin: 8px 0; font-size: 22px; font-weight: 700; line-height: 1.45; color: var(--gelap); }
+.lt-ubin-kal { flex-direction: column; align-items: stretch; }
+.lt-ubin-kal .lt-kata { text-align: left; font-size: 16px; font-weight: 700; line-height: 1.4; padding: 8px 12px; }
+.lt-urutan { margin: 6px 0 0; padding-left: 22px; font-weight: 700; }
