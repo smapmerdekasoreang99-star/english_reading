@@ -27,7 +27,8 @@
   function tulis(kunci, nilai) {
     try { localStorage.setItem(kunci, JSON.stringify(nilai)); } catch (e) { /* abaikan */ }
   }
-  const setelan = Object.assign({ suara: '', laju: 0.9, arti: true, tanpaGrafik: false }, baca('er_setelan', {}));
+  const setelan = Object.assign({ suara: '', laju: 0.9, tampilArti: false, tanpaGrafik: false }, baca('er_setelan', {}));
+  delete setelan.arti;          // pengaturan lama (terjemahan tampil); diganti tampilArti
   const simpanSetelan = () => tulis('er_setelan', setelan);
   const skorTerbaik = baca('er_skor', {});
 
@@ -697,8 +698,8 @@
   }
 
   function terapkanArti() {
-    $('#teks').classList.toggle('tanpa-arti', !setelan.arti);
-    $('#t-arti').textContent = setelan.arti ? 'Sembunyikan terjemahan' : 'Tampilkan terjemahan';
+    $('#teks').classList.toggle('tanpa-arti', !setelan.tampilArti);
+    $('#t-arti').textContent = setelan.tampilArti ? 'Sembunyikan terjemahan' : 'Tampilkan terjemahan';
   }
 
   function tampilBaca(b) {
@@ -744,7 +745,7 @@
     $('#t-putar').onclick = () => mulaiPutar(kini.pilihK);
     $('#t-henti').onclick = hentikanSuara;
     $('#t-rekam').onclick = () => (rekam ? hentikanRekam() : mulaiRekam());
-    $('#t-arti').onclick = () => { setelan.arti = !setelan.arti; simpanSetelan(); terapkanArti(); };
+    $('#t-arti').onclick = () => { setelan.tampilArti = !setelan.tampilArti; simpanSetelan(); terapkanArti(); };
     $('#pilih-laju').onchange = e => { setelan.laju = +e.target.value; simpanSetelan(); };
     $('#pilih-suara').onchange = e => { setelan.suara = e.target.value; simpanSetelan(); };
     $('#teks').onclick = e => {
