@@ -1,6 +1,7 @@
 /* English Reading — dengarkan paragraf, lalu baca sendiri dan dikoreksi per kata.
    Suara: speechSynthesis (bawaan browser). Koreksi: SpeechRecognition (Chrome),
-   hasil pengenalan dicocokkan dengan teks memakai LCS per kata. Grafik suara
+   hasil pengenalan dicocokkan dengan teks per kata (penyelarasan lokal berulang,
+   sehingga kalimat sebelumnya boleh dibaca ulang). Grafik suara
    memakai getUserMedia + AnalyserNode, terpisah dari pengenal suara. */
 (function () {
   'use strict';
@@ -30,7 +31,8 @@
   const setelan = Object.assign({ suara: '', laju: 0.9, tampilArti: false, tanpaGrafik: false }, baca('er_setelan', {}));
   delete setelan.arti;          // pengaturan lama (terjemahan tampil); diganti tampilArti
   const simpanSetelan = () => tulis('er_setelan', setelan);
-  const skorTerbaik = baca('er_skor', {});
+  const skorTerbaik = baca('er_skor', {});   // pelafalan terbaik per level
+  const skorPaham = baca('er_paham', {});     // soal pemahaman terbaik per level
 
   function esc(s) {
     return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -117,21 +119,48 @@
   }
   // Frasa → kata-kata ternormalisasi dipisah spasi ("Good morning" → "good morning").
   const normFrasa = teks => kataUcapan([{ teks }]).map(x => x.w).join(' ');
-  // LCS: untuk tiap kata teks, indeks kata ucapan pasangannya (-1 bila tidak ada).
+  // Penyelarasan lokal berulang (Smith-Waterman): untuk tiap kata teks, indeks kata ucapan
+  // pasangannya (-1 bila tidak ada). Putaran pertama menemukan bacaan utama; sisa ucapan lalu
+  // diselaraskan lagi ke bagian mana pun, sehingga siswa boleh kembali membaca ulang kalimat
+  // sebelumnya (mis. sudah di kalimat 6, lalu mengulang kalimat 2). Putaran berikutnya baru
+  // diterima bila paling sedikit dua kata berurutan cocok, agar kata lepas tidak salah tempat.
   function cocokkan(target, ucap) {
-    const n = target.length, m = ucap.length;
-    const dp = Array.from({ length: n + 1 }, () => new Uint16Array(m + 1));
-    for (let i = n - 1; i >= 0; i--) {
-      for (let j = m - 1; j >= 0; j--) {
-        dp[i][j] = sama(target[i], ucap[j]) ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
-      }
-    }
+    const n = target.length;
     const pasangan = new Array(n).fill(-1);
-    let i = 0, j = 0;
-    while (i < n && j < m) {
-      if (sama(target[i], ucap[j]) && dp[i][j] === dp[i + 1][j + 1] + 1) { pasangan[i] = j; i++; j++; }
-      else if (dp[i + 1][j] >= dp[i][j + 1]) i++;
-      else j++;
+    const kt = target.map(kanon), ku = ucap.map(kanon);   // sama() tanpa regex di tiap sel
+    const terpakai = new Uint8Array(ucap.length);
+    for (let putaran = 0; putaran < 12; putaran++) {
+      const idx = [];
+      for (let j = 0; j < ucap.length; j++) if (!terpakai[j]) idx.push(j);
+      const m = idx.length, lebar = m + 1;
+      if (!m || !n) break;
+      const H = new Int32Array((n + 1) * lebar);
+      let terbaik = 0, bi = 0, bj = 0;
+      for (let i = 1; i <= n; i++) {
+        for (let j = 1; j <= m; j++) {
+          const v = Math.max(0,
+            H[(i - 1) * lebar + j - 1] + (kt[i - 1] === ku[idx[j - 1]] ? 2 : -1),
+            H[(i - 1) * lebar + j] - 1,
+            H[i * lebar + j - 1] - 1);
+          H[i * lebar + j] = v;
+          if (v > terbaik) { terbaik = v; bi = i; bj = j; }
+        }
+      }
+      if (terbaik < (putaran ? 4 : 2)) break;
+      // Bila skornya sama, kata teks yang dilewati ditaruh sedekat mungkin ke akhir agar
+      // pasangan menempel ke kalimat yang sedang dibaca. Kata ucapan sisipan (tidak
+      // berpasangan) tidak dipakai: bisa jadi itu bacaan ulang untuk putaran berikutnya.
+      let i = bi, j = bj;
+      while (i > 0 && j > 0 && H[i * lebar + j] > 0) {
+        const v = H[i * lebar + j], cocok = kt[i - 1] === ku[idx[j - 1]];
+        const diag = H[(i - 1) * lebar + j - 1];
+        if (v === H[(i - 1) * lebar + j] - 1) i--;
+        else if (v === diag + (cocok ? 2 : -1)) {
+          if (cocok && pasangan[i - 1] < 0) pasangan[i - 1] = idx[j - 1];
+          terpakai[idx[j - 1]] = 1;
+          i--; j--;
+        } else j--;
+      }
     }
     return pasangan;
   }
@@ -446,15 +475,119 @@
     'gagal-mulai': 'Pengenal suara gagal dinyalakan. Muat ulang halaman, lalu coba lagi.'
   };
 
-  // Ajakan naik level setelah membaca utuh dengan skor tuntas.
-  function lanjutHTML(persen, lengkap) {
-    const p = posisiLevel(kini.b);
-    if (!lengkap) return '<p class="lanjut">Baca paragraf sampai akhir agar skormu tercatat.</p>';
-    if (persen < TUNTAS) return `<p class="lanjut">Capai ${TUNTAS}% untuk menuntaskan level ini. Latih kata di atas, lalu coba lagi.</p>`;
-    if (!p.sesudah) return '<p class="lanjut">🏆 Kamu sudah sampai level terakhir. Hebat!</p>';
-    const naik = p.sesudah.tahap !== kini.b.tahap;
-    return `<p class="lanjut">${naik ? `🎉 Tahap ${kini.b.tahap} selesai! ` : ''}Level ini tuntas.</p>
-      <a class="tombol utama" href="#baca/${encodeURIComponent(p.sesudah.id)}">Lanjut: ${labelLevel(p.sesudah)} →</a>`;
+  // Syarat tuntas: kosakata & pola = pelafalan; bacaan Tahap 1–2 = pelafalan + pemahaman;
+  // bacaan Tahap 3–4 = pemahaman saja (fokus TKA), pelafalan menjadi latihan tambahan.
+  const soalDari = b => (window.SOAL && window.SOAL[b.id]) || null;
+  function syaratLevel(b) {
+    const paham = !!soalDari(b);
+    return { ucap: !paham || b.tahap <= 2, paham };
+  }
+  function tuntas(b) {
+    const s = syaratLevel(b);
+    return (!s.ucap || skorTerbaik[b.id] >= TUNTAS) && (!s.paham || skorPaham[b.id] >= TUNTAS);
+  }
+
+  // Status level: tombol lanjut bila tuntas, atau syarat yang belum terpenuhi.
+  function statusLevelHTML() {
+    const b = kini.b;
+    const p = posisiLevel(b);
+    if (tuntas(b)) {
+      if (!p.sesudah) return '<p class="lanjut">🏆 Kamu sudah sampai level terakhir. Hebat!</p>';
+      const naik = p.sesudah.tahap !== b.tahap;
+      return `<p class="lanjut">${naik ? `🎉 Tahap ${b.tahap} selesai! ` : ''}Level ini tuntas.</p>
+        <a class="tombol utama" href="#baca/${encodeURIComponent(p.sesudah.id)}">Lanjut: ${labelLevel(p.sesudah)} →</a>`;
+    }
+    const s = syaratLevel(b);
+    const kurang = [];
+    if (s.ucap && !(skorTerbaik[b.id] >= TUNTAS)) {
+      kurang.push(`🎤 pelafalan ≥ ${TUNTAS}%${skorTerbaik[b.id] != null ? ` (terbaikmu ${skorTerbaik[b.id]}%)` : ''}`);
+    }
+    if (s.paham && !(skorPaham[b.id] >= TUNTAS)) {
+      kurang.push(`📝 soal pemahaman ≥ ${TUNTAS}%${skorPaham[b.id] != null ? ` (terbaikmu ${skorPaham[b.id]}%)` : ''}`);
+    }
+    return `<p class="lanjut">Untuk menuntaskan level ini: ${kurang.join(' dan ')}.</p>`;
+  }
+
+  // ---------- Soal pemahaman ----------
+  // Urutan pilihan diacak tiap kali ditampilkan agar posisi jawaban tidak bisa ditebak.
+  function acak(n) {
+    const a = Array.from({ length: n }, (_, i) => i);
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+  function soalHTML(b) {
+    const daftar = soalDari(b);
+    if (!daftar) return '';
+    kini.urutan = daftar.map(q => acak(q.p.length));
+    const s = syaratLevel(b);
+    return `<section class="paham" id="paham">
+      <h2>📝 Soal pemahaman</h2>
+      <p class="petunjuk">Jawab berdasarkan bacaan di atas.${s.ucap ? '' : ' Di tahap ini yang dinilai untuk naik level adalah pemahaman; membaca keras tetap bagus untuk latihan.'}
+        ${skorPaham[b.id] != null ? ` Skor terbaikmu: <b>${skorPaham[b.id]}%</b>.` : ''}</p>
+      <ol class="soal-daftar">${daftar.map((q, i) => `<li class="soal" data-i="${i}">
+        <p class="soal-teks">${esc(q.t)}</p>
+        <div class="pilihan">${kini.urutan[i].map((asli, posisi) => `<label class="opsi">
+          <input type="radio" name="s${i}" value="${asli}"><span class="opsi-huruf">${'ABCDE'[posisi]}</span><span>${esc(q.p[asli])}</span></label>`).join('')}</div>
+        <div class="bahas" hidden></div></li>`).join('')}</ol>
+      <div class="paham-aksi"><button class="tombol utama" id="t-periksa">Periksa jawaban</button></div>
+      <div id="hasil-paham"></div>
+    </section>`;
+  }
+  function pasangSoal() {
+    const t = $('#t-periksa');
+    if (t) t.onclick = periksaSoal;
+  }
+  function periksaSoal() {
+    const b = kini.b;
+    const daftar = soalDari(b);
+    const el = $('#paham');
+    const jawab = daftar.map((q, i) => {
+      const r = el.querySelector(`input[name="s${i}"]:checked`);
+      return r ? +r.value : -1;
+    });
+    const kosong = jawab.filter(j => j < 0).length;
+    if (kosong) {
+      $('#hasil-paham').innerHTML = `<p class="pesan">Masih ada ${kosong} soal yang belum dijawab.</p>`;
+      return;
+    }
+    let benar = 0;
+    daftar.forEach((q, i) => {
+      const li = el.querySelector(`.soal[data-i="${i}"]`);
+      const ok = jawab[i] === q.j;
+      if (ok) benar++;
+      li.classList.add(ok ? 'soal-benar' : 'soal-salah');
+      li.querySelectorAll('.opsi').forEach(o => {
+        const input = o.querySelector('input');
+        const v = +input.value;
+        o.classList.toggle('opsi-kunci', v === q.j);
+        o.classList.toggle('opsi-keliru', v === jawab[i] && !ok);
+        input.disabled = true;
+      });
+      const hurufKunci = 'ABCDE'[kini.urutan[i].indexOf(q.j)];
+      const bh = li.querySelector('.bahas');
+      bh.hidden = false;
+      bh.innerHTML = `<b>${ok ? '✓ Benar.' : `✗ Kurang tepat. Jawaban: ${hurufKunci}.`}</b> ${esc(q.b)}`;
+    });
+    const persen = Math.round(benar * 100 / daftar.length);
+    let rekor = false;
+    if (skorPaham[b.id] == null || persen > skorPaham[b.id]) {
+      skorPaham[b.id] = persen;
+      tulis('er_paham', skorPaham);
+      rekor = true;
+    }
+    const kelas = persen >= 85 ? 'baik' : persen >= 60 ? 'sedang' : 'kurang';
+    $('#t-periksa').hidden = true;
+    $('#hasil-paham').innerHTML = `<div class="hasil">
+      <h2>Hasil pemahaman</h2>
+      <div class="skor ${kelas}"><b>${persen}%</b><span>${benar} dari ${daftar.length} soal benar${rekor ? ' · 🏅 skor terbaik baru' : ''}</span></div>
+      ${statusLevelHTML()}
+      <button class="tombol" id="t-ulang-soal">↻ Ulangi soal</button>
+    </div>`;
+    $('#t-ulang-soal').onclick = () => {
+      el.outerHTML = soalHTML(b);
+      pasangSoal();
+      $('#paham').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
   }
 
   const kelasNilai = n => (n >= 85 ? 'benar' : n >= 60 ? 'sedang' : 'salah');
@@ -668,7 +801,7 @@
           norm: x.w.norm, kata: bersihKata(x.w.asli), label: x.n + '%', kelas: kelasNilai(x.n)
         })).join('')}</div>`
         : (dibaca ? '<p>Semua kata yang kamu baca terdengar tepat. 👏</p>' : '')}
-      ${lanjutHTML(persen, lengkap)}
+      ${lengkap ? statusLevelHTML() : '<p class="lanjut">Baca sampai akhir agar skormu tercatat.</p>'}
       <details><summary>Yang terdengar oleh aplikasi</summary><p>${esc(teksUcap)}</p></details>
       <p class="catatan">Angka di bawah tiap kata adalah perkiraan dari pengenal suara otomatis: kata yang dikenali memakai
         tingkat keyakinan pengenal, kata yang tidak dikenali memakai kemiripan dengan kata yang terdengar. Belum menilai tekanan
@@ -750,21 +883,22 @@
       window.TAHAP.map(t => {
         const isi = window.BACAAN.filter(b => b.tahap === t.no);
         if (!isi.length) return '';
-        const tuntas = isi.filter(b => skorTerbaik[b.id] >= TUNTAS).length;
-        return `<section class="tahap${tuntas === isi.length ? ' selesai' : ''}">
+        const jumlahTuntas = isi.filter(tuntas).length;
+        return `<section class="tahap${jumlahTuntas === isi.length ? ' selesai' : ''}">
           <div class="tahap-kepala"><span class="tahap-no">${t.no}</span>
             <div><h2>${esc(t.nama)}</h2><span class="tahap-setara">${esc(t.setara)}</span></div>
-            <span class="tahap-progres">${tuntas}/${isi.length} tuntas</span></div>
+            <span class="tahap-progres">${jumlahTuntas}/${isi.length} tuntas</span></div>
           <p class="tahap-fokus">${esc(t.fokus)}</p>
           <div class="daftar">${isi.map((b, i) => {
             const s = skorTerbaik[b.id];
             const jenis = jenisLevel(b);
             const ukuran = b.kosakata ? `${b.kosakata.length} kata · ${esc(b.kelompok)}` : `${(b.teks.match(/\S+/g) || []).length} kata`;
-            const ok = s >= TUNTAS;
+            const ok = tuntas(b);
+            const sp = skorPaham[b.id];
             return `<a class="kartu${ok ? ' tuntas' : ''}" href="#baca/${encodeURIComponent(b.id)}">
               <span class="kartu-level">${ok ? '✓' : i + 1}</span>
               <span class="kartu-isi"><span class="kartu-judul">${esc(b.judul)}</span>
-              <span class="kartu-info"><span class="jenis jenis-${jenis.kunci}">${jenis.nama}</span> Level ${i + 1} · ${ukuran}${s != null ? ` · skor terbaik <b>${s}%</b>` : ''}</span></span></a>`;
+              <span class="kartu-info"><span class="jenis jenis-${jenis.kunci}">${jenis.nama}</span> Level ${i + 1} · ${ukuran}${s != null ? ` · 🎤 <b>${s}%</b>` : ''}${sp != null ? ` · 📝 <b>${sp}%</b>` : ''}${soalDari(b) && sp == null ? ` · ${soalDari(b).length} soal` : ''}</span></span></a>`;
           }).join('')}</div></section>`;
       }).join('') +
       (bisaSuara ? '' : '<div class="pesan">Browser ini tidak bisa membacakan teks. Gunakan Google Chrome versi terbaru.</div>');
@@ -854,6 +988,7 @@
       <div class="teks${b.kosakata ? ' mode-kosakata' : ''}" id="teks">${teksHTML}</div>
       <div class="legenda" id="legenda" hidden><span class="l-benar">≥ 85% baik</span><span class="l-sedang">60–84% cukup</span><span class="l-salah">&lt; 60% perlu dilatih</span><span class="l-lewat">belum dibaca</span></div>
       <div id="hasil"></div>
+      ${soalHTML(b)}
       <nav class="nav-level">${navLevel(b)}</nav>`;
 
     p.kalimat.forEach((kal, k) => { kal.el = layar.querySelector(`.kal[data-k="${k}"]`); });
@@ -876,6 +1011,7 @@
       ucapKata(w.asli, w);
     };
     $('#hasil').onclick = klikLatih;
+    pasangSoal();
   }
 
   function rute() {

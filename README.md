@@ -7,7 +7,8 @@ tanpa database dan tanpa login.
 |---|---|
 | `index.html` | Halaman aplikasi |
 | `bacaan.js` | Peta 5 tahap (TAHAP) dan daftar bacaan per tahap; urutan di daftar = urutan level. Tambah bacaan di sini |
-| `app.js` | Pemutar suara dan koreksi bacaan |
+| `soal.js` | Soal pemahaman per bacaan (pertanyaan, pilihan, kunci, pembahasan) |
+| `app.js` | Pemutar suara, koreksi bacaan, soal pemahaman, ulang kosakata |
 | `gaya.css` | Tampilan (palet sama dengan Matdas / Petualangan) |
 
 ## Cara kerja
@@ -23,6 +24,9 @@ tanpa database dan tanpa login.
    hijau = tepat, merah = perlu dilatih, abu-abu = belum dibaca. Skor = kata
    tepat ÷ kata yang dibaca. Skor terbaik disimpan di perangkat (localStorage)
    bila paragraf dibaca sampai akhir.
+   Siswa boleh kembali membaca ulang kalimat sebelumnya (mis. sudah di kalimat 6,
+   lalu mengulang kalimat 2): sisa ucapan diselaraskan lagi ke bagian mana pun di
+   paragraf, asal paling sedikit dua kata berurutan cocok.
 
 Koreksi ini menilai apakah kata **dikenali** sebagai kata yang benar, bukan
 penilaian fonetik rinci (tekanan, intonasi).
@@ -49,3 +53,15 @@ Mikrofon tidak diizinkan dari `file://`. Jalankan server lokal, misalnya
   utuh, atau saat kata di bacaan bernilai < 60%. Diucapkan ≥ 85% saat jatuh tempo → naik
   kotak (diulang lagi 1, 2, 4, 7, 14 hari); belum tepat → kotak 1, diulang besok.
   Disimpan di perangkat (`localStorage`, kunci `er_dek`).
+
+## Soal pemahaman dan syarat tuntas
+
+Tiap level *Bacaan* punya soal pilihan ganda di `soal.js` (3 soal Tahap 1, 4 soal
+Tahap 2–3, 5 soal Tahap 4 gaya TKA). Urutan pilihan diacak tiap kali tampil.
+Skor terbaik disimpan di perangkat (`er_paham`).
+
+| Jenis level | Syarat tuntas (≥ 80%) |
+|---|---|
+| Kosakata, pola kalimat | pelafalan |
+| Bacaan Tahap 1–2 | pelafalan **dan** pemahaman |
+| Bacaan Tahap 3–4 | pemahaman (pelafalan sebagai latihan) |

@@ -200,3 +200,29 @@ button { cursor: pointer; border: 0; background: none; }
 .info-ulang { margin: 12px 0 0; font-size: 14px; color: var(--tinta-2); }
 .latih-contoh { flex-basis: 100%; font-size: 14px; color: var(--tinta-2); font-style: italic; }
 .latih-dek { display: block; margin: 2px 0 0 !important; color: var(--biru-tua) !important; font-weight: 700; }
+
+/* ---------- Soal pemahaman ---------- */
+.paham { margin-top: 22px; background: var(--kertas); border: 1px solid var(--garis); border-radius: var(--r3); box-shadow: var(--bayang); padding: 18px 20px; }
+.paham h2 { font-size: 22px; color: var(--gelap); }
+.soal-daftar { margin: 10px 0 0; padding-left: 22px; }
+.soal { margin: 0 0 18px; }
+.soal::marker { font-weight: 800; color: var(--tinta-2); }
+.soal-teks { margin: 0 0 8px; font-weight: 700; color: var(--gelap); }
+.pilihan { display: grid; gap: 6px; }
+.opsi { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; border: 1.5px solid var(--garis-2); border-radius: var(--r1); cursor: pointer; background: #FBFCFE; }
+.opsi:hover { border-color: var(--biru); }
+.opsi input { position: absolute; opacity: 0; pointer-events: none; }
+.opsi-huruf { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 14px;
+  background: var(--biru-muda); color: var(--biru-tua); }
+.opsi:has(input:checked) { border-color: var(--biru); background: var(--biru-muda); }
+.opsi:has(input:checked) .opsi-huruf { background: var(--biru); color: #fff; }
+.opsi:has(input:focus-visible) { outline: 3px solid var(--emas); outline-offset: 1px; }
+.opsi:has(input:disabled) { cursor: default; }
+.paham .opsi.opsi-kunci { border-color: var(--hijau); background: var(--hijau-muda); }
+.paham .opsi.opsi-kunci .opsi-huruf { background: var(--hijau); color: #fff; }
+.paham .opsi.opsi-keliru { border-color: var(--merah); background: var(--merah-muda); }
+.paham .opsi.opsi-keliru .opsi-huruf { background: var(--merah); color: #fff; }
+.bahas { margin-top: 8px; padding: 8px 12px; border-radius: var(--r1); font-size: 14px; background: var(--emas-muda); color: #5E4610; }
+.soal-benar .bahas { background: var(--hijau-muda); color: var(--hijau-tua); }
+.paham-aksi { margin-top: 6px; }
+.paham .hasil { box-shadow: none; }
