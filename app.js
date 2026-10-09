@@ -17,7 +17,7 @@
     (ios && !/Safari\//.test(ua));
   const brave = !!navigator.brave;
   const browserSaran = ios ? 'Safari' : 'Google Chrome';
-  const TINGKAT = ['Dasar', 'Menengah', 'Lanjut'];
+  const TUNTAS = 80;           // skor terbaik minimal agar satu level dianggap tuntas
   const LAJU = [[0.6, 'Sangat pelan'], [0.75, 'Pelan'], [0.9, 'Sedang'], [1, 'Normal']];
   const RE_KALIMAT = /[^.!?]+[.!?]+["'”’]?|[^.!?]+$/g;
 
@@ -72,7 +72,9 @@
   function pecah(teks, arti) {
     const kata = [];
     const daftarArti = (arti.match(RE_KALIMAT) || []).map(s => s.trim()).filter(Boolean);
-    const kalimat = (teks.match(RE_KALIMAT) || []).map(s => s.trim()).filter(Boolean).map((s, k) => {
+    // Baris kosong sebelum kalimat = awal paragraf baru.
+    const mentah = (teks.match(RE_KALIMAT) || []).filter(x => x.trim());
+    const kalimat = mentah.map(x => x.trim()).map((s, k) => {
       const daftar = [];
       const re = /[^\s-]+-?|-/g;
       let m;
@@ -81,7 +83,7 @@
         if (w.norm) { w.i = kata.length; kata.push(w); }
         daftar.push(w);
       }
-      return { teks: s, kata: daftar, arti: '' };
+      return { teks: s, kata: daftar, arti: '', paragrafBaru: k > 0 && /^\s*\n\s*\n/.test(mentah[k]) };
     });
     // Terjemahan per kalimat hanya bila jumlah kalimatnya sama; selain itu tampil utuh di bawah paragraf.
     const sejajar = daftarArti.length === kalimat.length;
@@ -433,6 +435,17 @@
     'gagal-mulai': 'Pengenal suara gagal dinyalakan. Muat ulang halaman, lalu coba lagi.'
   };
 
+  // Ajakan naik level setelah membaca utuh dengan skor tuntas.
+  function lanjutHTML(persen, lengkap) {
+    const p = posisiLevel(kini.b);
+    if (!lengkap) return '<p class="lanjut">Baca paragraf sampai akhir agar skormu tercatat.</p>';
+    if (persen < TUNTAS) return `<p class="lanjut">Capai ${TUNTAS}% untuk menuntaskan level ini. Latih kata di atas, lalu coba lagi.</p>`;
+    if (!p.sesudah) return '<p class="lanjut">🏆 Kamu sudah sampai level terakhir. Hebat!</p>';
+    const naik = p.sesudah.tahap !== kini.b.tahap;
+    return `<p class="lanjut">${naik ? `🎉 Tahap ${kini.b.tahap} selesai! ` : ''}Level ini tuntas.</p>
+      <a class="tombol utama" href="#baca/${encodeURIComponent(p.sesudah.id)}">Lanjut: ${labelLevel(p.sesudah)} →</a>`;
+  }
+
   const kelasNilai = n => (n >= 85 ? 'benar' : n >= 60 ? 'sedang' : 'salah');
 
   // ---------- Latihan ulang per kata ----------
@@ -576,6 +589,7 @@
           <span class="latih-baru"></span>
         </div>`).join('')}</div>`
         : (dibaca ? '<p>Semua kata yang kamu baca terdengar tepat. 👏</p>' : '')}
+      ${lanjutHTML(persen, lengkap)}
       <details><summary>Yang terdengar oleh aplikasi</summary><p>${esc(teksUcap)}</p></details>
       <p class="catatan">Angka di bawah tiap kata adalah perkiraan dari pengenal suara otomatis: kata yang dikenali memakai
         tingkat keyakinan pengenal, kata yang tidak dikenali memakai kemiripan dengan kata yang terdengar. Belum menilai tekanan
@@ -639,21 +653,47 @@
   }
 
   // ---------- Tampilan ----------
+  // Level = urutan bacaan di dalam tahapnya.
+  function posisiLevel(b) {
+    const isi = window.BACAAN.filter(x => x.tahap === b.tahap);
+    const i = isi.indexOf(b);
+    const semua = window.BACAAN;
+    const j = semua.indexOf(b);
+    return { level: i + 1, jumlah: isi.length, sebelum: semua[j - 1] || null, sesudah: semua[j + 1] || null };
+  }
+  const labelLevel = b => `Tahap ${b.tahap} · Level ${posisiLevel(b).level}`;
+
   function tampilDaftar() {
     kini = null;
     layar.innerHTML = `<header class="judul-app"><h1>📖 English Reading</h1>
-        <p>Dengarkan bacaan, lalu baca sendiri dan lihat koreksinya.</p></header>` +
-      TINGKAT.map(t => {
-        const isi = window.BACAAN.filter(b => b.tingkat === t);
+        <p>Dengarkan bacaan, lalu baca sendiri dan lihat koreksinya. Mulai dari tahap yang sesuai, tuntaskan tiap level
+          (skor terbaik ≥ ${TUNTAS}%), lalu naik ke tahap berikutnya.</p></header>` +
+      window.TAHAP.map(t => {
+        const isi = window.BACAAN.filter(b => b.tahap === t.no);
         if (!isi.length) return '';
-        return `<section class="kelompok"><h2>${t}</h2><div class="daftar">${isi.map(b => {
-          const nKata = (b.teks.match(/\S+/g) || []).length;
-          const s = skorTerbaik[b.id];
-          return `<a class="kartu" href="#baca/${encodeURIComponent(b.id)}"><span class="kartu-judul">${esc(b.judul)}</span>
-            <span class="kartu-info">${nKata} kata${s != null ? ` · skor terbaik <b>${s}%</b>` : ''}</span></a>`;
-        }).join('')}</div></section>`;
+        const tuntas = isi.filter(b => skorTerbaik[b.id] >= TUNTAS).length;
+        return `<section class="tahap${tuntas === isi.length ? ' selesai' : ''}">
+          <div class="tahap-kepala"><span class="tahap-no">${t.no}</span>
+            <div><h2>${esc(t.nama)}</h2><span class="tahap-setara">${esc(t.setara)}</span></div>
+            <span class="tahap-progres">${tuntas}/${isi.length} tuntas</span></div>
+          <p class="tahap-fokus">${esc(t.fokus)}</p>
+          <div class="daftar">${isi.map((b, i) => {
+            const nKata = (b.teks.match(/\S+/g) || []).length;
+            const s = skorTerbaik[b.id];
+            const ok = s >= TUNTAS;
+            return `<a class="kartu${ok ? ' tuntas' : ''}" href="#baca/${encodeURIComponent(b.id)}">
+              <span class="kartu-level">${ok ? '✓' : i + 1}</span>
+              <span class="kartu-isi"><span class="kartu-judul">${esc(b.judul)}</span>
+              <span class="kartu-info">Level ${i + 1} · ${nKata} kata${s != null ? ` · skor terbaik <b>${s}%</b>` : ''}</span></span></a>`;
+          }).join('')}</div></section>`;
       }).join('') +
       (bisaSuara ? '' : '<div class="pesan">Browser ini tidak bisa membacakan teks. Gunakan Google Chrome versi terbaru.</div>');
+  }
+
+  function navLevel(b) {
+    const p = posisiLevel(b);
+    return (p.sebelum ? `<a href="#baca/${encodeURIComponent(p.sebelum.id)}">← ${labelLevel(p.sebelum)}</a>` : '<span></span>') +
+      (p.sesudah ? `<a href="#baca/${encodeURIComponent(p.sesudah.id)}">${labelLevel(p.sesudah)} →</a>` : '<span></span>');
   }
 
   function terapkanArti() {
@@ -664,7 +704,7 @@
   function tampilBaca(b) {
     const p = pecah(b.teks, b.arti);
     kini = { b, kalimat: p.kalimat, kata: p.kata, pilihK: 0, sejajar: p.sejajar };
-    const teksHTML = p.kalimat.map((kal, k) => `<div class="kal" data-k="${k}"><div class="kal-en">` +
+    const teksHTML = p.kalimat.map((kal, k) => `<div class="kal${kal.paragrafBaru ? ' paragraf-baru' : ''}" data-k="${k}"><div class="kal-en">` +
       kal.kata.map((w, j) => {
         const isi = w.i >= 0 ? `<span class="kata" data-w="${w.i}"><span class="k-teks">${esc(w.asli)}</span><span class="k-skor"></span></span>` : esc(w.asli);
         const jeda = j < kal.kata.length - 1 && !w.asli.endsWith('-') ? ' ' : '';
@@ -673,7 +713,7 @@
       (p.sejajar ? '' : `<div class="kal-id arti-utuh">${esc(b.arti)}</div>`);
 
     layar.innerHTML = `
-      <div class="bar-atas"><a href="#" class="kembali">← Daftar bacaan</a><span class="label-tingkat">${esc(b.tingkat)}</span></div>
+      <div class="bar-atas"><a href="#" class="kembali">← Daftar bacaan</a><span class="label-tingkat">${labelLevel(b)}</span></div>
       <h1 class="judul-bacaan">${esc(b.judul)}</h1>
       <div class="kendali">
         <button id="t-putar" class="tombol utama"${bisaSuara ? '' : ' disabled'}>▶ Dengarkan</button>
@@ -690,9 +730,10 @@
         <canvas id="grafik" aria-label="Grafik suara yang tertangkap mikrofon"></canvas>
         <div class="status-grafik" id="status-grafik"></div>
       </div>
-      <div class="teks" id="teks">${teksHTML}</div>
+      <div class="teks${b.tahap === 0 ? ' mode-kata' : ''}" id="teks">${teksHTML}</div>
       <div class="legenda" id="legenda" hidden><span class="l-benar">≥ 85% baik</span><span class="l-sedang">60–84% cukup</span><span class="l-salah">&lt; 60% perlu dilatih</span><span class="l-lewat">belum dibaca</span></div>
-      <div id="hasil"></div>`;
+      <div id="hasil"></div>
+      <nav class="nav-level">${navLevel(b)}</nav>`;
 
     p.kalimat.forEach((kal, k) => { kal.el = layar.querySelector(`.kal[data-k="${k}"]`); });
     p.kata.forEach(w => { w.el = layar.querySelector(`.kata[data-w="${w.i}"]`); });

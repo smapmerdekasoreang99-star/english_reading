@@ -142,3 +142,34 @@ button { cursor: pointer; border: 0; background: none; }
 .saran-tombol { display: flex; flex-wrap: wrap; gap: 8px; }
 .tombol.kecil { min-height: 40px; padding: 6px 14px; font-size: 16px; text-decoration: none; color: inherit; }
 .tombol.kecil.utama { color: #3A2A06; }
+
+/* ---------- Peta tahap ---------- */
+.tahap { margin-top: 22px; }
+.tahap-kepala { display: flex; align-items: center; gap: 12px; }
+.tahap-no { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--gelap); color: var(--emas); font-family: var(--huruf-judul); font-weight: 800; font-size: 22px; }
+.tahap.selesai .tahap-no { background: var(--hijau); color: #fff; }
+.tahap-kepala h2 { font-size: 21px; color: var(--gelap); }
+.tahap-setara { font-size: 13px; color: var(--tinta-2); font-weight: 700; }
+.tahap-progres { margin-left: auto; font-size: 13px; font-weight: 800; color: var(--tinta-2); white-space: nowrap; }
+.tahap.selesai .tahap-progres { color: var(--hijau-tua); }
+.tahap-fokus { margin: 6px 0 10px 56px; font-size: 14px; color: var(--tinta-2); }
+.kartu { flex-direction: row; align-items: center; gap: 14px; }
+.kartu-isi { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kartu-level { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--biru-muda); color: var(--biru-tua); font-weight: 800; }
+.kartu.tuntas .kartu-level { background: var(--hijau); color: #fff; }
+@media (max-width: 480px) { .tahap-fokus { margin-left: 0; } }
+
+/* Tahap 0: kata dan frasa tampil sebagai kartu */
+.teks.mode-kata { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.mode-kata .kal { border: 1px solid var(--garis); text-align: center; padding: 10px 6px; }
+.mode-kata .kal + .kal { margin-top: 0; }
+.mode-kata .kal-en { font-size: 24px; line-height: 1.5; }
+
+.kal.paragraf-baru { margin-top: 18px; }
+
+.lanjut { font-weight: 700; color: var(--gelap); }
+.hasil > .tombol.utama { text-decoration: none; margin: 4px 0 6px; }
+.nav-level { display: flex; justify-content: space-between; gap: 12px; margin-top: 20px; font-weight: 700; }
+.nav-level a { color: var(--biru-tua); text-decoration: none; }

@@ -6,7 +6,7 @@ tanpa database dan tanpa login.
 | Berkas | Isi |
 |---|---|
 | `index.html` | Halaman aplikasi |
-| `bacaan.js` | Daftar bacaan (judul, tingkat, teks, terjemahan). Tambah bacaan di sini |
+| `bacaan.js` | Peta 5 tahap (TAHAP) dan daftar bacaan per tahap; urutan di daftar = urutan level. Tambah bacaan di sini |
 | `app.js` | Pemutar suara dan koreksi bacaan |
 | `gaya.css` | Tampilan (palet sama dengan Matdas / Petualangan) |
 
