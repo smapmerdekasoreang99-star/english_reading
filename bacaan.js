@@ -5,6 +5,9 @@
    Tiga jenis level: kosakata (daftar [kata, arti, contoh, arti contoh]),
    pola kalimat (pola + catatan + teks), dan bacaan (teks).
 
+   Kosakata boleh diberi contohLain ({ kata: [[kalimat, arti], ...] }) dan situasi
+   ([{ s, j, juga }]) untuk Latihan bertahap 5 sub level; lihat README dan contoh Greetings.
+
    Menambah bacaan: salin satu blok { ... }, beri id unik (huruf kecil, tanda -),
    isi tahap 0–4. Jumlah kalimat terjemahan (arti) harus sama dengan teks agar
    terjemahan tampil di bawah tiap kalimat. Baris kosong di teks = paragraf baru.
@@ -34,6 +37,42 @@ window.BACAAN = [
       ['please', 'tolong, silakan', 'Please sit down.', 'Silakan duduk.'],
       ['excuse me', 'permisi', 'Excuse me, where is the library?', 'Permisi, di mana perpustakaan?'],
       ['how are you', 'apa kabar', 'How are you today?', 'Apa kabarmu hari ini?']
+    ],
+    // Latihan bertahap (percontohan): contoh kalimat tambahan per kata dan soal situasi.
+    contohLain: {
+      'hello': [['Hello, I am your new friend.', 'Halo, saya teman barumu.'], ['Hello, Andi! Nice to see you.', 'Halo, Andi! Senang bertemu denganmu.'], ['Hello, can you hear me?', 'Halo, kamu bisa mendengarku?']],
+      'good morning': [['Good morning, everyone.', 'Selamat pagi, semuanya.'], ['Good morning, Dad.', 'Selamat pagi, Ayah.'], ['Good morning, teacher. I am ready.', 'Selamat pagi, Bu Guru. Saya siap.']],
+      'good afternoon': [['Good afternoon, everyone.', 'Selamat siang, semuanya.'], ['Good afternoon, Dad. I am home.', 'Selamat siang, Ayah. Aku sudah pulang.'], ['Good afternoon, madam.', 'Selamat siang, Bu.']],
+      'good night': [['Good night, sleep well.', 'Selamat tidur, tidur yang nyenyak.'], ['Good night, Dad. See you in the morning.', 'Selamat tidur, Ayah. Sampai jumpa besok pagi.'], ['Good night, little brother.', 'Selamat tidur, adik kecil.']],
+      'goodbye': [['Goodbye, everyone!', 'Sampai jumpa, semuanya!'], ['Goodbye, Grandma. I will visit you again.', 'Sampai jumpa, Nenek. Aku akan berkunjung lagi.'], ['Say goodbye to your friends.', 'Ucapkan sampai jumpa kepada teman-temanmu.']],
+      'thank you': [['Thank you very much.', 'Terima kasih banyak.'], ['Thank you for the gift.', 'Terima kasih atas hadiahnya.'], ['Thank you, teacher.', 'Terima kasih, Bu Guru.']],
+      'sorry': [['Sorry, I forgot my book.', 'Maaf, aku lupa membawa bukuku.'], ['I am sorry, I broke your pencil.', 'Maaf, aku mematahkan pensilmu.'], ['Sorry, can you say that again?', 'Maaf, bisa kamu ulangi?']],
+      'please': [['Please open your book.', 'Tolong buka bukumu.'], ['Please be quiet.', 'Tolong tenang.'], ['Please come in.', 'Silakan masuk.']],
+      'excuse me': [['Excuse me, can I sit here?', 'Permisi, boleh saya duduk di sini?'], ['Excuse me, I want to pass.', 'Permisi, saya mau lewat.'], ['Excuse me, is this your bag?', 'Permisi, apakah ini tasmu?']],
+      'how are you': [['Hi Rina, how are you?', 'Hai Rina, apa kabar?'], ['How are you, Grandpa?', 'Apa kabar, Kakek?'], ['How are you this morning?', 'Apa kabarmu pagi ini?']]
+    },
+    // s = situasi, j = jawaban, juga = ungkapan lain yang juga pantas (tidak dipakai sebagai pengecoh).
+    situasi: [
+      { s: 'Pukul tujuh pagi kamu bertemu gurumu di gerbang sekolah. Kamu menyapanya…', j: 'good morning', juga: ['hello', 'how are you'] },
+      { s: 'Pagi hari kamu bangun dan menyapa ayahmu di meja makan…', j: 'good morning', juga: ['hello', 'how are you'] },
+      { s: 'Pukul dua siang kamu masuk ke ruang guru dan menyapa guru di sana…', j: 'good afternoon', juga: ['hello', 'excuse me', 'how are you'] },
+      { s: 'Pukul tiga sore ayahmu pulang kerja. Kamu menyapanya…', j: 'good afternoon', juga: ['hello', 'how are you'] },
+      { s: 'Malam hari kamu akan tidur. Kamu berkata kepada ibumu…', j: 'good night', juga: ['goodbye'] },
+      { s: 'Adikmu sudah berbaring di tempat tidur. Sebelum mematikan lampu, kamu berkata…', j: 'good night', juga: ['goodbye'] },
+      { s: 'Pulang sekolah, kamu berpisah dengan temanmu di gerbang. Kamu berkata…', j: 'goodbye', juga: ['good afternoon'] },
+      { s: 'Liburan selesai dan kamu pamit kepada nenek sebelum naik bus. Kamu berkata…', j: 'goodbye', juga: ['thank you'] },
+      { s: 'Temanmu meminjamkan pensilnya kepadamu. Kamu berkata…', j: 'thank you', juga: [] },
+      { s: 'Gurumu memujimu, "Good job!" Kamu menjawab…', j: 'thank you', juga: [] },
+      { s: 'Kamu tidak sengaja menginjak kaki temanmu. Kamu berkata…', j: 'sorry', juga: ['excuse me'] },
+      { s: 'Kamu datang terlambat ke kelas. Kamu berkata kepada guru…', j: 'sorry', juga: ['excuse me', 'good morning', 'good afternoon'] },
+      { s: 'Kamu meminta adikmu dengan sopan, "… close the door."', j: 'please', juga: [] },
+      { s: 'Ada tamu di depan pintu. Kamu mempersilakannya, "… come in."', j: 'please', juga: [] },
+      { s: 'Kamu ingin lewat, tetapi ada orang berdiri di depan pintu. Kamu berkata…', j: 'excuse me', juga: ['sorry'] },
+      { s: 'Kamu ingin bertanya arah kepada orang yang tidak kamu kenal. Kamu memulai dengan…', j: 'excuse me', juga: ['hello', 'sorry', 'good morning', 'good afternoon'] },
+      { s: 'Kamu bertemu teman yang lama tidak berjumpa dan ingin menanyakan kabarnya…', j: 'how are you', juga: ['hello', 'good morning', 'good afternoon'] },
+      { s: 'Kamu menjenguk kakek yang baru sembuh dan ingin tahu keadaannya…', j: 'how are you', juga: ['hello', 'good morning', 'good afternoon'] },
+      { s: 'Kamu mengangkat telepon dari nomor yang tidak kamu kenal. Kamu berkata…', j: 'hello', juga: ['good morning', 'good afternoon', 'how are you'] },
+      { s: 'Kamu melambaikan tangan kepada teman di seberang jalan dan menyapanya…', j: 'hello', juga: ['good morning', 'good afternoon', 'how are you'] }
     ]
   },
   {

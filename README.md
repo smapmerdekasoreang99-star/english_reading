@@ -65,3 +65,30 @@ Skor terbaik disimpan di perangkat (`er_paham`).
 | Kosakata, pola kalimat | pelafalan |
 | Bacaan Tahap 1–2 | pelafalan **dan** pemahaman |
 | Bacaan Tahap 3–4 | pemahaman (pelafalan sebagai latihan) |
+| Kosakata dengan latihan bertahap | kelima sub level lulus (Baca & Koreksi sebagai latihan) |
+
+## Latihan bertahap (sub level kosakata)
+
+Percontohan 9 Okt 2026 di **Greetings**. Aktif otomatis di level kosakata yang punya
+`situasi` di `bacaan.js`; level lain tetap seperti semula sampai datanya ditambahkan.
+
+| Sub level | Bentuk soal |
+|---|---|
+| 1 Kenali | kata → pilih arti, atau arti → pilih kata |
+| 2 Dengar | kata dibacakan → pilih tulisannya; kalimat dibacakan → pilih artinya |
+| 3 Situasi | situasi berbahasa Indonesia → pilih ungkapan yang tepat |
+| 4 Lengkapi & susun | kalimat rumpang (dengan artinya) atau susun kata acak |
+| 5 Ucapkan | arti atau situasi → siswa mengucapkan bahasa Inggrisnya (pengenal suara ≥ 70%; diketik bila browser tanpa pengenal suara) |
+
+- Soal dibuat acak dari `kosakata`, `contohLain` (2–3 contoh kalimat tambahan per kata,
+  dengan arti) dan `situasi` (`s` situasi, `j` jawaban, `juga` ungkapan lain yang juga
+  pantas: tidak dijadikan pengecoh dan ikut diterima di sub level 5).
+- Tiap sesi 10 soal (satu per kata; Situasi = 10 situasi acak). Yang salah diulang di akhir
+  sesi dengan soal baru untuk kata yang sama. Lulus = ≥ 80% benar pada percobaan pertama.
+- Sub level berikutnya terbuka setelah yang sebelumnya lulus; level tuntas bila kelimanya lulus.
+  Lulus sub level 5 memasukkan semua kata ke Ulang kosakata; kata yang salah diucapkan di
+  sub level 5 juga masuk (kotak 1).
+- Level yang sudah tuntas lewat Baca & Koreksi sebelum sub level dipasang dianggap lulus semua
+  sub levelnya (dicatat sekali di `er_sub_cek`). Skor sub level: `er_sub` di perangkat.
+- Menambah ke level lain: isi `contohLain` dan `situasi` seperti di Greetings. Contoh kalimat
+  sebaiknya memuat kata/frasanya utuh (untuk kalimat rumpang) dan 3–8 kata (untuk susun kata).
