@@ -37,3 +37,15 @@ koreksi tetap tepat. Naikkan `?v=` di `index.html` setelah mengubah berkas.
 
 Mikrofon tidak diizinkan dari `file://`. Jalankan server lokal, misalnya
 `npx serve .` di folder ini, lalu buka alamat yang ditampilkan di Chrome.
+
+## Jenis level dan pengulangan
+
+- **Kosakata** (Tahap 0): 17 kelompok × 10 kata. Tiap kata punya arti dan satu
+  contoh kalimat. Ditulis di `bacaan.js` sebagai `kosakata: [kata, arti, contoh, arti contoh]`;
+  teksnya dibentuk otomatis menjadi "kata. contoh kalimat." agar bisa didengar dan dikoreksi.
+- **Pola kalimat** (Tahap 1–3): `pola` (rumus), `catatan` (penjelasan), lalu contoh kalimat.
+- **Bacaan**: paragraf biasa.
+- **Ulang kosakata** (`#ulang`): sistem kotak 1–5. Kata masuk saat level kosakata dibaca
+  utuh, atau saat kata di bacaan bernilai < 60%. Diucapkan ≥ 85% saat jatuh tempo → naik
+  kotak (diulang lagi 1, 2, 4, 7, 14 hari); belum tepat → kotak 1, diulang besok.
+  Disimpan di perangkat (`localStorage`, kunci `er_dek`).

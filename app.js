@@ -38,7 +38,8 @@
   function norm(w) {
     return w.toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z0-9']/g, '').replace(/^'+|'+$/g, '');
   }
-  const bersihKata = w => w.replace(/[^A-Za-z0-9'’-]/g, '');
+  // Buang tanda baca; spasi dipertahankan untuk frasa ("good morning").
+  const bersihKata = w => w.replace(/[^A-Za-z0-9'’ -]/g, '').trim();
 
   // ---------- Suara (text to speech) ----------
   let suaraInggris = [];
@@ -108,9 +109,14 @@
     }
     return hasil;
   }
+  // Bentuk yang setara bagi pengenal suara (mis. "cannot" kadang ditulis "can't").
+  const SETARA = { cannot: "can't" };
+  const kanon = w => (SETARA[w] || w).replace(/'/g, '');
   function sama(a, b) {
-    return a === b || a.replace(/'/g, '') === b.replace(/'/g, '');
+    return a === b || kanon(a) === kanon(b);
   }
+  // Frasa → kata-kata ternormalisasi dipisah spasi ("Good morning" → "good morning").
+  const normFrasa = teks => kataUcapan([{ teks }]).map(x => x.w).join(' ');
   // LCS: untuk tiap kata teks, indeks kata ucapan pasangannya (-1 bila tidak ada).
   function cocokkan(target, ucap) {
     const n = target.length, m = ucap.length;
@@ -322,6 +328,10 @@
     $('#legenda').hidden = true;
     $('#kotak-grafik').hidden = true;
   }
+  const petunjukAwal = b => (b && b.kosakata
+    ? 'Ketuk kata untuk mendengar. Dengarkan kata dan contoh kalimatnya, lalu tekan Baca & Koreksi dan bacakan semuanya.'
+    : 'Ketuk sebuah kata untuk mendengar cara membacanya.');
+
   function tombolRekam(aktif) {
     const t = $('#t-rekam');
     if (t) {
@@ -335,7 +345,7 @@
       ptj.classList.toggle('rekam', aktif);
       ptj.textContent = aktif
         ? 'Mendengarkan… Bacalah paragraf dengan suara jelas. Kata yang dikenali berubah hijau. Tekan "Selesai membaca" bila sudah.'
-        : 'Ketuk sebuah kata untuk mendengar cara membacanya.';
+        : petunjukAwal(kini && kini.b);
     }
   }
 
@@ -453,17 +463,81 @@
   // Penilaian satu kata dari beberapa alternatif pengenal suara: cocok di alternatif
   // pertama = keyakinan pengenal (paling rendah 60); cocok di alternatif lain = 70
   // (pengenal lebih condong ke kata lain); tidak cocok = kemiripan (paling tinggi 84).
+  // Target boleh frasa ("good morning"): harus muncul berurutan di ucapan.
   function nilaiSatuKata(target, alternatif) {
+    const t = target.split(' ').filter(Boolean);
+    const gabung = t.join('');
     let terbaik = 0;
     for (let a = 0; a < alternatif.length; a++) {
-      const kata = kataUcapan([alternatif[a]]);
-      if (kata.some(x => sama(target, x.w))) {
+      const kata = kataUcapan([alternatif[a]]).map(x => x.w);
+      let cocok = false;
+      for (let j = 0; j + t.length <= kata.length && !cocok; j++) cocok = t.every((x, k) => sama(x, kata[j + k]));
+      if (cocok) {
         const y = alternatif[a].yakin;
         return a === 0 ? (y > 0 ? Math.max(60, Math.round(y * 100)) : 100) : 70;
       }
-      for (const x of kata) terbaik = Math.max(terbaik, kemiripan(target, x.w));
+      // Kemiripan dengan rangkaian kata yang panjangnya mendekati target.
+      for (let j = 0; j < kata.length; j++) {
+        for (let L = Math.max(1, t.length - 1); L <= t.length + 1 && j + L <= kata.length; L++) {
+          terbaik = Math.max(terbaik, kemiripan(gabung, kata.slice(j, j + L).join('')));
+        }
+      }
     }
     return Math.min(84, Math.round(terbaik * 100));
+  }
+
+  // ---------- Ulang kosakata (pengulangan terjadwal, sistem kotak) ----------
+  // Kata baru masuk kotak 1. Diucapkan baik (≥ 85%) saat jatuh tempo → naik kotak,
+  // jeda sampai diulang lagi makin panjang. Belum tepat → kembali ke kotak 1, diulang besok.
+  const JEDA = [0, 1, 2, 4, 7, 14];           // hari, per kotak 1–5
+  const dek = baca('er_dek', {});              // normFrasa → { kata, contoh, kotak, tempo }
+  const simpanDek = () => tulis('er_dek', dek);
+  function tanggal(tambahHari) {
+    const d = new Date();
+    d.setDate(d.getDate() + tambahHari);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+  // gagal = kata yang baru saja keliru: bila sudah ada di dek, dikembalikan ke kotak 1.
+  function tambahDek(kata, contoh, gagal) {
+    const n = normFrasa(kata);
+    if (!n) return;
+    const ada = dek[n];
+    if (ada && !gagal) return;
+    dek[n] = { kata: kata.trim(), contoh: (ada && ada.contoh) || contoh || '', kotak: 1, tempo: tanggal(1) };
+  }
+  const jatuhTempo = () => Object.entries(dek).filter(([, e]) => e.tempo <= tanggal(0)).sort((a, b) => a[1].kotak - b[1].kotak);
+  function perbaruiDek(n, nilai) {
+    const e = dek[n];
+    if (!e) return '';
+    if (e.tempo > tanggal(0)) return `Sudah dinilai · diulang lagi ${e.tempo}`;
+    if (nilai >= 85) {
+      e.kotak = Math.min(5, e.kotak + 1);
+      e.tempo = tanggal(JEDA[e.kotak]);
+      simpanDek();
+      return `Naik ke kotak ${e.kotak} · diulang ${JEDA[e.kotak]} hari lagi`;
+    }
+    e.kotak = 1;
+    e.tempo = tanggal(1);
+    simpanDek();
+    return 'Kembali ke kotak 1 · diulang besok';
+  }
+
+  // Satu baris latihan kata: dengar contoh, ucapkan, dinilai ulang.
+  function barisLatih(o) {
+    return `<div class="latih-baris" data-norm="${esc(o.norm)}"${o.dek ? ' data-dek="1"' : ''}>
+      <span class="latih-kata">${esc(o.kata)}</span>
+      <span class="latih-awal ${o.kelas || ''}">${esc(o.label)}</span>
+      <button class="tombol kecil" data-ucap="${esc(o.kata)}" aria-label="Dengarkan contoh">🔊</button>
+      <button class="tombol kecil rekam" data-ulang>🎤 Ucapkan</button>
+      ${o.contoh ? `<span class="latih-contoh">${esc(o.contoh)}</span>` : ''}
+      <span class="latih-baru"></span>
+    </div>`;
+  }
+  function klikLatih(e) {
+    const c = e.target.closest('[data-ucap]');
+    if (c) { batalUlang(); ucapKata(c.dataset.ucap); return; }
+    const u = e.target.closest('[data-ulang]');
+    if (u) ulangKata(u.closest('.latih-baris'));
   }
 
   let ulang = null;           // { rec, baris, batas }
@@ -517,8 +591,10 @@
       const terbaik = Math.max(n, +(baris.dataset.terbaik || 0));
       baris.dataset.terbaik = terbaik;
       baris.classList.toggle('lulus', terbaik >= 85);
+      const infoDek = baris.dataset.dek ? perbaruiDek(target, n) : '';
       keluaran.innerHTML = `<b class="latih-nilai ${kelasNilai(n)}">${n}%</b>${n >= 85 ? ' ✓ Bagus!' : ''}
-        <small>terdengar: “${esc(alternatif[0].teks.trim())}”${terbaik > n ? ` · terbaik ${terbaik}%` : ''}</small>`;
+        <small>terdengar: “${esc(alternatif[0].teks.trim())}”${terbaik > n ? ` · terbaik ${terbaik}%` : ''}</small>
+        ${infoDek ? `<small class="latih-dek">${esc(infoDek)}</small>` : ''}`;
     };
     // Pengaman: hentikan bila tidak ada suara dalam beberapa detik.
     u.batas = setTimeout(() => { try { r.stop(); } catch (e) { /* abaikan */ } }, 6000);
@@ -573,6 +649,12 @@
       tulis('er_skor', skorTerbaik);
       rekor = true;
     }
+    // Masukkan ke kotak ulang: semua kosakata level ini (bila dibaca utuh) dan kata yang
+    // masih keliru (< 60%, selain kata sangat pendek seperti "of", "a").
+    if (lengkap && kini.b.kosakata) kini.b.kosakata.forEach(([k, , c]) => tambahDek(k, c, false));
+    latih.filter(x => x.n < 60 && x.w.norm.length > 2)
+      .forEach(x => tambahDek(bersihKata(x.w.asli), kini.kalimat[x.w.k].teks, true));
+    simpanDek();
     const kelas = persen >= 85 ? 'baik' : persen >= 60 ? 'sedang' : 'kurang';
     const pujian = persen >= 95 ? 'Excellent! 🎉' : persen >= 85 ? 'Great job! 👍' : persen >= 60 ? 'Good, keep practicing!' : 'Keep trying, you can do it!';
 
@@ -582,13 +664,9 @@
       <div class="skor ${kelas}"><b>${persen}%</b><span>${pujian}</span></div>
       <p>${tepat} dari ${dibaca} kata yang kamu baca dikenali dengan tepat.${sisa > 0 ? ` <b>${sisa} kata di akhir belum dibaca.</b>` : ''}${rekor ? ' 🏅 Skor terbaik baru!' : ''}</p>
       ${latih.length ? `<p>Latih kata berikut: tekan 🔊 untuk mendengar contoh, lalu 🎤 untuk mengucapkannya dan dinilai ulang.</p>
-        <div class="latih-daftar">${latih.map(x => `<div class="latih-baris" data-norm="${esc(x.w.norm)}">
-          <span class="latih-kata">${esc(bersihKata(x.w.asli))}</span>
-          <span class="latih-awal ${kelasNilai(x.n)}" title="Nilai saat membaca paragraf">${x.n}%</span>
-          <button class="tombol kecil" data-ucap="${esc(x.w.asli)}" aria-label="Dengarkan contoh">🔊</button>
-          <button class="tombol kecil rekam" data-ulang>🎤 Ucapkan</button>
-          <span class="latih-baru"></span>
-        </div>`).join('')}</div>`
+        <div class="latih-daftar">${latih.map(x => barisLatih({
+          norm: x.w.norm, kata: bersihKata(x.w.asli), label: x.n + '%', kelas: kelasNilai(x.n)
+        })).join('')}</div>`
         : (dibaca ? '<p>Semua kata yang kamu baca terdengar tepat. 👏</p>' : '')}
       ${lanjutHTML(persen, lengkap)}
       <details><summary>Yang terdengar oleh aplikasi</summary><p>${esc(teksUcap)}</p></details>
@@ -668,7 +746,7 @@
     kini = null;
     layar.innerHTML = `<header class="judul-app"><h1>📖 English Reading</h1>
         <p>Dengarkan bacaan, lalu baca sendiri dan lihat koreksinya. Mulai dari tahap yang sesuai, tuntaskan tiap level
-          (skor terbaik ≥ ${TUNTAS}%), lalu naik ke tahap berikutnya.</p></header>` +
+          (skor terbaik ≥ ${TUNTAS}%), lalu naik ke tahap berikutnya.</p></header>` + kartuUlang() +
       window.TAHAP.map(t => {
         const isi = window.BACAAN.filter(b => b.tahap === t.no);
         if (!isi.length) return '';
@@ -679,16 +757,44 @@
             <span class="tahap-progres">${tuntas}/${isi.length} tuntas</span></div>
           <p class="tahap-fokus">${esc(t.fokus)}</p>
           <div class="daftar">${isi.map((b, i) => {
-            const nKata = (b.teks.match(/\S+/g) || []).length;
             const s = skorTerbaik[b.id];
+            const jenis = jenisLevel(b);
+            const ukuran = b.kosakata ? `${b.kosakata.length} kata · ${esc(b.kelompok)}` : `${(b.teks.match(/\S+/g) || []).length} kata`;
             const ok = s >= TUNTAS;
             return `<a class="kartu${ok ? ' tuntas' : ''}" href="#baca/${encodeURIComponent(b.id)}">
               <span class="kartu-level">${ok ? '✓' : i + 1}</span>
               <span class="kartu-isi"><span class="kartu-judul">${esc(b.judul)}</span>
-              <span class="kartu-info">Level ${i + 1} · ${nKata} kata${s != null ? ` · skor terbaik <b>${s}%</b>` : ''}</span></span></a>`;
+              <span class="kartu-info"><span class="jenis jenis-${jenis.kunci}">${jenis.nama}</span> Level ${i + 1} · ${ukuran}${s != null ? ` · skor terbaik <b>${s}%</b>` : ''}</span></span></a>`;
           }).join('')}</div></section>`;
       }).join('') +
       (bisaSuara ? '' : '<div class="pesan">Browser ini tidak bisa membacakan teks. Gunakan Google Chrome versi terbaru.</div>');
+  }
+
+  const jenisLevel = b => (b.kosakata ? { kunci: 'kosakata', nama: 'Kosakata' }
+    : b.pola ? { kunci: 'pola', nama: 'Pola kalimat' } : { kunci: 'bacaan', nama: 'Bacaan' });
+
+  function kartuUlang() {
+    const total = Object.keys(dek).length;
+    if (!total) return '<p class="info-ulang">🔁 Kata yang sudah kamu pelajari akan masuk <b>Ulang kosakata</b> untuk diulang secara terjadwal.</p>';
+    const n = jatuhTempo().length;
+    const berikut = Object.values(dek).map(e => e.tempo).sort()[0];
+    return `<a class="kartu-ulang${n ? ' ada' : ''}" href="#ulang"><span class="ulang-ikon">🔁</span>
+      <span><b>Ulang kosakata</b><br><small>${n ? `${n} kata perlu diulang hari ini` : `Tidak ada untuk hari ini · berikutnya ${berikut}`} · ${total} kata di kotak ulang</small></span></a>`;
+  }
+
+  function tampilUlang() {
+    kini = null;
+    const daftar = jatuhTempo().slice(0, 15);
+    layar.innerHTML = `
+      <div class="bar-atas"><a href="#" class="kembali">← Daftar bacaan</a><span class="label-tingkat">${Object.keys(dek).length} kata</span></div>
+      <h1 class="judul-bacaan">🔁 Ulang kosakata</h1>
+      <p class="petunjuk">Tekan 🔊 untuk mendengar, lalu 🎤 dan ucapkan katanya. Ucapan ≥ 85% menaikkan kata ke kotak berikutnya
+        sehingga diulang makin jarang (1, 2, 4, 7, lalu 14 hari). Yang belum tepat kembali ke kotak 1 dan diulang besok.</p>
+      ${daftar.length
+        ? `<div class="latih-daftar" id="daftar-ulang">${daftar.map(([n, e]) => barisLatih({ norm: n, kata: e.kata, label: 'kotak ' + e.kotak, contoh: e.contoh, dek: true })).join('')}</div>`
+        : '<div class="hasil"><p>Tidak ada kata yang perlu diulang hari ini. 👍 Lanjutkan belajar level berikutnya.</p></div>'}`;
+    const el = $('#daftar-ulang');
+    if (el) el.onclick = klikLatih;
   }
 
   function navLevel(b) {
@@ -705,17 +811,31 @@
   function tampilBaca(b) {
     const p = pecah(b.teks, b.arti);
     kini = { b, kalimat: p.kalimat, kata: p.kata, pilihK: 0, sejajar: p.sejajar };
-    const teksHTML = p.kalimat.map((kal, k) => `<div class="kal${kal.paragrafBaru ? ' paragraf-baru' : ''}" data-k="${k}"><div class="kal-en">` +
+    // Kosakata: kalimat genap = kata (titik akhirnya disembunyikan, arti selalu tampil), ganjil = contoh.
+    const kalHTML = (kal, k, kata) => `<div class="kal${kata ? ' kal-kata' : ''}${kal.paragrafBaru ? ' paragraf-baru' : ''}" data-k="${k}"><div class="kal-en">` +
       kal.kata.map((w, j) => {
-        const isi = w.i >= 0 ? `<span class="kata" data-w="${w.i}"><span class="k-teks">${esc(w.asli)}</span><span class="k-skor"></span></span>` : esc(w.asli);
+        const tampil = kata && j === kal.kata.length - 1 ? w.asli.replace(/\.$/, '') : w.asli;
+        const isi = w.i >= 0 ? `<span class="kata" data-w="${w.i}"><span class="k-teks">${esc(tampil)}</span><span class="k-skor"></span></span>` : esc(tampil);
         const jeda = j < kal.kata.length - 1 && !w.asli.endsWith('-') ? ' ' : '';
         return isi + jeda;
-      }).join('') + `</div>${kal.arti ? `<div class="kal-id">${esc(kal.arti)}</div>` : ''}</div>`).join('') +
-      (p.sejajar ? '' : `<div class="kal-id arti-utuh">${esc(b.arti)}</div>`);
+      }).join('') + `</div>${kal.arti ? `<div class="kal-id${kata ? ' arti-kata' : ''}">${esc(kata ? kal.arti.replace(/\.$/, '') : kal.arti)}</div>` : ''}</div>`;
+    let teksHTML;
+    if (b.kosakata && p.sejajar) {
+      teksHTML = '';
+      for (let k = 0; k < p.kalimat.length; k += 2) {
+        teksHTML += `<div class="kartu-kosa">${kalHTML(p.kalimat[k], k, true)}${p.kalimat[k + 1] ? kalHTML(p.kalimat[k + 1], k + 1, false) : ''}</div>`;
+      }
+    } else {
+      teksHTML = p.kalimat.map((kal, k) => kalHTML(kal, k, false)).join('') +
+        (p.sejajar ? '' : `<div class="kal-id arti-utuh">${esc(b.arti)}</div>`);
+    }
+    const petunjuk = esc(petunjukAwal(b));
 
     layar.innerHTML = `
       <div class="bar-atas"><a href="#" class="kembali">← Daftar bacaan</a><span class="label-tingkat">${labelLevel(b)}</span></div>
       <h1 class="judul-bacaan">${esc(b.judul)}</h1>
+      ${b.kelompok ? `<p class="sub-judul">Kosakata · ${esc(b.kelompok)}</p>` : ''}
+      ${b.pola ? `<div class="kotak-pola"><span class="pola-label">Pola</span><div class="pola-rumus">${esc(b.pola)}</div><p>${esc(b.catatan || '')}</p></div>` : ''}
       <div class="kendali">
         <button id="t-putar" class="tombol utama"${bisaSuara ? '' : ' disabled'}>▶ Dengarkan</button>
         <button id="t-henti" class="tombol" hidden>⏹ Berhenti</button>
@@ -726,12 +846,12 @@
         <label>Suara <select id="pilih-suara"></select></label>
         <button id="t-arti" class="tautan"></button>
       </div>
-      <p class="petunjuk" id="petunjuk">Ketuk sebuah kata untuk mendengar cara membacanya.</p>
+      <p class="petunjuk" id="petunjuk">${petunjuk}</p>
       <div class="kotak-grafik" id="kotak-grafik" hidden>
         <canvas id="grafik" aria-label="Grafik suara yang tertangkap mikrofon"></canvas>
         <div class="status-grafik" id="status-grafik"></div>
       </div>
-      <div class="teks${b.tahap === 0 ? ' mode-kata' : ''}" id="teks">${teksHTML}</div>
+      <div class="teks${b.kosakata ? ' mode-kosakata' : ''}" id="teks">${teksHTML}</div>
       <div class="legenda" id="legenda" hidden><span class="l-benar">≥ 85% baik</span><span class="l-sedang">60–84% cukup</span><span class="l-salah">&lt; 60% perlu dilatih</span><span class="l-lewat">belum dibaca</span></div>
       <div id="hasil"></div>
       <nav class="nav-level">${navLevel(b)}</nav>`;
@@ -755,12 +875,7 @@
       pilihKalimat(w.k);
       ucapKata(w.asli, w);
     };
-    $('#hasil').onclick = e => {
-      const c = e.target.closest('[data-ucap]');
-      if (c) { batalUlang(); ucapKata(c.dataset.ucap); return; }
-      const u = e.target.closest('[data-ulang]');
-      if (u) ulangKata(u.closest('.latih-baris'));
-    };
+    $('#hasil').onclick = klikLatih;
   }
 
   function rute() {
@@ -770,9 +885,15 @@
     const m = location.hash.match(/^#baca\/(.+)$/);
     const id = m ? decodeURIComponent(m[1]) : '';
     const b = window.BACAAN.find(x => x.id === id);
-    if (b) tampilBaca(b); else tampilDaftar();
+    if (b) tampilBaca(b); else if (location.hash === '#ulang') tampilUlang(); else tampilDaftar();
     window.scrollTo(0, 0);
   }
+  // Level kosakata: teks = "kata. contoh kalimat." berurutan; arti mengikuti pola yang sama.
+  window.BACAAN.forEach(b => {
+    if (!b.kosakata) return;
+    b.teks = b.kosakata.map(([k, , c]) => `${k}. ${c}`).join(' ');
+    b.arti = b.kosakata.map(([, a, , ca]) => `${a}. ${ca}`).join(' ');
+  });
   window.addEventListener('hashchange', rute);
   saranBrowser();
   // Chrome kadang tetap bersuara setelah halaman ditinggalkan.

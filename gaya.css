@@ -77,7 +77,7 @@ button { cursor: pointer; border: 0; background: none; }
 .kal-en { font-size: 21px; line-height: 1.9; }
 .kal-id { font-size: 15px; line-height: 1.45; color: var(--tinta-2); font-style: italic; margin: 0 0 4px; }
 .arti-utuh { margin: 12px 8px 4px; padding-top: 10px; border-top: 1px dashed var(--garis-2); }
-.teks.tanpa-arti .kal-id { display: none; }
+.teks.tanpa-arti .kal-id:not(.arti-kata) { display: none; }
 .kal.dibaca { background: var(--emas-muda); }
 .kata { cursor: pointer; border-radius: 4px; padding: 1px 1px; }
 .kata:hover { background: var(--biru-muda); }
@@ -161,11 +161,6 @@ button { cursor: pointer; border: 0; background: none; }
 .kartu.tuntas .kartu-level { background: var(--hijau); color: #fff; }
 @media (max-width: 480px) { .tahap-fokus { margin-left: 0; } }
 
-/* Tahap 0: kata dan frasa tampil sebagai kartu */
-.teks.mode-kata { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
-.mode-kata .kal { border: 1px solid var(--garis); text-align: center; padding: 10px 6px; }
-.mode-kata .kal + .kal { margin-top: 0; }
-.mode-kata .kal-en { font-size: 24px; line-height: 1.5; }
 
 .kal.paragraf-baru { margin-top: 18px; }
 
@@ -173,3 +168,35 @@ button { cursor: pointer; border: 0; background: none; }
 .hasil > .tombol.utama { text-decoration: none; margin: 4px 0 6px; }
 .nav-level { display: flex; justify-content: space-between; gap: 12px; margin-top: 20px; font-weight: 700; }
 .nav-level a { color: var(--biru-tua); text-decoration: none; }
+
+/* ---------- Kosakata: kartu kata + contoh kalimat ---------- */
+.teks.mode-kosakata { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.kartu-kosa { border: 1px solid var(--garis); border-radius: var(--r2); padding: 6px; background: #FBFCFE; }
+.kartu-kosa .kal + .kal { margin-top: 0; }
+.kal-kata .kal-en { font-family: var(--huruf-judul); font-weight: 700; font-size: 26px; line-height: 1.3; color: var(--gelap); }
+.kal-id.arti-kata { font-style: normal; font-weight: 700; color: var(--biru-tua); font-size: 15px; }
+.kartu-kosa .kal:not(.kal-kata) .kal-en { font-size: 17px; line-height: 1.6; }
+.sub-judul { margin: -8px 0 12px; color: var(--tinta-2); font-weight: 700; }
+
+/* ---------- Pola kalimat ---------- */
+.kotak-pola { position: relative; background: var(--biru-muda); border: 1px solid #BFD8F5; border-radius: var(--r2); padding: 14px 16px 10px; margin: 0 0 14px; }
+.pola-label { position: absolute; top: -10px; left: 14px; background: var(--biru); color: #fff; font-size: 12px; font-weight: 800; padding: 1px 10px; border-radius: 99px; }
+.pola-rumus { font-family: var(--huruf-judul); font-weight: 700; font-size: 20px; color: var(--biru-tua); }
+.kotak-pola p { margin: 4px 0 0; font-size: 14px; color: var(--tinta-2); }
+
+/* ---------- Jenis level di daftar ---------- */
+.jenis { display: inline-block; font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 99px; margin-right: 4px; vertical-align: 1px; }
+.jenis-kosakata { background: var(--emas-muda); color: #7A5A12; }
+.jenis-pola { background: var(--biru-muda); color: var(--biru-tua); }
+.jenis-bacaan { background: var(--hijau-muda); color: var(--hijau-tua); }
+
+/* ---------- Ulang kosakata ---------- */
+.kartu-ulang { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 12px 16px; border-radius: var(--r2);
+  background: var(--kertas); border: 1px solid var(--garis); box-shadow: var(--bayang); text-decoration: none; color: inherit; }
+.kartu-ulang.ada { border-color: var(--emas-tua); background: var(--emas-muda); }
+.kartu-ulang b { font-family: var(--huruf-judul); font-size: 19px; color: var(--gelap); }
+.kartu-ulang small { color: var(--tinta-2); }
+.ulang-ikon { font-size: 26px; }
+.info-ulang { margin: 12px 0 0; font-size: 14px; color: var(--tinta-2); }
+.latih-contoh { flex-basis: 100%; font-size: 14px; color: var(--tinta-2); font-style: italic; }
+.latih-dek { display: block; margin: 2px 0 0 !important; color: var(--biru-tua) !important; font-weight: 700; }
