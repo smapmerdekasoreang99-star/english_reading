@@ -1761,6 +1761,100 @@
     $('#t-arti').textContent = setelan.tampilArti ? 'Sembunyikan terjemahan' : 'Tampilkan terjemahan';
   }
 
+  // ---------- Ilustrasi level (10 Okt 2026) ----------
+  // Level dengan `ilustrasi` di bacaan.js mendapat gambar bantu di atas teksnya. 'jam': muka jam
+  // dengan sebutan tiap 5 menit (sisi kanan past, sisi kiri to) dan tabel contoh satu jam. Ketuk
+  // sebutan atau contoh: jarum jam bergerak dan kalimatnya dibacakan.
+  const KATA_MENIT = { 5: 'five', 10: 'ten', 15: 'a quarter', 20: 'twenty', 25: 'twenty-five' };
+  const LABEL_MENIT = { 0: "o'clock", 30: 'half past', 15: 'quarter past', 45: 'quarter to' };
+  const labelMenit = m => LABEL_MENIT[m] || (m < 30 ? `${KATA_MENIT[m]} past` : `${KATA_MENIT[60 - m]} to`);
+  const NAMA_JAM = ANGKA.slice(0, 13);
+  function kalimatJam(h, m) {
+    const j = NAMA_JAM[h], b = NAMA_JAM[h % 12 + 1];
+    if (m === 0) return `It's ${j} o'clock.`;
+    if (m === 30) return `It's half past ${j}.`;
+    return m < 30 ? `It's ${KATA_MENIT[m]} past ${j}.` : `It's ${KATA_MENIT[60 - m]} to ${b}.`;
+  }
+  const digitalJam = (h, m) => `${h}:${String(m).padStart(2, '0')}`;
+  function ilustrasiHTML(b) {
+    if (b.ilustrasi !== 'jam') return '';
+    const cx = 260, cy = 190, R = 105;
+    const titik = (r, m) => [cx + r * Math.sin(m * Math.PI / 30), cy - r * Math.cos(m * Math.PI / 30)];
+    let svg = `<circle class="jam-muka" cx="${cx}" cy="${cy}" r="${R}"/>
+      <path class="jam-past" d="M${cx} ${cy - R} A${R} ${R} 0 0 1 ${cx} ${cy + R} Z"/>
+      <path class="jam-to" d="M${cx} ${cy + R} A${R} ${R} 0 0 1 ${cx} ${cy - R} Z"/>
+      <circle class="jam-bingkai" cx="${cx}" cy="${cy}" r="${R}"/>`;
+    for (let i = 0; i < 60; i++) {
+      const [x1, y1] = titik(R - (i % 5 ? 5 : 10), i), [x2, y2] = titik(R - 1, i);
+      svg += `<line class="jam-garis${i % 5 ? '' : ' tebal'}" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`;
+    }
+    for (let h = 1; h <= 12; h++) {
+      const [x, y] = titik(R - 24, h * 5);
+      svg += `<text class="jam-angka" x="${x.toFixed(1)}" y="${(y + 6).toFixed(1)}">${h}</text>`;
+    }
+    for (let m = 0; m < 60; m += 5) {
+      const [x, y] = titik(R + 22, m);
+      const jangkar = m === 0 || m === 30 ? 'middle' : m < 30 ? 'start' : 'end';
+      const geser = m === 0 ? -6 : m === 30 ? 14 : 5;
+      const [hx, hy] = titik(R - 1, m);
+      svg += `<g class="jam-pilih" data-m="${m}" role="button" tabindex="0" aria-label="${labelMenit(m)}">
+        <circle class="jam-sentuh" cx="${hx.toFixed(1)}" cy="${hy.toFixed(1)}" r="13"/>
+        <text class="jam-label ${m === 0 ? '' : m <= 30 ? 'l-past' : 'l-to'}" x="${x.toFixed(1)}" y="${(y + geser).toFixed(1)}" text-anchor="${jangkar}">${labelMenit(m)}</text></g>`;
+    }
+    svg += `<line class="jam-jarum-jam" id="jarum-jam" x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy - 55}"/>
+      <line class="jam-jarum-menit" id="jarum-menit" x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy - 88}"/>
+      <circle class="jam-poros" cx="${cx}" cy="${cy}" r="5"/>`;
+    return `<section class="ilustrasi" id="ilustrasi-jam">
+      <h2>🕒 Cara membaca jam</h2>
+      <p class="ilus-ket"><span class="ket-past">past = lewat</span> (menit 1–30, sisi kanan, jam yang sekarang) ·
+        <span class="ket-to">to = kurang</span> (menit 31–59, sisi kiri, jam <b>berikutnya</b>) ·
+        quarter = 15 menit · half = 30 menit · “minutes” boleh disebut: ten (minutes) past two.</p>
+      <svg class="jam-svg" viewBox="40 40 452 306" role="img" aria-label="Muka jam dengan sebutan tiap lima menit">${svg}</svg>
+      <div class="jam-sekarang"><b id="jam-digital"></b> <span id="jam-kalimat"></span>
+        <button class="tombol kecil" id="jam-putar" aria-label="Dengarkan">🔊</button></div>
+      <div class="jam-atur">Contoh untuk jam <button class="tombol kecil" id="jam-kurang" aria-label="Jam sebelumnya">◀</button>
+        <b id="jam-pilihan"></b> <button class="tombol kecil" id="jam-tambah" aria-label="Jam berikutnya">▶</button></div>
+      <div class="jam-contoh" id="jam-contoh"></div>
+      <p class="ilus-ket">Ketuk sebutan di sekeliling jam atau salah satu contoh: jarumnya bergerak dan kalimatnya dibacakan.</p>
+    </section>`;
+  }
+  function pasangIlustrasi(b) {
+    const el = $('#ilustrasi-jam');
+    if (!el) return;
+    const st = { h: 2, m: 0 };
+    const tampil = (bicara) => {
+      $('#jarum-menit').style.transform = `rotate(${st.m * 6}deg)`;
+      $('#jarum-jam').style.transform = `rotate(${(st.h % 12) * 30 + st.m / 2}deg)`;
+      $('#jam-digital').textContent = digitalJam(st.h, st.m);
+      $('#jam-kalimat').textContent = kalimatJam(st.h, st.m);
+      $('#jam-pilihan').textContent = st.h;
+      el.querySelectorAll('.jam-pilih').forEach(g => g.classList.toggle('aktif', +g.dataset.m === st.m));
+      el.querySelectorAll('.jam-baris').forEach(x => x.classList.toggle('aktif', +x.dataset.m === st.m));
+      if (bicara) ucapLatih(kalimatJam(st.h, st.m));
+    };
+    const isiContoh = () => {
+      $('#jam-contoh').innerHTML = Array.from({ length: 12 }, (_, i) => i * 5).map(m =>
+        `<button class="jam-baris" data-m="${m}"><b>${digitalJam(st.h, m)}</b> <span>${esc(kalimatJam(st.h, m))}</span></button>`).join('');
+    };
+    const pilih = m => { st.m = m; tampil(true); };
+    el.onclick = e => {
+      const p = e.target.closest('[data-m]');
+      if (p) { pilih(+p.dataset.m); return; }
+      if (e.target.closest('#jam-putar')) tampil(true);
+      else if (e.target.closest('#jam-kurang') || e.target.closest('#jam-tambah')) {
+        st.h = (st.h + (e.target.closest('#jam-tambah') ? 0 : 10)) % 12 + 1;
+        isiContoh();
+        tampil(false);
+      }
+    };
+    el.onkeydown = e => {
+      const p = e.target.closest('.jam-pilih');
+      if (p && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); pilih(+p.dataset.m); }
+    };
+    isiContoh();
+    tampil(false);
+  }
+
   function tampilBaca(b) {
     const p = pecah(b.teks, b.arti);
     kini = { b, kalimat: p.kalimat, kata: p.kata, pilihK: 0, sejajar: p.sejajar, didengar: new Set() };
@@ -1788,6 +1882,7 @@
       <div class="bar-atas"><a href="#" class="kembali">← Daftar bacaan</a><span class="label-tingkat">${labelLevel(b)}</span></div>
       <h1 class="judul-bacaan">${esc(b.judul)}</h1>
       ${b.kelompok ? `<p class="sub-judul">Kosakata · ${esc(b.kelompok)}</p>` : ''}
+      ${ilustrasiHTML(b)}
       ${b.pola ? `<div class="kotak-pola"><span class="pola-label">Pola</span><div class="pola-rumus">${esc(b.pola)}</div><p>${esc(b.catatan || '')}</p></div>` : ''}
       <div class="kendali">
         <button id="t-putar" class="tombol utama"${bisaSuara ? '' : ' disabled'}>▶ Dengarkan</button>
@@ -1832,6 +1927,7 @@
     };
     $('#hasil').onclick = klikLatih;
     pasangSoal();
+    pasangIlustrasi(b);
   }
 
   function rute() {

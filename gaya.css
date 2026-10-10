@@ -314,3 +314,41 @@ a.sub-kartu:hover { border-color: var(--biru); }
 .lt-teks { margin: 0 0 12px; padding: 10px 14px; border: 1px solid var(--garis); border-radius: var(--r2); background: var(--kertas); }
 .lt-teks summary { cursor: pointer; font-weight: 800; color: var(--biru-tua); }
 .lt-teks p { margin: 8px 0 0; font-size: 16px; line-height: 1.55; }
+
+/* ---------- Ilustrasi level: jam (10 Okt 2026) ---------- */
+.ilustrasi { background: var(--kertas); border: 1px solid var(--garis); border-radius: var(--r3); box-shadow: var(--bayang); padding: 14px 16px; margin: 0 0 14px; }
+.ilustrasi h2 { font-size: 20px; color: var(--gelap); }
+.ilus-ket { margin: 6px 0; font-size: 14px; color: var(--tinta-2); }
+.ket-past { color: var(--hijau-tua); font-weight: 800; }
+.ket-to { color: var(--biru-tua); font-weight: 800; }
+.jam-svg { display: block; width: 100%; max-width: 560px; height: auto; margin: 4px auto; }
+.jam-muka { fill: var(--kertas); }
+.jam-past { fill: var(--hijau-muda); }
+.jam-to { fill: var(--biru-muda); }
+.jam-bingkai { fill: none; stroke: var(--gelap); stroke-width: 5; }
+.jam-garis { stroke: var(--tinta-3); stroke-width: 1.5; }
+.jam-garis.tebal { stroke: var(--gelap); stroke-width: 3; }
+.jam-angka { font: 700 18px var(--huruf-judul); fill: var(--gelap); text-anchor: middle; }
+.jam-label { font: 700 16px var(--huruf); fill: var(--merah-tua); }
+.jam-label.l-past { fill: var(--hijau-tua); }
+.jam-label.l-to { fill: var(--biru-tua); }
+.jam-pilih { cursor: pointer; outline: none; }
+.jam-sentuh { fill: transparent; }
+.jam-pilih:hover .jam-label, .jam-pilih:focus-visible .jam-label { text-decoration: underline; }
+.jam-pilih.aktif .jam-sentuh { fill: var(--emas); }
+.jam-pilih.aktif .jam-label { fill: #7A5A12; font-size: 17px; }
+.jam-jarum-jam, .jam-jarum-menit { stroke-linecap: round; transform-box: view-box; transform-origin: 260px 190px; transition: transform .45s ease; }
+.jam-jarum-jam { stroke: var(--gelap); stroke-width: 7; }
+.jam-jarum-menit { stroke: var(--merah); stroke-width: 4; }
+.jam-poros { fill: var(--gelap); }
+.jam-sekarang { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; margin: 2px 0 8px; font-size: 20px; }
+.jam-sekarang b { font-family: var(--huruf-judul); padding: 2px 10px; border-radius: var(--r1); background: var(--gelap); color: #fff; }
+.jam-sekarang span { font-weight: 800; color: var(--gelap); }
+.jam-atur { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--tinta-2); margin: 6px 0; }
+.jam-atur b { font-size: 18px; color: var(--gelap); min-width: 1.5em; text-align: center; }
+.jam-contoh { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; }
+.jam-baris { display: flex; gap: 10px; align-items: baseline; text-align: left; padding: 7px 10px; border: 1px solid var(--garis); border-radius: var(--r1);
+  background: var(--emas-muda); font: inherit; font-size: 15px; color: var(--tinta); cursor: pointer; }
+.jam-baris b { min-width: 3em; color: var(--gelap); }
+.jam-baris:hover { border-color: var(--emas-tua); }
+.jam-baris.aktif { background: var(--emas); border-color: var(--emas-tua); }

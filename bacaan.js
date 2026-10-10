@@ -673,7 +673,7 @@ window.BACAAN = [
   },
   // Tambahan 10 Okt 2026: menyatakan waktu (jam). Gaya past/to; hindari a.m./p.m. (titiknya memecah kalimat).
   {
-    id: 'telling-time', tahap: 0, judul: 'Telling the Time', kelompok: 'Menyatakan jam',
+    id: 'telling-time', tahap: 0, judul: 'Telling the Time', kelompok: 'Menyatakan jam', ilustrasi: 'jam',
     kosakata: [
       ["o'clock", 'tepat (pukul … tepat)', "It is seven o'clock.", 'Sekarang pukul tujuh tepat.'],
       ['half past', 'lewat tiga puluh menit (setengah …)', 'It is half past six.', 'Sekarang pukul setengah tujuh.'],

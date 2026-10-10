@@ -32,6 +32,13 @@ tanpa database dan tanpa login.
 Koreksi ini menilai apakah kata **dikenali** sebagai kata yang benar, bukan
 penilaian fonetik rinci (tekanan, intonasi).
 
+## Ilustrasi level (10 Okt 2026)
+
+Level yang diberi `ilustrasi` di `bacaan.js` mendapat gambar bantu di atas teksnya (`ilustrasiHTML` di `app.js`).
+Saat ini `ilustrasi: 'jam'` di *Telling the Time*: muka jam (SVG buatan sendiri) dengan sebutan tiap 5 menit, sisi kanan
+*past* (hijau) dan sisi kiri *to* (biru), serta tabel contoh satu jam penuh (2:00 It's two o'clock … 2:55 It's five to three).
+Jamnya bisa diganti dengan ◀ ▶. Ketuk sebutan atau contoh: jarum bergerak dan kalimatnya dibacakan.
+
 ## Bilangan dan jam dari pengenal suara
 
 Pengenal suara sering menuliskan bilangan sebagai angka. Sebelum dicocokkan dengan teks, `bilanganKeKata`
