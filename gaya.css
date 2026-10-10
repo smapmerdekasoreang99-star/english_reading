@@ -668,3 +668,47 @@ a.sub-kartu:hover { border-color: var(--biru); }
 a.tombol { text-decoration: none; color: inherit; }
 a.tombol.utama { color: #3A2A06; }
 @media (max-width: 560px) { .at-contoh { grid-template-columns: 1fr 1fr; } .at-contoh-kartu small { font-size: 12px; } }
+
+/* ---------- Masuk siswa, identitas, kunci (10 Okt 2026) ---------- */
+.er-memuat { text-align: center; color: var(--tinta-2); padding: 60px 0; }
+.er-masuk { max-width: 460px; margin: 32px auto 0; padding: 24px 22px; border-radius: var(--r3); background: var(--kertas);
+  border: 1px solid var(--garis); box-shadow: var(--bayang); display: grid; gap: 14px; }
+.er-masuk-kepala { display: flex; gap: 14px; align-items: center; }
+.er-masuk-kepala img { flex: none; border-radius: 16px; }
+.er-masuk-kepala h1 { font-size: 28px; color: var(--gelap); margin: 0; }
+.er-masuk-kepala p { margin: 2px 0 0; color: var(--tinta-2); font-size: 15px; }
+.er-alis { font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--biru-tua); }
+.er-form { display: grid; gap: 10px; }
+.er-isian { display: grid; gap: 5px; font-weight: 800; color: var(--tinta); }
+.er-isian[hidden] { display: none; }
+.er-isian small { font-weight: 600; color: var(--tinta-3); }
+.er-isian input { min-height: 52px; padding: 10px 14px; border-radius: var(--r2); border: 2px solid var(--garis-2); font: inherit; font-size: 20px;
+  letter-spacing: .04em; color: var(--tinta); background: var(--kertas); }
+.er-isian input:focus { outline: none; border-color: var(--biru); box-shadow: 0 0 0 3px var(--biru-muda); }
+.er-tombol-masuk { width: 100%; font-size: 20px; min-height: 54px; }
+.er-galat { margin: 0; min-height: 1.2em; color: var(--merah-tua); font-weight: 700; }
+.er-galat:empty { min-height: 0; }
+.er-info { margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--emas-muda); color: #5E4610; font-size: 15px; }
+.er-catatan { margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--langit); color: var(--tinta-2); font-size: 14px; }
+.er-guru { justify-self: center; font-weight: 800; color: var(--biru-tua); text-decoration: none; font-size: 15px; }
+.er-guru:hover { text-decoration: underline; }
+
+.er-akun { display: flex; align-items: center; gap: 10px; margin: 14px 0 0; padding: 8px 10px 8px 12px; border-radius: 16px; background: var(--kertas);
+  border: 1px solid var(--garis); box-shadow: var(--bayang); }
+.er-akun-ikon { flex: none; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: var(--langit); font-size: 20px; }
+.er-akun-isi { flex: 1; min-width: 0; display: grid; }
+.er-akun-isi b { font-family: var(--huruf-judul); font-size: 17px; color: var(--gelap); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.er-akun-isi small { font-size: 13px; color: var(--tinta-2); }
+.er-sinkron { font-size: 12px; font-weight: 700; color: var(--tinta-3); white-space: nowrap; }
+.er-sinkron[data-s="ok"] { color: var(--hijau-tua); }
+.er-sinkron[data-s="tertunda"], .er-sinkron[data-s="galat"] { color: var(--merah-tua); white-space: normal; }
+@media (max-width: 480px) { .er-akun { flex-wrap: wrap; } .er-sinkron { order: 3; width: 100%; padding-left: 48px; } }
+
+.er-kunci { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: rgba(29, 42, 58, .72); backdrop-filter: blur(3px); }
+.er-kunci-kartu { width: min(420px, 100%); padding: 24px 20px; border-radius: var(--r3); background: var(--kertas); text-align: center; display: grid; gap: 10px; box-shadow: 0 20px 50px rgba(0,0,0,.3); }
+.er-kunci-ikon { font-size: 44px; }
+.er-kunci-kartu h2 { margin: 0; font-size: 24px; color: var(--gelap); }
+.er-kunci-kartu p { margin: 0; color: var(--tinta-2); }
+.er-kunci-kartu form { display: flex; gap: 8px; }
+.er-kunci-kartu input { flex: 1; min-width: 0; min-height: 48px; padding: 8px 12px; border-radius: var(--r2); border: 2px solid var(--garis-2); font: inherit; font-size: 18px; }
+.er-akun .tombol { flex: none; min-height: 38px; padding: 4px 14px; }

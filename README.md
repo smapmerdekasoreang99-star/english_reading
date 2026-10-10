@@ -1,11 +1,16 @@
 # English Reading
 
-Latihan membaca bahasa Inggris untuk siswa. Halaman statis (HTML + JavaScript),
-tanpa database dan tanpa login.
+Latihan membaca bahasa Inggris untuk siswa. Halaman statis (HTML + JavaScript).
+Sejak 10 Okt 2026 sistemnya meniru Matematika Dasar: siswa masuk dengan NISN (+ kode akses saat sesi kelas),
+guru masuk dengan PIN, dan kemajuan tersimpan di database Tryout (lihat
+[Login siswa, sesi kelas, dan halaman guru](#login-siswa-sesi-kelas-dan-halaman-guru-10-okt-2026)).
 
 | Berkas | Isi |
 |---|---|
-| `index.html` | Halaman aplikasi |
+| `index.html` | Halaman siswa |
+| `masuk.js` | Layar masuk siswa (NISN + kode akses), sinkron kemajuan ke server, kunci layar; memuat `app.js` sesudah masuk |
+| `guru.html`, `guru.js`, `guru.css` | Halaman guru / pengawas (PIN): Sesi Kegiatan, Perkembangan, Analisis Siswa, Pengaturan & Tahapan, Admin |
+| `config.js` | Alamat dan kunci publik project Supabase Tryout (sama dengan Matdas) |
 | `bacaan.js` | Peta 6 tahap (TAHAP, sampai Level TKA dan Level UTBK/SNBT) dan daftar bacaan per tahap; urutan di daftar = urutan level. Tambah bacaan di sini |
 | `soal.js` | Soal pemahaman per bacaan (pertanyaan, pilihan, kunci, pembahasan), pernyataan benar/salah (`SOAL_BS`), dan kata penting tiap bacaan (`KATA_BACAAN`) |
 | `pola.js` | Perakit kalimat acak untuk Latihan bertahap level Pola kalimat |
@@ -189,8 +194,43 @@ Meniru Matematika Dasar. Halaman **⚙️ Pengaturan & Tahapan** (`#pengaturan`,
   - Mulai dari awal atau dari contoh: Persiapan TKA, Persiapan UTBK/SNBT (sub level 6–10, 20 soal), Fondasi (Tahap 0–1), dan Teks Fungsional & Genre (Tahap 2–3).
   - Satu profil bisa dipakai pada satu waktu (`er_khusus`). Halaman depan lalu menampilkan spanduk dan hanya materi yang dipakai.
     Sub level yang tidak dipakai disembunyikan dan dilewati, dan level tuntas bila semua sub level yang dipakai lulus.
-- **Membagikan ke siswa:** belum ada database, jadi profil dibagikan sebagai tautan `#khusus=<kode>` (JSON → base64url).
-  Siswa membuka tautan → halaman "Pasang dan pakai" → profil tersimpan dan dipakai di perangkatnya. Kemajuan siswa tidak berubah.
+- **Sejak login siswa:** Pengaturan Umum dan tahapan khusus diatur guru di `guru.html` dan dikirim server saat siswa masuk.
+  Di halaman siswa, menu ini hanya-baca: tab Khusus menampilkan tahapan yang dipasang untuknya, sedangkan editor dan
+  tautan `#khusus=` dialihkan. Tautan `#khusus=` hanya berlaku pada mode luring tanpa server.
+
+## Login siswa, sesi kelas, dan halaman guru (10 Okt 2026)
+
+Meniru Matematika Dasar. Data di project Supabase Tryout, tabel dan fungsi berawalan `er_`
+(`../database_tryout/kontrak/english_reading.sql`).
+
+**Siswa** (`index.html` → `masuk.js`)
+- Masuk dengan **NISN**. Siswa yang dipakai adalah semua siswa aktif `tka_siswa`, per rombel.
+- Bila guru sedang membuka **sesi kelas** untuk rombelnya, siswa juga harus mengisi **kode akses** 4 angka.
+  Kode itu bisa terisi otomatis lewat QR (`index.html#kode=XXXX`).
+- Di luar sesi, siswa boleh **latihan mandiri** dengan NISN saja selama Pengaturan Umum "Latihan mandiri" = Boleh.
+- Kemajuan (`er_skor`, `er_paham`, `er_sub`, dan seterusnya) dikirim ke server sekitar 1,5 detik sesudah berubah, dan
+  diantre bila sedang luring. Riwayat nilai (sub level, Baca & Koreksi, dengar, pemahaman) dicatat di `er_hasil`.
+- Kemajuan lama di perangkat **dipindahkan** ke akun siswa yang pertama kali masuk di perangkat itu, lalu digabung
+  dengan mengambil nilai terbaik.
+- Saat sesi kelas, keluar halaman dicatat. Bila melebihi batas di Pengaturan Umum, latihan dikunci sampai guru
+  membuka kunci atau siswa mengetik kode buka.
+
+**Guru** (`guru.html`, tautan "Guru / pengawas" di layar masuk siswa)
+- Masuk dengan **PIN pribadi** yang sama dengan Tryout/Matdas (`mtd_guru`). Guru yang belum punya PIN bisa masuk
+  sementara dengan ID gurunya. Admin masuk dengan PIN admin Matdas/operator.
+- Guru hanya melihat **rombel Bahasa Inggris yang diajarnya**, sesuai jadwal KBM di Data Induk.
+- 🏫 **Sesi Kegiatan:** buka sesi per rombel (30–120 menit), perpanjang 15 menit, atau tutup. Tersedia layar penuh
+  berisi kode akses besar dan QR untuk proyektor, serta daftar siswa yang sedang aktif, terkunci, atau keluar halaman,
+  dengan tombol buka kunci.
+- 📈 **Perkembangan:** tabel per rombel berisi tahap sekarang, level tuntas, sub level lulus, hasil 7 hari, dan terakhir aktif.
+  Angka ini dihitung di browser dari blob kemajuan memakai `bacaan.js`/`soal.js`/`pola.js` dan tahapan yang berlaku.
+- 🔍 **Analisis Siswa:** kemajuan per tahap, sub level yang perlu perhatian (≥ 2 kali dicoba tetapi belum 80%),
+  dan 40 hasil terakhir. Dari sini guru juga bisa memasang tahapan khusus untuk satu siswa dan menghapus data latihan.
+- 🎯 **Pengaturan & Tahapan:** Pengaturan Umum hanya bisa diubah admin, termasuk latihan mandiri, batas keluar
+  halaman, dan kode buka. Tahapan khusus memakai editor checklist tahap → level → sub level yang sama dengan `app.js`.
+  Tahapan dipasang ke rombel. Urutan yang berlaku: tahapan siswa → rombel → umum.
+- 🛠️ **Admin:** "Tarik guru dari Data Induk" memanggil `guru_ekspor` (kunci `er_kelas`) lalu `er_sinkron_guru`.
+  PIN guru tetap dibuat di admin Matdas/Tryout.
 
 ## Sepuluh sub level untuk bacaan Tahap 2–5 (10 Okt 2026)
 

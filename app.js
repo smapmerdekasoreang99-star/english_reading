@@ -27,7 +27,10 @@
   }
   function tulis(kunci, nilai) {
     try { localStorage.setItem(kunci, JSON.stringify(nilai)); } catch (e) { /* abaikan */ }
+    if (window.ER_SINKRON && window.ER_SINKRON.kunci[kunci]) window.ER_SINKRON.jadwal();
   }
+  // Catat hasil untuk perkembangan siswa di halaman guru (masuk.js mengirimnya ke er_hasil).
+  const catatHasil = h => { if (window.ER_SINKRON) window.ER_SINKRON.catat(h); };
   const setelan = Object.assign({ suara: '', laju: 0.9, tampilArti: false, tanpaGrafik: false, syaratBaca: 75, harusBaca: true, harusDengar: true,
     tampilJawaban: true, bilaSalah: 'akhir', batasSalah: 0 },
     baca('er_setelan', {}));
@@ -41,6 +44,15 @@
   // Pengaturan & Tahapan Khusus (10 Okt 2026): profil yang sedang dipakai menimpa Pengaturan Umum (setelan).
   const khusus = Object.assign({ aktif: null, daftar: [] }, baca('er_khusus', {}));
   const simpanKhusus = () => tulis('er_khusus', khusus);
+  // Siswa yang masuk lewat masuk.js: aturan Umum dan tahapan khusus berasal dari server (diatur guru), bukan perangkat.
+  const AKUN = window.ER_AKUN || null;
+  if (AKUN && AKUN.atur && !AKUN.luring) {
+    const u = AKUN.atur.umum || {};
+    ['jumlahSoal', 'tampilJawaban', 'bilaSalah', 'batasSalah', 'harusDengar', 'harusBaca', 'syaratBaca'].forEach(k => { if (u[k] != null) setelan[k] = u[k]; });
+    const p = AKUN.atur.profil;
+    khusus.daftar = p ? [{ id: p.id, nama: p.nama, catatan: p.catatan || '', setelan: p.setelan || {}, mati: p.mati || {}, asal: p.asal }] : [];
+    khusus.aktif = p ? p.id : null;
+  }
   const profilAktif = () => khusus.daftar.find(p => p.id === khusus.aktif) || null;
   // atur.x = aturan yang berlaku: dari tahapan khusus yang dipakai bila diisi, selain itu Umum.
   const atur = {};
@@ -312,6 +324,7 @@
     if (kini.didengar.size < kini.kalimat.length) return;
     const terbuka = punyaSub(kini.b) && !siapSub(kini.b);
     dengarSelesai[kini.b.id] = 1;
+    catatHasil({ level: kini.b.id, jenis: 'dengar', nilai: 100 });
     tulis('er_dengar', dengarSelesai);
     const el = layar.querySelector('.sub-level');
     if (el) el.outerHTML = subHTML(kini.b);
@@ -650,6 +663,7 @@
       bh.innerHTML = `<b>${ok ? '✓ Benar.' : `✗ Kurang tepat. Jawaban: ${hurufKunci}.`}</b> ${esc(q.b)}`;
     });
     const persen = Math.round(benar * 100 / daftar.length);
+    catatHasil({ level: b.id, jenis: 'paham', nilai: persen, rincian: { benar, soal: daftar.length } });
     let rekor = false;
     if (skorPaham[b.id] == null || persen > skorPaham[b.id]) {
       skorPaham[b.id] = persen;
@@ -859,6 +873,7 @@
     const lengkap = sisa <= Math.max(2, Math.round(total * 0.05));
     let rekor = false;
     const bacaSebelum = sudahBaca(kini.b);
+    if (lengkap) catatHasil({ level: kini.b.id, jenis: 'baca', nilai: persen, rincian: { tepat, dibaca } });
     if (lengkap && (skorTerbaik[kini.b.id] == null || persen > skorTerbaik[kini.b.id])) {
       skorTerbaik[kini.b.id] = persen;
       tulis('er_skor', skorTerbaik);
@@ -1695,6 +1710,7 @@
     const persen = Math.round(L.benar * 100 / L.awal);
     const d = dataSub(b);
     const rekor = !(d.s[n - 1] >= persen);
+    catatHasil({ level: b.id, sub: n, jenis: 'sub', nilai: persen, rincian: { benar: L.benar, soal: L.awal, salah: L.salah } });
     if (rekor) { d.s[n - 1] = persen; simpanSub(); }
     const lulus = persen >= TUNTAS;
     const SB = daftarSub(b);
@@ -1828,7 +1844,11 @@
   function tampilDaftar() {
     kini = null;
     const p = profilAktif();
-    layar.innerHTML = `<header class="judul-app"><h1>📖 English Reading</h1>
+    layar.innerHTML = (AKUN ? `<div class="er-akun"><span class="er-akun-ikon" aria-hidden="true">👤</span>
+        <span class="er-akun-isi"><b>${esc(AKUN.siswa.nama || AKUN.siswa.nisn)}</b>
+          <small>${esc(AKUN.siswa.kelas || '')}${AKUN.siswa.kelas ? ' · ' : ''}${AKUN.mode === 'kelas' ? '🏫 Sesi kelas' : '🏠 Latihan mandiri'}</small></span>
+        <span class="er-sinkron" id="er-sinkron" role="status"></span>
+        <button class="tombol kecil" id="er-keluar">Keluar</button></div>` : '') + `<header class="judul-app"><h1>📖 English Reading</h1>
         <p>Dengarkan bacaan, lalu baca sendiri dan lihat koreksinya. Mulai dari tahap yang sesuai, tuntaskan tiap level
           (skor terbaik ≥ ${TUNTAS}%), lalu naik ke tahap berikutnya.</p></header>` +
       (p ? `<a class="at-banner" href="#pengaturan/khusus"><span class="at-banner-ikon" aria-hidden="true">🎯</span>
@@ -1860,8 +1880,10 @@
       }).join('') +
       (bisaSuara ? '' : '<div class="pesan">Browser ini tidak bisa membacakan teks. Gunakan Google Chrome versi terbaru.</div>') +
       `<a class="at-pintu" href="#pengaturan"><span class="at-ikon" aria-hidden="true">⚙️</span>
-        <span class="at-pintu-isi"><b>Pengaturan &amp; Tahapan</b><small>Jumlah soal, syarat dengar/baca, bila jawaban salah, dan tahapan khusus${khusus.daftar.length ? ` · ${khusus.daftar.length} tersimpan` : ''}</small></span>
+        <span class="at-pintu-isi"><b>${AKUN ? 'Aturan &amp; Tahapan latihanmu' : 'Pengaturan &amp; Tahapan'}</b><small>${AKUN ? 'Diatur guru: jumlah soal, syarat dengar/baca, bila jawaban salah, dan tahapan' : `Jumlah soal, syarat dengar/baca, bila jawaban salah, dan tahapan khusus${khusus.daftar.length ? ` · ${khusus.daftar.length} tersimpan` : ''}`}</small></span>
         <span class="at-panah-kanan" aria-hidden="true">›</span></a>`;
+    const k = $('#er-keluar');
+    if (k) k.onclick = () => { k.disabled = true; k.textContent = 'Keluar…'; window.ER_SINKRON.keluar(); };
   }
 
   const jenisLevel = b => (b.kosakata ? { kunci: 'kosakata', nama: 'Kosakata' }
@@ -2430,13 +2452,14 @@
   function kepalaAtur(tab) {
     const p = profilAktif(), r = ringkasTahapan(p ? p.mati : null);
     return `<div class="bar-atas"><a href="#" class="kembali">← Daftar bacaan</a><span class="label-tingkat">Pengaturan</span></div>
-      <header class="at-kepala"><span class="at-alis">Berlaku di perangkat ini</span><h1>Pengaturan &amp; Tahapan</h1>
-        <p>Atur cara latihan dan materi yang dipakai. <b>Umum</b> berlaku selama tidak ada tahapan khusus yang dipakai.</p></header>
+      <header class="at-kepala"><span class="at-alis">${AKUN ? 'Diatur guru' : 'Berlaku di perangkat ini'}</span><h1>${AKUN ? 'Aturan &amp; Tahapan Latihanmu' : 'Pengaturan &amp; Tahapan'}</h1>
+        <p>${AKUN ? 'Aturan latihan dan materi yang dipakai diatur gurumu. Halaman ini menampilkan yang berlaku untukmu.'
+          : 'Atur cara latihan dan materi yang dipakai. <b>Umum</b> berlaku selama tidak ada tahapan khusus yang dipakai.'}</p></header>
       <section class="at-berlaku${p ? ' khusus' : ''}" aria-live="polite">
         <span class="at-berlaku-ikon" aria-hidden="true">${p ? '🎯' : '🌐'}</span>
         <div class="at-berlaku-isi"><small>Yang berlaku sekarang</small><b>${p ? esc(p.nama) : 'Pengaturan &amp; Tahapan Umum'}</b>
           <span>${teksRingkas(r)}</span></div>
-        ${p ? '<button class="tombol kecil" data-aksi="pakai-umum">Kembali ke Umum</button>'
+        ${AKUN ? '' : p ? '<button class="tombol kecil" data-aksi="pakai-umum">Kembali ke Umum</button>'
           : khusus.daftar.length && tab !== 'khusus' ? '<a class="tombol kecil" href="#pengaturan/khusus">Pakai tahapan khusus</a>' : ''}
       </section>
       <nav class="at-tab" role="tablist" aria-label="Jenis pengaturan">
@@ -2480,6 +2503,7 @@
       '<p class="at-tersimpan" id="at-tersimpan" role="status"></p>';
     pasangKepalaAtur();
     const atur1 = () => { const r = layar.querySelector('[data-baris="syaratBaca"]'); if (r) r.hidden = !umum('harusBaca'); };
+    if (AKUN) layar.querySelectorAll('select[data-atur]').forEach(x => { x.disabled = true; });
     atur1();
     layar.querySelectorAll('select[data-atur]').forEach(s => {
       s.onchange = () => {
@@ -2515,6 +2539,14 @@
   let bagikanId = null;
   function tampilAturKhusus() {
     kini = null;
+    if (AKUN) {
+      const p = profilAktif();
+      layar.innerHTML = kepalaAtur('khusus') + (p
+        ? `<div class="at-profil-daftar">${kartuProfil(p, true, false).replace(/<div class="at-profil-aksi">[\s\S]*?<\/div>/, '')}</div>
+           <p class="at-catatan">Tahapan ini dipasang gurumu ${p.asal === 'siswa' ? 'khusus untukmu' : 'untuk kelasmu'}.</p>`
+        : '<div class="at-kosong"><span aria-hidden="true">🗺️</span><b>Memakai tahapan umum</b><p>Gurumu belum memasang tahapan khusus. Semua materi bisa kamu latih berurutan.</p></div>');
+      return;
+    }
     layar.innerHTML = kepalaAtur('khusus') + `
       <section class="at-kartu at-buat"><div class="at-kartu-kepala"><span class="at-ikon" aria-hidden="true">✨</span>
         <div><h2>Buat tahapan khusus</h2><p>Pilih tahap, level, sampai sub level yang dipakai, dan aturan yang berbeda dari Umum.
@@ -2551,6 +2583,7 @@
   let draf = null;
   function tampilEditor(kunci) {
     kini = null;
+    if (AKUN) { location.replace('#pengaturan/khusus'); return; }
     const lama = khusus.daftar.find(p => p.id === kunci);
     const contoh = CONTOH.find(c => 'contoh-' + c.kode === kunci);
     if (!lama && !contoh && kunci !== 'baru') { location.replace('#pengaturan/khusus'); return; }
@@ -2685,6 +2718,7 @@
   // ---------- Memasang tahapan khusus dari tautan guru ----------
   function tampilImpor(kode) {
     kini = null;
+    if (AKUN) { location.replace('#pengaturan/khusus'); return; }
     let p = null;
     try { p = bukaKode(kode); } catch (e) { p = null; }
     const bar = '<div class="bar-atas"><a href="#" class="kembali">← Daftar bacaan</a></div>';
