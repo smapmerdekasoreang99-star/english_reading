@@ -219,6 +219,15 @@ Kemajuan yang sudah ada saat fitur ini dipasang disalin ke kedua jalur.
 - Di kartu Latihan mandiri halaman awal, siswa memilih jumlah soal (10/15/20/25) dan tampil jawaban. Guru melihat
   akurasi pengucapan di rumah dan pilihan siswa di kartu Analisis.
 
+## Penyimpanan kemajuan untuk ratusan siswa (10 Okt 2026)
+
+- Perangkat hanya mengirim **bagian kemajuan yang berubah** (`masuk.js`: `selisih` terhadap salinan server
+  dari `er_masuk`/`er_lanjut` atau kiriman terakhir yang berhasil). Server menggabungkan (`er_gabung`: nilai
+  terbaik, gabungan daftar), jadi bagian yang tidak dikirim tetap utuh; kiriman gagal diulang otomatis.
+- Siswa yang lama berlatih (±1.500 kosakata di kotak ulang, ±256 KB): simpan ±49 ms → ±11 ms di server.
+  Kiriman tidak lagi mendekati batas 400 KB per kiriman yang dulu bisa membuat penyimpanan gagal.
+- `er_simpan` tanpa kemajuan baru (hanya hasil) tidak menulis ulang baris kemajuan.
+
 ## Meniru tampilan dan fasilitas Matematika Dasar (10 Okt 2026)
 
 Halaman guru dibangun ulang dari `Matematika_Dasar/guru.html` (CSS disalin apa adanya). Yang berbeda hanya editor

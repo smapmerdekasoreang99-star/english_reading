@@ -63,13 +63,42 @@
   const tulisLokal = d => Object.entries(KUNCI).forEach(([k, n]) => tulis(k, d[n] || (n === 'sub_cek' ? [] : {})));
 
   // ---------- Sinkron ----------
+  // Kiriman sebagian (10 Okt 2026): hanya isian kemajuan yang belum diketahui server yang dikirim.
+  // `dasar` = sidik salinan server (dari er_masuk/er_lanjut) atau kiriman terakhir yang berhasil. Server
+  // menggabungkan (nilai terbaik/gabungan), jadi isian yang tidak dikirim tetap utuh di server. Bila kiriman
+  // gagal, dasar tidak berubah dan isian itu ikut lagi berikutnya; muat ulang halaman = dasar dari server lagi.
+  let dasar = {};
+  // Urutan kunci dibakukan: jsonb di server menyusun ulang kunci objek, jadi bandingkan isinya, bukan urutannya.
+  const baku = x => Array.isArray(x) ? x.map(baku)
+    : x && typeof x === 'object' ? Object.keys(x).sort().reduce((o, k) => { o[k] = baku(x[k]); return o; }, {}) : x;
+  const tera = x => JSON.stringify(baku(x));
+  const sidik = d => {
+    const o = {};
+    Object.entries(d || {}).forEach(([n, v]) => {
+      o[n] = Array.isArray(v) ? new Set(v.map(String))
+        : Object.fromEntries(Object.entries(v && typeof v === 'object' ? v : {}).map(([k, x]) => [k, tera(x)]));
+    });
+    return o;
+  };
+  function selisih(d) {
+    const h = {};
+    Object.entries(d).forEach(([n, v]) => {
+      const b = dasar[n];
+      if (Array.isArray(v)) { const baru = v.filter(x => !(b instanceof Set && b.has(String(x)))); if (baru.length) h[n] = baru; return; }
+      const o = {};
+      Object.entries(v && typeof v === 'object' ? v : {}).forEach(([k, x]) => { if (!b || b instanceof Set || b[k] !== tera(x)) o[k] = x; });
+      if (Object.keys(o).length) h[n] = o;
+    });
+    return h;
+  }
   let akun = null, jadwal = null, antre = baca('er_antre', []), sedang = false, coba = 0;
   async function kirim(keepalive) {
     if (!akun || akun.coba || sedang) return;
     sedang = true;
-    const hasil = antre.slice(0, 50);
+    const hasil = antre.slice(0, 50), semua = dataLokal();
     try {
-      const r = await rpc('er_simpan', { p_token: akun.token, p_data: dataLokal(), p_hasil: hasil }, { keepalive });
+      const r = await rpc('er_simpan', { p_token: akun.token, p_data: selisih(semua), p_hasil: hasil }, { keepalive });
+      dasar = sidik(semua);
       antre = antre.slice(hasil.length); tulis('er_antre', antre);
       coba = 0;
       tandaSinkron('ok');
@@ -245,6 +274,7 @@
     else if (!milik && adaIsi(lokal)) pindah = true;                                     // kemajuan sebelum ada login
     const gab = gabung(p.kemajuan, sama || pindah ? lokal : {});
     tulisLokal(gab);
+    dasar = sidik(p.kemajuan);          // yang sudah ada di server: tidak perlu dikirim lagi
     tulis('er_milik', nisn);
     tulis('er_mode_lokal', p.mode);
     tulis('er_token', p.token);
