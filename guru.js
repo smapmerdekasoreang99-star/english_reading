@@ -367,7 +367,7 @@
     maks_keluar: ['Batas keluar halaman saat sesi kelas', [0, 1, 2, 3, 5].map(v => [v, v ? `${v} kali → latihan dikunci` : 'Tanpa batas (hanya dicatat)'])],
     toleransi_keluar: ['Keluar halaman yang dihitung', [5, 10, 20, 30].map(v => [v, `≥ ${v} detik`])]
   };
-  const KUNCI_PROFIL = ['jumlahSoal', 'harusDengar', 'harusBaca', 'syaratBaca', 'tampilJawaban', 'bilaSalah', 'batasSalah'];
+  const KUNCI_PROFIL = ['jumlahSoal', 'harusDengar', 'harusBaca', 'syaratBaca', 'tampilJawaban', 'bilaSalah', 'batasSalah', 'maks_keluar', 'toleransi_keluar'];
   const teksNilai = (k, v) => ((PILIHAN[k][1].find(([x]) => x === v) || [null, String(v)])[1]);
   const nilaiKetik = (k, s) => (s === '' ? null : typeof DEF_ATUR[k] === 'boolean' ? s === 'true' : typeof DEF_ATUR[k] === 'number' ? +s : s);
   const umum = k => (AKUN.umum[k] == null ? DEF_ATUR[k] : AKUN.umum[k]);
@@ -407,7 +407,7 @@
     isi().innerHTML = `<section class="g-seksi-kepala"><div><h1>Pengaturan &amp; Tahapan</h1>
         <p><b>Umum</b> berlaku untuk semua siswa. <b>Tahapan khusus</b> dipasang ke rombel atau siswa tertentu; aturan yang diisi di tahapan khusus mengalahkan Umum, satu per satu. Urutan: siswa → rombel → umum.</p></div></section>
       <section class="at-kartu"><div class="at-kartu-kepala"><span class="at-ikon" aria-hidden="true">🌐</span><div><h2>Pengaturan Umum</h2>
-        <p>${admin ? 'Berlaku untuk semua siswa yang tidak diberi aturan lain.' : 'Diatur admin. Untuk aturan berbeda di rombel Anda, buat tahapan khusus.'}</p></div></div>
+        <p>${admin ? 'Berlaku untuk semua siswa yang tidak diberi aturan lain.' : 'Diatur admin. Untuk aturan berbeda di rombel Anda, termasuk batas keluar halaman saat sesi kelas, buat tahapan khusus lalu pasang ke rombel.'}</p></div></div>
         <div class="at-baris-daftar">${Object.keys(PILIHAN).map(k => barisAtur(k, umum(k), false, !admin)).join('')}</div>
         ${admin ? '<label class="at-baris"><span class="at-baris-label">Kode buka kunci (kosong = kode akses sesi atau PIN guru)</span><input id="g-kode-buka" class="g-pilih" maxlength="12" value="' + esc(AKUN.umum.kode_buka || '') + '"></label>' : ''}</section>
       <section class="at-kartu"><div class="at-kartu-kepala"><span class="at-ikon" aria-hidden="true">🏫</span><div><h2>Tahapan untuk rombel</h2><p>Pilih tahapan yang dipakai tiap rombel. Siswa yang diberi tahapan sendiri (menu Analisis Siswa) tidak terpengaruh.</p></div></div>

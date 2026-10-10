@@ -229,6 +229,8 @@ Meniru Matematika Dasar. Data di project Supabase Tryout, tabel dan fungsi beraw
 - 🎯 **Pengaturan & Tahapan:** Pengaturan Umum hanya bisa diubah admin, termasuk latihan mandiri, batas keluar
   halaman, dan kode buka. Tahapan khusus memakai editor checklist tahap → level → sub level yang sama dengan `app.js`.
   Tahapan dipasang ke rombel. Urutan yang berlaku: tahapan siswa → rombel → umum.
+  Seperti Matdas, tahapan khusus juga boleh mengisi **batas keluar halaman saat sesi kelas** dan **keluar halaman yang dihitung**
+  (detik); bila dibiarkan "Ikut umum", nilai Pengaturan Umum yang dipakai.
 - 🛠️ **Admin:** "Tarik guru dari Data Induk" memanggil `guru_ekspor` (kunci `er_kelas`) lalu `er_sinkron_guru`.
   PIN guru tetap dibuat di admin Matdas/Tryout.
 
