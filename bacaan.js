@@ -14,7 +14,7 @@
    Hindari angka (tulis "twenty", bukan "20"), jam ("seven o'clock"), dan singkatan
    bertitik ("Mr.") agar pemecahan kalimat dan koreksi bacaan tetap tepat. */
 window.TAHAP = [
-  { no: 0, nama: 'Fondasi', setara: 'Pre-A1 · setara SD', fokus: 'Kosakata dasar berkelompok (17 kelompok, 170 kata). Tiap kata dengan arti dan contoh kalimat.' },
+  { no: 0, nama: 'Fondasi', setara: 'Pre-A1 · setara SD', fokus: 'Kosakata dasar berkelompok (21 kelompok, 210 kata), termasuk angka sampai jutaan, bilangan bertingkat, dan menyatakan jam. Tiap kata dengan arti dan contoh kalimat.' },
   { no: 1, nama: 'Kalimat Sederhana', setara: 'A1 · SD akhir–SMP 7', fokus: 'Pola kalimat dasar (I am, there is, simple present, want to, kata tanya) dan bacaan pendek.' },
   { no: 2, nama: 'Teks Fungsional Pendek', setara: 'A2 · SMP', fokus: 'Pola masa lalu, masa depan, dan modal; teks deskripsi, recount, prosedur, pengumuman.' },
   { no: 3, nama: 'Genre Teks', setara: 'A2+–B1 · SMP 9–SMA 10', fokus: 'Pola menyampaikan pendapat; narrative, report, exposition singkat; kata sambung.' },
@@ -161,6 +161,138 @@ window.BACAAN = [
       { s: 'Berapa jumlah kaki seekor laba-laba?', j: 'eight' },
       { s: 'Lima ditambah empat sama dengan …', j: 'nine' },
       { s: 'Berapa jumlah jari pada kedua tanganmu?', j: 'ten' }
+    ]
+  },
+  // Tambahan 10 Okt 2026: bilangan 11–100, bilangan besar sampai jutaan, bilangan bertingkat.
+  {
+    id: 'numbers-100', tahap: 0, judul: 'Numbers 11 to 100', kelompok: 'Angka 11–100',
+    kosakata: [
+      ['eleven', 'sebelas', 'There are eleven players in a football team.', 'Ada sebelas pemain dalam satu tim sepak bola.'],
+      ['twelve', 'dua belas', 'There are twelve months in a year.', 'Ada dua belas bulan dalam setahun.'],
+      ['thirteen', 'tiga belas', 'My brother is thirteen years old.', 'Kakakku berumur tiga belas tahun.'],
+      ['fifteen', 'lima belas', 'The break is fifteen minutes long.', 'Waktu istirahat lamanya lima belas menit.'],
+      ['twenty', 'dua puluh', 'I have twenty books.', 'Saya punya dua puluh buku.'],
+      ['twenty-five', 'dua puluh lima', 'There are twenty-five students in my class.', 'Ada dua puluh lima siswa di kelasku.'],
+      ['thirty', 'tiga puluh', 'April has thirty days.', 'Bulan April punya tiga puluh hari.'],
+      ['forty', 'empat puluh', 'My father is forty years old.', 'Ayahku berumur empat puluh tahun.'],
+      ['sixty', 'enam puluh', 'One hour has sixty minutes.', 'Satu jam ada enam puluh menit.'],
+      ['one hundred', 'seratus', 'There are one hundred chairs in the hall.', 'Ada seratus kursi di aula.']
+    ],
+    contohLain: {
+      'eleven': [['Ten plus one is eleven.', 'Sepuluh tambah satu sama dengan sebelas.'], ['My cousin is eleven years old.', 'Sepupuku berumur sebelas tahun.']],
+      'twelve': [['I have lunch at twelve.', 'Saya makan siang pukul dua belas.'], ['A box has twelve pencils.', 'Satu kotak berisi dua belas pensil.']],
+      'thirteen': [['There are thirteen girls in the room.', 'Ada tiga belas anak perempuan di ruangan itu.'], ['Ten plus three is thirteen.', 'Sepuluh tambah tiga sama dengan tiga belas.']],
+      'fifteen': [['I walk to school for fifteen minutes.', 'Saya berjalan ke sekolah selama lima belas menit.'], ['She is fifteen years old.', 'Dia berumur lima belas tahun.']],
+      'twenty': [['Two times ten is twenty.', 'Dua kali sepuluh sama dengan dua puluh.'], ['We have twenty chickens.', 'Kami punya dua puluh ekor ayam.']],
+      'twenty-five': [['Five times five is twenty-five.', 'Lima kali lima sama dengan dua puluh lima.'], ['My teacher is twenty-five years old.', 'Guruku berumur dua puluh lima tahun.']],
+      'thirty': [['The test takes thirty minutes.', 'Ujiannya berlangsung tiga puluh menit.'], ['There are thirty days in June.', 'Ada tiga puluh hari di bulan Juni.']],
+      'forty': [['Our class has forty desks.', 'Kelas kami punya empat puluh meja.'], ['Four times ten is forty.', 'Empat kali sepuluh sama dengan empat puluh.']],
+      'sixty': [['One minute has sixty seconds.', 'Satu menit ada enam puluh detik.'], ['My grandfather is sixty years old.', 'Kakekku berumur enam puluh tahun.']],
+      'one hundred': [['Ten times ten is one hundred.', 'Sepuluh kali sepuluh sama dengan seratus.'], ['I got one hundred on my test.', 'Saya mendapat nilai seratus di ujianku.']]
+    },
+    situasi: [
+      { s: 'Berapa jumlah pemain satu tim sepak bola di lapangan?', j: 'eleven' },
+      { s: 'Berapa jumlah bulan dalam setahun?', j: 'twelve' },
+      { s: 'Sepuluh ditambah dua sama dengan …', j: 'twelve' },
+      { s: 'Sepuluh ditambah tiga sama dengan …', j: 'thirteen' },
+      { s: 'Seperempat jam sama dengan berapa menit?', j: 'fifteen' },
+      { s: 'Sepuluh ditambah lima sama dengan …', j: 'fifteen' },
+      { s: 'Dua kali sepuluh sama dengan …', j: 'twenty' },
+      { s: 'Berapa jumlah jari tangan dan jari kakimu seluruhnya?', j: 'twenty' },
+      { s: 'Lima kali lima sama dengan …', j: 'twenty-five' },
+      { s: 'Berapa jumlah hari di bulan April?', j: 'thirty' },
+      { s: 'Setengah jam sama dengan berapa menit?', j: 'thirty' },
+      { s: 'Empat kali sepuluh sama dengan …', j: 'forty' },
+      { s: 'Berapa menit dalam satu jam?', j: 'sixty' },
+      { s: 'Sepuluh kali sepuluh sama dengan …', j: 'one hundred' }
+    ]
+  },
+  {
+    id: 'big-numbers', tahap: 0, judul: 'Big Numbers', kelompok: 'Angka ratusan sampai jutaan',
+    kosakata: [
+      ['five hundred', 'lima ratus', 'I found a five hundred rupiah coin.', 'Saya menemukan koin lima ratus rupiah.'],
+      ['one thousand', 'seribu', 'Our school has one thousand two hundred students.', 'Sekolah kami punya seribu dua ratus siswa.'],
+      ['two thousand', 'dua ribu', 'I buy a candy for two thousand rupiah.', 'Saya membeli permen seharga dua ribu rupiah.'],
+      ['ten thousand', 'sepuluh ribu', 'My pocket money is ten thousand rupiah a day.', 'Uang sakuku sepuluh ribu rupiah sehari.'],
+      ['twenty thousand', 'dua puluh ribu', 'The ticket costs twenty thousand rupiah.', 'Harga tiketnya dua puluh ribu rupiah.'],
+      ['fifty thousand', 'lima puluh ribu', 'This book costs fifty thousand rupiah.', 'Buku ini harganya lima puluh ribu rupiah.'],
+      ['one hundred thousand', 'seratus ribu', 'The stadium can hold one hundred thousand people.', 'Stadion itu dapat menampung seratus ribu orang.'],
+      ['five hundred thousand', 'lima ratus ribu', 'My new shoes cost five hundred thousand rupiah.', 'Sepatu baruku harganya lima ratus ribu rupiah.'],
+      ['one million', 'satu juta', 'More than one million people live in this city.', 'Lebih dari satu juta orang tinggal di kota ini.'],
+      ['ten million', 'sepuluh juta', 'The new motorcycle costs ten million rupiah.', 'Sepeda motor baru itu harganya sepuluh juta rupiah.']
+    ],
+    contohLain: {
+      'five hundred': [['Ten times fifty is five hundred.', 'Sepuluh kali lima puluh sama dengan lima ratus.'], ['The village has five hundred families.', 'Desa itu punya lima ratus keluarga.']],
+      'one thousand': [['Ten times one hundred is one thousand.', 'Sepuluh kali seratus sama dengan seribu.'], ['The hall has one thousand chairs.', 'Aula itu punya seribu kursi.']],
+      'two thousand': [['A bottle of water costs two thousand rupiah.', 'Sebotol air harganya dua ribu rupiah.'], ['The library has two thousand books.', 'Perpustakaan itu punya dua ribu buku.']],
+      'ten thousand': [['One hundred times one hundred is ten thousand.', 'Seratus kali seratus sama dengan sepuluh ribu.'], ['I walk ten thousand steps every day.', 'Saya berjalan sepuluh ribu langkah setiap hari.']],
+      'twenty thousand': [['A bowl of meatball soup costs twenty thousand rupiah.', 'Semangkuk bakso harganya dua puluh ribu rupiah.'], ['The concert has twenty thousand fans.', 'Konser itu punya dua puluh ribu penggemar.']],
+      'fifty thousand': [['Can I pay with fifty thousand rupiah?', 'Bolehkah saya membayar dengan lima puluh ribu rupiah?'], ['The festival has fifty thousand visitors.', 'Festival itu punya lima puluh ribu pengunjung.']],
+      'one hundred thousand': [['The red money is one hundred thousand rupiah.', 'Uang berwarna merah itu seratus ribu rupiah.'], ['This bag costs one hundred thousand rupiah.', 'Tas ini harganya seratus ribu rupiah.']],
+      'five hundred thousand': [['My mother saves five hundred thousand rupiah every month.', 'Ibuku menabung lima ratus ribu rupiah setiap bulan.'], ['The school trip costs five hundred thousand rupiah.', 'Darmawisata sekolah biayanya lima ratus ribu rupiah.']],
+      'one million': [['One thousand times one thousand is one million.', 'Seribu kali seribu sama dengan satu juta.'], ['The prize is one million rupiah.', 'Hadiahnya satu juta rupiah.']],
+      'ten million': [['The city has ten million trees.', 'Kota itu punya sepuluh juta pohon.'], ['My uncle saved ten million rupiah for a new house.', 'Pamanku menabung sepuluh juta rupiah untuk rumah baru.']]
+    },
+    situasi: [
+      { s: 'Koin Rp500 dalam bahasa Inggris dibaca …', j: 'five hundred' },
+      { s: 'Seribu dikurangi lima ratus sama dengan …', j: 'five hundred' },
+      { s: 'Sepuluh kali seratus sama dengan …', j: 'one thousand' },
+      { s: 'Uang kertas Rp2.000 dalam bahasa Inggris dibaca …', j: 'two thousand' },
+      { s: 'Dua kali seribu sama dengan …', j: 'two thousand' },
+      { s: 'Uang kertas Rp10.000 dalam bahasa Inggris dibaca …', j: 'ten thousand' },
+      { s: 'Seratus kali seratus sama dengan …', j: 'ten thousand' },
+      { s: 'Uang kertas Rp20.000 dalam bahasa Inggris dibaca …', j: 'twenty thousand' },
+      { s: 'Uang kertas biru Rp50.000 dalam bahasa Inggris dibaca …', j: 'fifty thousand' },
+      { s: 'Uang kertas merah Rp100.000 dalam bahasa Inggris dibaca …', j: 'one hundred thousand' },
+      { s: 'Lima puluh ribu ditambah lima puluh ribu sama dengan …', j: 'one hundred thousand' },
+      { s: 'Lima kali seratus ribu sama dengan …', j: 'five hundred thousand' },
+      { s: 'Seribu kali seribu sama dengan …', j: 'one million' },
+      { s: 'Rp1.000.000 dalam bahasa Inggris dibaca …', j: 'one million' },
+      { s: 'Sepuluh kali satu juta sama dengan …', j: 'ten million' }
+    ]
+  },
+  {
+    id: 'ordinal-numbers', tahap: 0, judul: 'Ordinal Numbers', kelompok: 'Bilangan bertingkat',
+    kosakata: [
+      ['first', 'pertama', 'January is the first month of the year.', 'Januari adalah bulan pertama dalam setahun.'],
+      ['second', 'kedua', 'I sit in the second row.', 'Saya duduk di baris kedua.'],
+      ['third', 'ketiga', 'My class is on the third floor.', 'Kelasku ada di lantai tiga.'],
+      ['fourth', 'keempat', 'April is the fourth month of the year.', 'April adalah bulan keempat dalam setahun.'],
+      ['fifth', 'kelima', 'May is the fifth month of the year.', 'Mei adalah bulan kelima dalam setahun.'],
+      ['eighth', 'kedelapan', 'August is the eighth month of the year.', 'Agustus adalah bulan kedelapan dalam setahun.'],
+      ['ninth', 'kesembilan', 'My brother is in the ninth grade.', 'Kakakku duduk di kelas sembilan.'],
+      ['twelfth', 'kedua belas', 'December is the twelfth month of the year.', 'Desember adalah bulan kedua belas dalam setahun.'],
+      ['twentieth', 'kedua puluh', 'Today is my twentieth day at the new school.', 'Hari ini adalah hari kedua puluhku di sekolah baru.'],
+      ['twenty-first', 'kedua puluh satu', 'Kartini Day is on the twenty-first of April.', 'Hari Kartini jatuh pada tanggal dua puluh satu April.']
+    ],
+    contohLain: {
+      'first': [['She won first place in the race.', 'Dia meraih juara pertama dalam lomba lari.'], ['This is my first visit to Bali.', 'Ini kunjungan pertamaku ke Bali.']],
+      'second': [['Andi is the second child in his family.', 'Andi adalah anak kedua di keluarganya.'], ['February is the second month.', 'Februari adalah bulan kedua.']],
+      'third': [['My team got third place.', 'Timku mendapat juara ketiga.'], ['March is the third month of the year.', 'Maret adalah bulan ketiga dalam setahun.']],
+      'fourth': [['This is the fourth time I read this book.', 'Ini keempat kalinya saya membaca buku ini.'], ['He lives on the fourth floor.', 'Dia tinggal di lantai empat.']],
+      'fifth': [['Our team finished in fifth place.', 'Tim kami finis di urutan kelima.'], ['Turn left at the fifth house.', 'Belok kiri di rumah kelima.']],
+      'eighth': [['My sister is in the eighth grade.', 'Kakak perempuanku duduk di kelas delapan.'], ['This is the eighth question.', 'Ini soal kedelapan.']],
+      'ninth': [['September is the ninth month of the year.', 'September adalah bulan kesembilan dalam setahun.'], ['I live on the ninth floor.', 'Saya tinggal di lantai sembilan.']],
+      'twelfth': [['Students in the twelfth grade will finish school soon.', 'Siswa kelas dua belas akan segera lulus sekolah.'], ['This is the twelfth page.', 'Ini halaman kedua belas.']],
+      'twentieth': [['Grandma celebrated her twentieth wedding anniversary.', 'Nenek merayakan ulang tahun pernikahannya yang kedua puluh.'], ['Tomorrow is the twentieth of May.', 'Besok tanggal dua puluh Mei.']],
+      'twenty-first': [['My birthday is on the twenty-first of June.', 'Ulang tahunku tanggal dua puluh satu Juni.'], ['We live in the twenty-first century.', 'Kita hidup di abad kedua puluh satu.']]
+    },
+    situasi: [
+      { s: 'Kamu juara satu lomba lari. Kamu berada di urutan …', j: 'first' },
+      { s: 'Januari adalah bulan ke-…', j: 'first' },
+      { s: 'Pemenang medali perak berada di urutan …', j: 'second' },
+      { s: 'Februari adalah bulan ke-…', j: 'second' },
+      { s: 'Pemenang medali perunggu berada di urutan …', j: 'third' },
+      { s: 'Maret adalah bulan ke-…', j: 'third' },
+      { s: 'April adalah bulan ke-…', j: 'fourth' },
+      { s: 'Mei adalah bulan ke-…', j: 'fifth' },
+      { s: 'Hari Kemerdekaan Indonesia jatuh pada bulan ke-…', j: 'eighth' },
+      { s: 'Agustus adalah bulan ke-…', j: 'eighth' },
+      { s: 'Siswa kelas 9 SMP duduk di kelas ke-… (the … grade)', j: 'ninth' },
+      { s: 'Desember adalah bulan ke-…', j: 'twelfth' },
+      { s: 'Ulang tahun yang ke-20 disebut the … birthday.', j: 'twentieth' },
+      { s: 'Hari Kartini jatuh pada tanggal … April.', j: 'twenty-first' },
+      { s: 'Abad sekarang, abad ke-21, disebut the … century.', j: 'twenty-first' }
     ]
   },
   {
@@ -493,6 +625,50 @@ window.BACAAN = [
       { s: 'Hari sesudah Sabtu.', j: 'Sunday' },
       { s: 'Tujuh hari disebut satu …', j: 'week' },
       { s: 'Enam puluh menit disebut satu …', j: 'hour' }
+    ]
+  },
+  // Tambahan 10 Okt 2026: menyatakan waktu (jam). Gaya past/to; hindari a.m./p.m. (titiknya memecah kalimat).
+  {
+    id: 'telling-time', tahap: 0, judul: 'Telling the Time', kelompok: 'Menyatakan jam',
+    kosakata: [
+      ["o'clock", 'tepat (pukul … tepat)', "It is seven o'clock.", 'Sekarang pukul tujuh tepat.'],
+      ['half past', 'lewat tiga puluh menit (setengah …)', 'It is half past six.', 'Sekarang pukul setengah tujuh.'],
+      ['quarter past', 'lewat seperempat (lewat lima belas menit)', 'It is a quarter past eight.', 'Sekarang pukul delapan lewat lima belas menit.'],
+      ['quarter to', 'kurang seperempat (kurang lima belas menit)', 'It is a quarter to nine.', 'Sekarang pukul sembilan kurang lima belas menit.'],
+      ['minutes past', 'menit lewat', 'It is ten minutes past four.', 'Sekarang pukul empat lewat sepuluh menit.'],
+      ['minutes to', 'menit sebelum (kurang … menit)', 'It is five minutes to twelve.', 'Sekarang pukul dua belas kurang lima menit.'],
+      ['what time is it', 'jam berapa sekarang', 'Excuse me, what time is it?', 'Permisi, jam berapa sekarang?'],
+      ['noon', 'tengah hari (pukul dua belas siang)', 'We have lunch at noon.', 'Kami makan siang pada tengah hari.'],
+      ['midnight', 'tengah malam', 'The new year starts at midnight.', 'Tahun baru dimulai tengah malam.'],
+      ['in the morning', 'pagi hari', 'I go to school at seven in the morning.', 'Saya berangkat sekolah pukul tujuh pagi.']
+    ],
+    contohLain: {
+      "o'clock": [["School starts at seven o'clock.", 'Sekolah dimulai pukul tujuh tepat.'], ["I go to bed at nine o'clock.", 'Saya tidur pukul sembilan tepat.']],
+      'half past': [['The film starts at half past seven.', 'Filmnya mulai pukul setengah delapan.'], ['I wake up at half past five.', 'Saya bangun pukul setengah enam.']],
+      'quarter past': [['The bus comes at a quarter past six.', 'Bus datang pukul enam lewat seperempat.'], ['We have a break at a quarter past ten.', 'Kami istirahat pukul sepuluh lewat seperempat.']],
+      'quarter to': [['The class ends at a quarter to one.', 'Pelajaran selesai pukul satu kurang seperempat.'], ['I leave home at a quarter to seven.', 'Saya berangkat dari rumah pukul tujuh kurang seperempat.']],
+      'minutes past': [['The train leaves at twenty minutes past three.', 'Kereta berangkat pukul tiga lewat dua puluh menit.'], ['It is five minutes past eleven.', 'Sekarang pukul sebelas lewat lima menit.']],
+      'minutes to': [['It is ten minutes to six.', 'Sekarang pukul enam kurang sepuluh menit.'], ['The shop closes at twenty minutes to nine.', 'Toko tutup pukul sembilan kurang dua puluh menit.']],
+      'what time is it': [['What time is it now?', 'Jam berapa sekarang?'], ['Mom, what time is it?', 'Bu, jam berapa sekarang?']],
+      'noon': [['The sun is very hot at noon.', 'Matahari sangat panas pada tengah hari.'], ['The shop closes at noon on Friday.', 'Toko itu tutup pada tengah hari setiap Jumat.']],
+      'midnight': [['I never stay up until midnight.', 'Saya tidak pernah begadang sampai tengah malam.'], ['The streets are quiet at midnight.', 'Jalanan sepi pada tengah malam.']],
+      'in the morning': [['I take a shower at six in the morning.', 'Saya mandi pukul enam pagi.'], ['Birds sing in the morning.', 'Burung-burung berkicau di pagi hari.']]
+    },
+    situasi: [
+      { s: 'Jam menunjukkan pukul 07.00. Dalam bahasa Inggris: It is seven …', j: "o'clock" },
+      { s: 'Kamu pulang tepat pukul dua. Ayah bertanya kapan kamu pulang. Kamu menjawab, "At two …"', j: "o'clock" },
+      { s: 'Jam menunjukkan pukul 06.30. Dalam bahasa Inggris: It is … six.', j: 'half past' },
+      { s: 'Film dimulai pukul 07.30. Dalam bahasa Inggris: at … seven.', j: 'half past' },
+      { s: 'Jam menunjukkan pukul 08.15. Dalam bahasa Inggris: It is a … eight.', j: 'quarter past' },
+      { s: 'Istirahat pukul 10.15. Dalam bahasa Inggris: at a … ten.', j: 'quarter past' },
+      { s: 'Jam menunjukkan pukul 08.45. Dalam bahasa Inggris: It is a … nine.', j: 'quarter to' },
+      { s: 'Pelajaran selesai pukul 12.45. Dalam bahasa Inggris: at a … one.', j: 'quarter to' },
+      { s: 'Jam menunjukkan pukul 04.10. Dalam bahasa Inggris: It is ten … four.', j: 'minutes past' },
+      { s: 'Jam menunjukkan pukul 05.50. Dalam bahasa Inggris: It is ten … six.', j: 'minutes to' },
+      { s: 'Kamu tidak membawa jam dan ingin tahu waktu. Kamu bertanya kepada temanmu, "Excuse me, …?"', j: 'what time is it' },
+      { s: 'Pukul 12.00 siang disebut …', j: 'noon' },
+      { s: 'Pukul 12.00 malam, saat tanggal berganti, disebut …', j: 'midnight' },
+      { s: 'Kamu berangkat sekolah pukul 06.30 pagi: "at half past six …"', j: 'in the morning' }
     ]
   },
   {

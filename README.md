@@ -32,6 +32,13 @@ tanpa database dan tanpa login.
 Koreksi ini menilai apakah kata **dikenali** sebagai kata yang benar, bukan
 penilaian fonetik rinci (tekanan, intonasi).
 
+## Bilangan dan jam dari pengenal suara
+
+Pengenal suara sering menuliskan bilangan sebagai angka. Sebelum dicocokkan dengan teks, `bilanganKeKata`
+di `app.js` mengubahnya ke kata: `1,000,000` / `Rp50.000` → one million / fifty thousand, `21st` →
+twenty first, `7:30` → half past seven, `8:45` → quarter to nine, `7:00` → seven o'clock. Karena itu teks
+menulis jam dengan gaya past/to dan bilangan tanpa "and" (one thousand two hundred).
+
 ## Menambah bacaan
 
 Salin satu blok di `bacaan.js`, beri `id` unik. Tulis angka dengan huruf
@@ -45,7 +52,8 @@ Mikrofon tidak diizinkan dari `file://`. Jalankan server lokal, misalnya
 
 ## Jenis level dan pengulangan
 
-- **Kosakata** (Tahap 0): 17 kelompok × 10 kata. Tiap kata punya arti dan satu
+- **Kosakata** (Tahap 0): 21 kelompok × 10 kata (sejak 10 Okt 2026 termasuk *Numbers 11 to 100*,
+  *Big Numbers* sampai puluhan juta, *Ordinal Numbers*, dan *Telling the Time*). Tiap kata punya arti dan satu
   contoh kalimat. Ditulis di `bacaan.js` sebagai `kosakata: [kata, arti, contoh, arti contoh]`;
   teksnya dibentuk otomatis menjadi "kata. contoh kalimat." agar bisa didengar dan dikoreksi.
 - **Pola kalimat** (Tahap 1–3): `pola` (rumus), `catatan` (penjelasan), lalu contoh kalimat.
@@ -83,7 +91,7 @@ browser tanpa suara (syarat dengar) atau tanpa pengenal suara (syarat baca), lev
 sebelumnya, dan level yang sub levelnya sudah mulai dikerjakan. Pengaturan lama "Tanpa syarat" otomatis
 menjadi Tanpa Baca.
 
-Percontohan di **Greetings** (9 Okt 2026), lalu dipasang di ke-17 kelompok kosakata Tahap 0.
+Percontohan di **Greetings** (9 Okt 2026), lalu dipasang di semua kelompok kosakata Tahap 0.
 Aktif otomatis di level kosakata yang punya `situasi` di `bacaan.js`.
 
 | Sub level | Bentuk soal |

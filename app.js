@@ -102,11 +102,44 @@
   // ---------- Pencocokan bacaan ----------
   const ANGKA = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
     'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+  // Pengenal suara menuliskan bilangan sebagai angka ("1,000,000", "21st", "7:30"); diubah ke kata
+  // agar cocok dengan teks yang menulis bilangan dengan huruf (10 Okt 2026, level angka dan jam).
+  const PULUHAN = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+  function angkaKata(n) {
+    if (n <= 20) return ANGKA[n];
+    if (n < 100) return PULUHAN[Math.floor(n / 10)] + (n % 10 ? ' ' + ANGKA[n % 10] : '');
+    if (n < 1000) return ANGKA[Math.floor(n / 100)] + ' hundred' + (n % 100 ? ' ' + angkaKata(n % 100) : '');
+    for (const [b, nama] of [[1e9, 'billion'], [1e6, 'million'], [1e3, 'thousand']]) {
+      if (n >= b) return angkaKata(Math.floor(n / b)) + ' ' + nama + (n % b ? ' ' + angkaKata(n % b) : '');
+    }
+    return String(n);
+  }
+  const ORDINAL = { one: 'first', two: 'second', three: 'third', five: 'fifth', eight: 'eighth', nine: 'ninth', twelve: 'twelfth' };
+  function ordinalKata(n) {
+    const k = angkaKata(n).split(' ');
+    const a = k.pop();
+    return [...k, ORDINAL[a] || (a.endsWith('y') ? a.slice(0, -1) + 'ieth' : a + 'th')].join(' ');
+  }
+  // Jam ditulis seperti di teks (gaya past/to): 7:00 seven o'clock, 6:30 half past six, 8:45 quarter to nine.
+  function jamKata(h, m) {
+    const j = h % 12 || 12, b = j % 12 + 1;
+    if (m === 0) return `${angkaKata(j)} o'clock`;
+    if (m === 15) return `quarter past ${angkaKata(j)}`;
+    if (m === 30) return `half past ${angkaKata(j)}`;
+    if (m === 45) return `quarter to ${angkaKata(b)}`;
+    return m < 30 ? `${angkaKata(m)} minutes past ${angkaKata(j)}` : `${angkaKata(60 - m)} minutes to ${angkaKata(b)}`;
+  }
+  const bilanganKeKata = t => t
+    .replace(/\b(\d{1,2})[:.](\d{2})\b(?!\d)/g, (x, h, m) => (+h <= 24 && +m < 60 ? jamKata(+h, +m) : x))
+    .replace(/(rp\.?|\$)\s?(?=\d)/gi, '')
+    .replace(/(\d)[,.](?=\d{3}(\D|$))/g, '$1')
+    .replace(/\b(\d+)(st|nd|rd|th)\b/gi, (x, d) => (+d < 1e9 ? ordinalKata(+d) : x))
+    .replace(/\d+/g, d => (+d < 1e12 ? ' ' + angkaKata(+d) + ' ' : d));
   // segmen: [{ teks, yakin }] → [{ w, yakin }]; yakin 0 = tidak diketahui.
   function kataUcapan(segmen) {
     const hasil = [];
     for (const s of segmen) {
-      for (let w of s.teks.replace(/-/g, ' ').split(/\s+/)) {
+      for (let w of bilanganKeKata(s.teks).replace(/-/g, ' ').split(/\s+/)) {
         w = norm(w);
         if (!w) continue;
         if (/^\d+$/.test(w) && ANGKA[+w]) w = ANGKA[+w];
