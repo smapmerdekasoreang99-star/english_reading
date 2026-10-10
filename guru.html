@@ -840,10 +840,14 @@ body.lihat .ubah { display: none !important; }
           <button class="kecil" id="dl-atur-buka" aria-expanded="false" aria-controls="dl-panel">Atur aturan &amp; tahapan</button>
           <span class="ujung"><button class="kecil bahaya" id="dl-hapus">Hapus data latihan</button><span class="m-jarak" aria-hidden="true"></span><button class="kecil hidden" id="dl-terapkan">Terapkan</button><button class="kecil tutup" id="dl-batal">Batal pilih</button></span></div>
         <div class="m-panel hidden" id="dl-panel">
-        <div class="m-baris"><span class="m-label">Aturan</span>
-          <div class="m-kendali"><select id="dl-aturan" aria-label="Profil aturan untuk siswa terpilih"><option value="">Ikut rombel</option></select></div></div>
-        <div class="m-baris"><span class="m-label">Tahapan</span>
-          <div class="m-kendali"><select id="dl-profil" aria-label="Tahapan untuk siswa terpilih"><option value="">Ikut rombel</option></select></div></div>
+        <div class="m-baris"><span class="m-label">Aturan sesi</span>
+          <div class="m-kendali"><select id="dl-aturan" aria-label="Profil aturan sesi untuk siswa terpilih"><option value="">Ikut rombel</option></select></div></div>
+        <div class="m-baris"><span class="m-label">Tahapan sesi</span>
+          <div class="m-kendali"><select id="dl-profil" aria-label="Tahapan sesi untuk siswa terpilih"><option value="">Ikut rombel</option></select></div></div>
+        <div class="m-baris"><span class="m-label">Aturan mandiri</span>
+          <div class="m-kendali"><select id="dl-aturan-m" aria-label="Profil aturan latihan mandiri untuk siswa terpilih"><option value="">Ikut rombel</option></select></div></div>
+        <div class="m-baris"><span class="m-label">Saran mandiri</span>
+          <div class="m-kendali"><select id="dl-saran-m" aria-label="Saran tahapan latihan mandiri untuk siswa terpilih"><option value="">Ikut rombel</option></select></div></div>
         </div>
       </div>
       <div class="kartu">
@@ -889,7 +893,7 @@ body.lihat .ubah { display: none !important; }
             <li class="l-umum"><span class="l-no">3</span><div><b>Pengaturan Umum</b><small>diatur admin</small></div><span class="l-isi"><span><small>Aturan</small>Pengaturan Umum</span><span><small>Tahapan</small>urutan Tahapan Level (tanpa yang ditutup admin)</span></span></li>
           </ol>
         </div>
-        <p class="catatan-seksi"><span>Isian aturan yang tidak diisi profil di atas ikut lapisan di bawahnya, satu per satu. Contoh: profil siswa yang hanya mengubah jumlah soal tetap memakai batas keluar halaman dari profil rombelnya.</span></p>
+        <p class="catatan-seksi"><span>Latihan mandiri (di luar sesi) memakai lapis yang sama tetapi dengan pilihannya sendiri: <b>aturan latihan mandiri</b> dan <b>saran tahapan</b> (bagian 3 dan 4). Isian aturan yang tidak diisi profil di atas ikut lapisan di bawahnya, satu per satu. Contoh: profil siswa yang hanya mengubah jumlah soal tetap memakai batas keluar halaman dari profil rombelnya.</span></p>
       </section>
       <p id="lapis-buka-p" class="hidden" style="margin:0 0 var(--j4)"><button class="garis kecil" id="lapis-buka">Tampilkan cara sistem memilih aturan dan tahapan</button></p>
 
@@ -1002,6 +1006,6 @@ body.lihat .ubah { display: none !important; }
 <script>window.XL_APLIKASI = "English Reading";</script>
 <script src="assets/kepala-excel.js?v=1"></script>
 <script src="assets/excel.js?v=5"></script>
-<script src="guru.js?v=6"></script>
+<script src="guru.js?v=7"></script>
 </body>
 </html>

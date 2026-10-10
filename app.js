@@ -48,15 +48,23 @@
   const simpanKhusus = () => tulis('er_khusus', khusus);
   // Siswa yang masuk lewat masuk.js: aturan Umum dan tahapan khusus berasal dari server (diatur guru), bukan perangkat.
   const AKUN = window.ER_AKUN || null;
+  const PILIHAN_SOAL_MANDIRI = [10, 15, 20, 25];   // harus termasuk PILIHAN_JUMLAH (jumlah soal yang didukung latihan)
   if (AKUN && AKUN.atur && !AKUN.luring) {
     const u = AKUN.atur.umum || {};
     ['jumlahSoal', 'tampilJawaban', 'bilaSalah', 'batasSalah', 'harusDengar', 'harusBaca', 'syaratBaca'].forEach(k => { if (u[k] != null) setelan[k] = u[k]; });
     // Profil aturan dari guru (rombel, lalu siswa) mengalahkan Pengaturan Umum, isian demi isian.
     const ai = (AKUN.atur.aturan && AKUN.atur.aturan.isi) || {};
     ['jumlahSoal', 'tampilJawaban', 'bilaSalah', 'batasSalah', 'harusDengar', 'harusBaca', 'syaratBaca'].forEach(k => { if (ai[k] != null) setelan[k] = ai[k]; });
+    // Latihan mandiri (di luar sesi): siswa memilih sendiri jumlah soal dan tampil jawaban (disimpan di perangkat),
+    // dan boleh melepas saran tahapan dari guru untuk memilih materi apa saja.
+    if (AKUN.mode === 'mandiri') {
+      const ps = baca('er_pilihan_mandiri', {});
+      if (PILIHAN_SOAL_MANDIRI.includes(ps.jumlahSoal)) setelan.jumlahSoal = ps.jumlahSoal;
+      if (typeof ps.tampilJawaban === 'boolean') setelan.tampilJawaban = ps.tampilJawaban;
+    }
     const p = AKUN.atur.profil;
-    khusus.daftar = p ? [{ id: p.id, nama: p.nama, catatan: p.catatan || '', setelan: p.setelan || {}, mati: p.mati || {}, asal: p.asal }] : [];
-    khusus.aktif = p ? p.id : null;
+    khusus.daftar = p ? [{ id: p.id, nama: p.nama, catatan: p.catatan || '', setelan: p.setelan || {}, mati: p.mati || {}, asal: p.asal, saran: !!p.saran }] : [];
+    khusus.aktif = p && !(p.saran && baca('er_saran_lepas', false)) ? p.id : null;
   }
   const profilAktif = () => khusus.daftar.find(p => p.id === khusus.aktif) || null;
   // atur.x = aturan yang berlaku: dari tahapan khusus yang dipakai bila diisi, selain itu Umum.
@@ -1001,7 +1009,8 @@
   const subDipakaiM = (m, b) => daftarSub(b).map((_, i) => i + 1).filter(n => subOn(m, b, n));
   const levelOn = (m, b) => levelOnDasar(m, b) && (!punyaSub(b) || subDipakaiM(m, b).length > 0);
   // Tanpa tahapan khusus: tahapan umum, tanpa tahap/level/sub level yang ditutup admin (Tahapan Level di halaman guru).
-  const matiUmum = (AKUN && !AKUN.luring && AKUN.atur && AKUN.atur.umum && AKUN.atur.umum.mati) || null;
+  // Latihan mandiri: semua materi boleh dipilih siswa, jadi tahap/level yang ditutup admin untuk tahapan umum tidak berlaku.
+  const matiUmum = (AKUN && !AKUN.luring && AKUN.mode !== 'mandiri' && AKUN.atur && AKUN.atur.umum && AKUN.atur.umum.mati) || null;
   const matiAktif = () => { const p = profilAktif(); return p ? p.mati : matiUmum; };
   const levelAktif = b => levelOn(matiAktif(), b);
   const subDipakai = b => subDipakaiM(matiAktif(), b);
@@ -1717,7 +1726,7 @@
     const persen = Math.round(L.benar * 100 / L.awal);
     const d = dataSub(b);
     const rekor = !(d.s[n - 1] >= persen);
-    catatHasil({ level: b.id, sub: n, jenis: 'sub', nilai: persen, rincian: { benar: L.benar, soal: L.awal, salah: L.salah } });
+    catatHasil({ level: b.id, sub: n, jenis: 'sub', nilai: persen, rincian: { benar: L.benar, soal: L.awal, salah: L.salah, jawab: !!atur.tampilJawaban } });
     if (rekor) { d.s[n - 1] = persen; simpanSub(); }
     const lulus = persen >= TUNTAS;
     const SB = daftarSub(b);
@@ -1848,6 +1857,23 @@
   }
   const labelLevel = b => `Tahap ${b.tahap} · Level ${posisiLevel(b).level}`;
 
+  // Kartu "Latihan mandiri" di halaman depan: pilihan siswa sendiri (jumlah soal, tampil jawaban) dan saran guru.
+  function kartuMandiri() {
+    if (!AKUN || AKUN.mode !== 'mandiri' || AKUN.luring || AKUN.coba) return '';
+    const p = AKUN.atur && AKUN.atur.profil, lepas = baca('er_saran_lepas', false);
+    return `<section class="er-mandiri" aria-label="Pilihan latihan mandiri"><div class="er-mandiri-kepala"><span aria-hidden="true">🏠</span>
+        <div><b>Latihan mandiri</b><small>Pilih sendiri materi yang ingin dilatih. Kemajuan di sini terpisah dari kemajuan resmi di kelas.</small></div></div>
+      ${p && p.saran ? `<div class="er-mandiri-saran"><span>Saran guru: <b>${esc(p.nama)}</b></span>
+        <button class="tombol kecil" id="er-saran-ubah">${lepas ? 'Pakai saran guru' : 'Lihat semua materi'}</button></div>` : ''}
+      <div class="er-mandiri-pilih"><label>Jumlah soal per sub level <select id="er-pm-soal">${PILIHAN_SOAL_MANDIRI.map(n => `<option value="${n}"${atur.jumlahSoal === n ? ' selected' : ''}>${n} soal</option>`).join('')}</select></label>
+        <label>Bila salah, jawaban benar <select id="er-pm-jawab"><option value="1"${atur.tampilJawaban ? ' selected' : ''}>ditampilkan</option><option value="0"${atur.tampilJawaban ? '' : ' selected'}>tidak ditampilkan</option></select></label></div>
+    </section>`;
+  }
+  function ikatMandiri() {
+    const simpanPilihan = () => { tulis('er_pilihan_mandiri', { jumlahSoal: +$('#er-pm-soal').value, tampilJawaban: $('#er-pm-jawab').value === '1' }); location.reload(); };
+    if ($('#er-pm-soal')) { $('#er-pm-soal').onchange = simpanPilihan; $('#er-pm-jawab').onchange = simpanPilihan; }
+    if ($('#er-saran-ubah')) $('#er-saran-ubah').onclick = () => { tulis('er_saran_lepas', !baca('er_saran_lepas', false)); location.reload(); };
+  }
   function tampilDaftar() {
     kini = null;
     const p = profilAktif();
@@ -1858,9 +1884,9 @@
         <p>Dengarkan bacaan, lalu baca sendiri dan lihat koreksinya. Mulai dari tahap yang sesuai, tuntaskan tiap level
           (skor terbaik ≥ ${TUNTAS}%), lalu naik ke tahap berikutnya.</p></header>` +
       (p ? `<a class="at-banner" href="#pengaturan/khusus"><span class="at-banner-ikon" aria-hidden="true">🎯</span>
-        <span class="at-banner-isi"><small>Sedang memakai tahapan khusus</small><b>${esc(p.nama)}</b>
+        <span class="at-banner-isi"><small>${p.saran ? 'Saran latihan dari guru' : 'Sedang memakai tahapan khusus'}</small><b>${esc(p.nama)}</b>
           <span>${teksRingkas(ringkasTahapan(p.mati))}${p.catatan ? ' · ' + esc(p.catatan) : ''}</span></span>
-        <span class="at-banner-aksi">Atur ›</span></a>` : '') + kartuUlang() +
+        <span class="at-banner-aksi">Atur ›</span></a>` : '') + kartuMandiri() + kartuUlang() +
       window.TAHAP.map(t => {
         const semua = window.BACAAN.filter(b => b.tahap === t.no);
         const isi = semua.filter(levelAktif);
@@ -1888,6 +1914,7 @@
       `<a class="at-pintu" href="#pengaturan"><span class="at-ikon" aria-hidden="true">⚙️</span>
         <span class="at-pintu-isi"><b>${AKUN ? 'Aturan &amp; Tahapan latihanmu' : 'Pengaturan &amp; Tahapan'}</b><small>${AKUN ? 'Diatur guru: jumlah soal, syarat dengar/baca, bila jawaban salah, dan tahapan' : `Jumlah soal, syarat dengar/baca, bila jawaban salah, dan tahapan khusus${khusus.daftar.length ? ` · ${khusus.daftar.length} tersimpan` : ''}`}</small></span>
         <span class="at-panah-kanan" aria-hidden="true">›</span></a>`;
+    ikatMandiri();
   }
 
   const jenisLevel = b => (b.kosakata ? { kunci: 'kosakata', nama: 'Kosakata' }

@@ -765,3 +765,15 @@ a.tombol.utama { color: var(--utama-teks); }
 .er-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--gelap); color: #fff; padding: var(--j3) var(--j4); border-radius: var(--r2);
   font-size: var(--h-m); z-index: var(--lapis-pesan); opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 90vw; }
 .er-toast.show { opacity: 1; }
+
+/* Kartu latihan mandiri di halaman depan (10 Okt 2026) */
+.er-mandiri { margin: 0 0 14px; padding: 14px 16px; border-radius: var(--r3); background: var(--kertas-2); border: 1px solid var(--garis);
+  border-left: 4px solid var(--biru); box-shadow: var(--bayang); display: grid; gap: 10px; }
+.er-mandiri-kepala { display: flex; gap: 10px; align-items: flex-start; }
+.er-mandiri-kepala > span { font-size: 22px; line-height: 1.2; }
+.er-mandiri-kepala b { display: block; font-family: var(--huruf-judul); font-size: 18px; color: var(--gelap); }
+.er-mandiri-kepala small { color: var(--tinta-2); font-size: 14px; }
+.er-mandiri-saran { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 10px; background: var(--emas-muda); font-size: 14px; }
+.er-mandiri-pilih { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; color: var(--tinta-2); }
+.er-mandiri-pilih label { display: flex; align-items: center; gap: 6px; }
+.er-mandiri-pilih select { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--garis-2); background: var(--kertas-2); font-size: 14px; }

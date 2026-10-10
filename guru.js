@@ -155,6 +155,7 @@ function status(r) {
   if (ss.terkunci) s.push({ t: "Terkunci", c: "buruk", bobot: 5 });
   if (r.profil) s.push({ t: "Tahapan: " + r.profil.nama, c: "biru", bobot: 0 });
   if (r.aturan) s.push({ t: "Aturan: " + r.aturan.nama, c: "emas", bobot: 0 });
+  if (r.pasang_mandiri && r.pasang_mandiri.saran) s.push({ t: "Saran mandiri: " + r.pasang_mandiri.saran.nama, c: "", bobot: 0 });
   if (k.selesai) s.push({ t: "Tamat", c: "baik", bobot: 0 });
   if (r.macet) s.push({ t: "Macet", c: "buruk", bobot: 4 });
   if (!aktif7(r)) s.push({ t: "Tidak aktif", c: "emas", bobot: 3 });
@@ -348,7 +349,7 @@ function bukaPanelMassal(buka) {
 }
 $("dl-atur-buka").onclick = () => bukaPanelMassal(!PANEL_MASSAL);
 // Pilihan Aturan & Tahapan di bilah bawah menunjukkan keadaan siswa terpilih sekarang (seperti Matdas).
-let AWAL_A = "";
+let AWAL_A = "", AWAL_AM = "", AWAL_SM = "";
 function isiDefaultMassal() {
   const L = terpilih();
   if (!L.length) return;
@@ -362,6 +363,8 @@ function isiDefaultMassal() {
   };
   AWAL_A = isi($("dl-aturan"), `Ikut rombel (${k1 ? (a1 ? `profil "${esc(a1.nama)}"` : "Pengaturan Umum") : "masing-masing rombel"})`, ATPROFIL,
     [...new Set(L.map((r) => (r.aturan ? r.aturan.id : "")))]);
+  AWAL_AM = isi($("dl-aturan-m"), "Ikut rombel", ATPROFIL, [...new Set(L.map((r) => (r.pasang_mandiri && r.pasang_mandiri.aturan ? r.pasang_mandiri.aturan.id : "")))]);
+  AWAL_SM = isi($("dl-saran-m"), "Ikut rombel", PROFIL, [...new Set(L.map((r) => (r.pasang_mandiri && r.pasang_mandiri.saran ? r.pasang_mandiri.saran.id : "")))]);
   AWAL_T = isi($("dl-profil"), `Ikut rombel (${k1 ? (p1 ? `tahapan "${esc(p1.nama)}"` : "Tahapan Level") : "masing-masing rombel"})`, PROFIL,
     [...new Set(L.map((r) => (r.profil ? r.profil.id : "")))]);
 }
@@ -371,8 +374,9 @@ $("dl-batal").onclick = () => { PILIH.clear(); gambarDaftar(); };
 // Satu tombol Terapkan; yang diterapkan hanya pilihan yang diubah guru dari keadaan awal siswa.
 $("dl-terapkan").onclick = async () => {
   const L = terpilih(), vA = $("dl-aturan").value, vT = $("dl-profil").value;
-  const ubahA = vA !== "~" && vA !== AWAL_A, ubahT = vT !== "~" && vT !== AWAL_T;
-  if (!ubahA && !ubahT) return toast("Belum ada aturan atau tahapan yang diubah.");
+  const vAM = $("dl-aturan-m").value, vSM = $("dl-saran-m").value;
+  const ubahA = vA !== "~" && vA !== AWAL_A, ubahT = vT !== "~" && vT !== AWAL_T, ubahAM = vAM !== "~" && vAM !== AWAL_AM, ubahSM = vSM !== "~" && vSM !== AWAL_SM;
+  if (!ubahA && !ubahT && !ubahAM && !ubahSM) return toast("Belum ada aturan atau tahapan yang diubah.");
   const a = ATPROFIL.find((x) => x.id === vA), p = PROFIL.find((x) => x.id === vT), bagian = [], kerja = [];
   if (ubahA) {
     bagian.push(a ? `ATURAN: pasang "${a.nama}" (${ringkasAturan(a)}). Isian lain tetap dari aturan rombel atau Pengaturan Umum.` : "ATURAN: kembali ke aturan rombelnya.");
@@ -384,6 +388,12 @@ $("dl-terapkan").onclick = async () => {
     kerja.push(async () => { const r = await rpc("er_pasang_siswa", { p_pin: PIN, p_nisn: L.map((x) => x.nisn), p_profil: p ? p.id : null });
       return p ? `tahapan "${p.nama}" untuk ${r.jumlah} siswa` : `tahapan ${r.jumlah} siswa ikut rombel`; });
   }
+  [[ubahAM, "aturan", ATPROFIL.find((x) => x.id === vAM), "ATURAN LATIHAN MANDIRI"], [ubahSM, "saran", PROFIL.find((x) => x.id === vSM), "SARAN LATIHAN MANDIRI"]].forEach(([ubah, jenis, x, judul]) => {
+    if (!ubah) return;
+    bagian.push(x ? `${judul}: "${x.nama}".` : `${judul}: kembali ikut rombel.`);
+    kerja.push(async () => { const r = await rpc("er_pasang_mandiri_siswa", { p_pin: PIN, p_nisn: L.map((y) => y.nisn), p_jenis: jenis, p_profil: x ? x.id : null });
+      return `${judul.toLowerCase()} ${r.jumlah} siswa`; });
+  });
   if (!confirm(`Terapkan untuk ${L.length} siswa?\n\n${namaTerpilih()}\n\n${bagian.join("\n\n")}\n\nKemajuan siswa tidak berubah.`)) return;
   const hasil = [];
   try { for (const f of kerja) hasil.push(await f()); toast("Diterapkan: " + hasil.join("; ")); }
@@ -715,8 +725,11 @@ function gambarInfoKelompok() {
 
 /* ----------------------------------------------------------- profil aturan & tahapan khusus (seperti Matdas) */
 let PROFIL = [], ATPROFIL = [], SEMUA = [];
-const dipakaiTeks = (p) => [p.kelas.length ? `rombel ${p.kelas.join(", ")} (${p.kelas.reduce((a, k) => a + ((G.rombel.find((r) => r.kelas === k) || {}).siswa || 0), 0)} siswa)` : "",
-  p.siswa ? `${p.siswa} siswa dipilih langsung` : ""].filter(Boolean).join(" · ");
+const dipakaiTeks = (p) => [...dipakaiSesi(p), ...dipakaiMandiri(p)].join(" · ");
+const dipakaiMandiri = (p) => { const k = p.kelas_mandiri || p.kelas_saran || [], n = p.siswa_mandiri || p.siswa_saran || 0;
+  return [k.length ? `latihan mandiri rombel ${k.join(", ")}` : "", n ? `latihan mandiri ${n} siswa` : ""].filter(Boolean); };
+const dipakaiSesi = (p) => [p.kelas.length ? `rombel ${p.kelas.join(", ")} (${p.kelas.reduce((a, k) => a + ((G.rombel.find((r) => r.kelas === k) || {}).siswa || 0), 0)} siswa)` : "",
+  p.siswa ? `${p.siswa} siswa dipilih langsung` : ""].filter(Boolean);
 async function muatProfil(diam) {
   try { [PROFIL, ATPROFIL] = await Promise.all([rpc("er_profil_daftar", { p_pin: PIN }), rpc("er_atur_profil_daftar", { p_pin: PIN })]); }
   catch (e) { if (!diam) toast(e.message); return; }
@@ -818,14 +831,18 @@ function gambarKelompokAturan() {
   if (!$("pr-kelompok") || !G) return;
   if (!G.rombel.length) { $("pr-kelompok").innerHTML = '<p class="butir redup">Belum ada rombel. Admin perlu menarik guru Bahasa Inggris dari Data Induk.</p>'; return; }
   const anggota = (k) => SEMUA.filter((r) => r.kelas === k);
-  $("pr-kelompok").innerHTML = `<div class="gulir seksi-tabel"><table class="tabel kel-tabel"><thead><tr><th>Rombel</th><th class="angka">Anggota</th><th>Profil aturan</th><th>Tahapan</th><th>Yang berbeda dari umum</th></tr></thead><tbody>${G.rombel.map((r) => {
-    const a = r.aturan && ATPROFIL.find((x) => x.id === r.aturan.id), p = r.profil && PROFIL.find((x) => x.id === r.profil.id);
+  const pilih = (attr, kel, daftar, nilai, kosong, label) => `<select ${attr}="${esc(kel)}" aria-label="${label} ${esc(kel)}"><option value="">${kosong}</option>${daftar.map((x) => `<option value="${esc(x.id)}" ${nilai && nilai.id === x.id ? "selected" : ""}>${esc(x.nama)}</option>`).join("")}</select>`;
+  $("pr-kelompok").innerHTML = `<div class="gulir seksi-tabel"><table class="tabel kel-tabel"><thead>
+    <tr><th rowspan="2">Rombel</th><th rowspan="2" class="angka">Anggota</th><th colspan="2" style="text-align:center">Sesi di sekolah (kemajuan resmi)</th><th colspan="2" style="text-align:center">Latihan mandiri (di luar sesi)</th></tr>
+    <tr><th>Profil aturan</th><th>Tahapan</th><th>Profil aturan</th><th>Saran tahapan</th></tr></thead><tbody>${G.rombel.map((r) => {
+    const m = r.pasang_mandiri || {};
     return `<tr><td><b>${esc(r.kelas)}</b></td><td class="angka">${SEMUA.length ? anggota(r.kelas).length : r.siswa}</td>
-      <td><select data-kel-a="${esc(r.kelas)}" aria-label="Profil aturan ${esc(r.kelas)}"><option value="">— Pengaturan Umum —</option>${ATPROFIL.map((x) => `<option value="${esc(x.id)}" ${r.aturan && r.aturan.id === x.id ? "selected" : ""}>${esc(x.nama)}</option>`).join("")}</select></td>
-      <td><select data-kel-t="${esc(r.kelas)}" aria-label="Tahapan ${esc(r.kelas)}"><option value="">— Tahapan Level —</option>${PROFIL.map((x) => `<option value="${esc(x.id)}" ${r.profil && r.profil.id === x.id ? "selected" : ""}>${esc(x.nama)}</option>`).join("")}</select></td>
-      <td class="kecil redup">${[a ? aturanProfil(a).map((x) => `${x.l}: <b>${esc(nilaiAturTeks(x, a.aturan[x.k]))}</b>`).join(" · ") : "",
-        p ? `Materi: <b>${esc(teksRingkas(ringkasTahapan(p.mati)))}</b>` : ""].filter(Boolean).join(" · ") || "—"}</td></tr>`;
-  }).join("")}</tbody></table></div>`;
+      <td>${pilih("data-kel-a", r.kelas, ATPROFIL, r.aturan, "— Pengaturan Umum —", "Profil aturan sesi")}</td>
+      <td>${pilih("data-kel-t", r.kelas, PROFIL, r.profil, "— Tahapan Level —", "Tahapan sesi")}</td>
+      <td>${pilih("data-kel-am", r.kelas, ATPROFIL, m.aturan, "— Pengaturan Umum —", "Profil aturan latihan mandiri")}</td>
+      <td>${pilih("data-kel-sm", r.kelas, PROFIL, m.saran, "— Bebas (semua materi) —", "Saran tahapan latihan mandiri")}</td></tr>`;
+  }).join("")}</tbody></table></div>
+  <p class="catatan-seksi"><span>Latihan mandiri boleh berbeda dari sesi: mis. di kelas <b>Tanpa Dengar/Baca</b> dan Tahap 4, tetapi di rumah <b>Harus Dengar/Baca</b> untuk melatih pengucapan dan disarankan mengulang Tahap 0. <b>Saran tahapan</b> hanya saran: siswa boleh beralih ke semua materi. Jumlah soal dan tampil jawaban saat latihan mandiri dipilih siswa sendiri.</span></p>`;
   $("pr-kelompok").querySelectorAll("[data-kel-a]").forEach((sel) => sel.onchange = async () => {
     const k = sel.dataset.kelA, a = ATPROFIL.find((x) => x.id === sel.value), sendiri = anggota(k).filter((r) => r.aturan).length;
     const pesan = a ? `Pasang aturan "${a.nama}" untuk rombel ${k}?\n\nYang diatur: ${ringkasAturan(a)}.\nIsian lain dari Pengaturan Umum.` +
@@ -834,6 +851,16 @@ function gambarKelompokAturan() {
     if (!confirm(pesan)) return gambarKelompokAturan();
     try { G.rombel = await rpc("er_atur_profil_kelas", { p_pin: PIN, p_kelas: k, p_profil: a ? a.id : null });
       toast(a ? `Aturan ${k} disimpan` : `${k} kembali ke Pengaturan Umum`); muatProfil(true); muatKelas(); }
+    catch (e) { toast(e.message); gambarKelompokAturan(); }
+  });
+  $("pr-kelompok").querySelectorAll("[data-kel-am], [data-kel-sm]").forEach((sel) => sel.onchange = async () => {
+    const aturan = sel.hasAttribute("data-kel-am"), k = aturan ? sel.dataset.kelAm : sel.dataset.kelSm;
+    const x = (aturan ? ATPROFIL : PROFIL).find((y) => y.id === sel.value);
+    const pesan = aturan ? (x ? `Pasang aturan latihan mandiri "${x.nama}" untuk rombel ${k}?\n\nYang diatur: ${ringkasAturan(x)}.\nBerlaku hanya saat siswa berlatih di luar sesi.` : `Latihan mandiri rombel ${k} kembali ke Pengaturan Umum?`)
+      : (x ? `Sarankan tahapan "${x.nama}" untuk latihan mandiri rombel ${k}?\n\nSiswa melihatnya sebagai saran dan tetap boleh memilih materi lain.` : `Latihan mandiri rombel ${k} tanpa saran (siswa bebas memilih materi)?`);
+    if (!confirm(pesan)) return gambarKelompokAturan();
+    try { G.rombel = await rpc("er_pasang_mandiri_kelas", { p_pin: PIN, p_kelas: k, p_jenis: aturan ? "aturan" : "saran", p_profil: x ? x.id : null });
+      toast(`Latihan mandiri ${k} disimpan`); muatProfil(true); muatKelas(); }
     catch (e) { toast(e.message); gambarKelompokAturan(); }
   });
   $("pr-kelompok").querySelectorAll("[data-kel-t]").forEach((sel) => sel.onchange = async () => {
@@ -969,10 +996,11 @@ function aturanBerlakuHtml(A) {
   const p = A.profil, at = A.aturan || {}, isi = at.isi || {}, asal = at.asal || {}, label = { siswa: "siswa", kelompok: "rombel", umum: "umum" };
   const jenis = (s) => s === "siswa" ? "siswa" : s === "kelas" ? "kelompok" : "umum";
   const sel = (judul, isiT, j, ket) => `<div class="ab-ring"><small>${judul}</small><b>${esc(isiT)}</b><span class="ab-asal a-${j}">${esc(ket)}</span></div>`;
-  const materi = p ? `"${p.nama}" · ${teksRingkas(ringkasTahapan(p.mati))}` : `Tahapan Level · ${teksRingkas(ringkasTahapan((A.umum || {}).mati || null))}`;
+  const mandiri = A.mode === "mandiri";
+  const materi = p ? `"${p.nama}" · ${teksRingkas(ringkasTahapan(p.mati))}${p.saran ? " (saran, siswa boleh memilih materi lain)" : ""}` : mandiri ? "Semua materi, bebas dipilih siswa" : `Tahapan Level · ${teksRingkas(ringkasTahapan((A.umum || {}).mati || null))}`;
   const jp = !p ? "umum" : p.asal === "siswa" ? "siswa" : "kelompok";
   return `<div class="ab-ringkas">
-      ${sel("Tahapan", materi, jp, label[jp])}
+      ${sel(mandiri ? "Saran tahapan" : "Tahapan", materi, jp, label[jp])}
       ${sel("Profil siswa", at.siswa ? at.siswa.nama : "Tidak ada", at.siswa ? "siswa" : "umum", at.siswa ? "siswa" : "—")}
       ${sel("Profil rombel", at.kelas ? at.kelas.nama : "Tidak ada", at.kelas ? "kelompok" : "umum", at.kelas ? "rombel" : "—")}
     </div>
@@ -989,7 +1017,7 @@ async function cekSiswa() {
   try {
     const A = await rpc("er_aturan_siswa", { p_pin: PIN, p_nisn: r.nisn }), n = Object.keys((A.aturan && A.aturan.isi) || {}).length;
     $("ck-hasil").innerHTML = `<div class="ck-kepala"><div><b>${esc(r.nama)}</b><span class="redup kecil">${esc(r.kelas)} · NISN ${esc(r.nisn)}</span></div>
-      <span><span class="lencana ${n ? "emas" : ""}">${n ? n + " aturan khusus" : "Semua aturan dari Pengaturan Umum"}</span>${A.profil ? ` <span class="lencana biru">Tahapan "${esc(A.profil.nama)}"</span>` : ""}</span></div>${aturanBerlakuHtml(A)}
+      <span><span class="lencana ${n ? "emas" : ""}">${n ? n + " aturan khusus" : "Semua aturan dari Pengaturan Umum"}</span>${A.profil ? ` <span class="lencana biru">Tahapan "${esc(A.profil.nama)}"</span>` : ""}</span></div><h3 style="margin:var(--j4) 0 var(--j2)">Saat sesi di sekolah</h3>${aturanBerlakuHtml(A)}${A.mandiri ? `<h3 style="margin:var(--j4) 0 var(--j2)">Saat latihan mandiri (di luar sesi)</h3>${aturanBerlakuHtml(A.mandiri)}<p class="redup kecil" style="margin:var(--j2) 0 0">Jumlah soal dan tampil jawaban saat latihan mandiri dipilih siswa sendiri; pengawasan keluar halaman tidak berlaku.</p>` : ""}
       <p class="redup kecil" style="margin:var(--j3) 0 0">Label menunjukkan asal aturan: <span class="ab-asal a-siswa">siswa</span> <span class="ab-asal a-kelompok">rombel</span> <span class="ab-asal a-umum">umum</span>. Arahkan penunjuk ke label untuk melihat nama tahapannya.</p>`;
   } catch (e) { $("ck-hasil").innerHTML = `<p class="redup kecil">${esc(e.message)}</p>`; }
 }
@@ -1149,12 +1177,16 @@ function gambarSiswa() {
       <span class="lencana ${nA ? "emas" : ""}">${nA ? nA + " aturan khusus" : "Pengaturan Umum"}</span>${p ? ` <span class="lencana biru">Tahapan "${esc(p.nama)}"</span>` : ""}</summary>${aturanBerlakuHtml(D.atur)}</details>`; })() : ""}
     <div class="kartu"><h2>Catatan otomatis</h2><ul class="catatan">${catatanOtomatis(D, k, O, H, Om, km).map((x) => `<li>${x}</li>`).join("")}</ul></div>
     <div class="kartu"><h2>Latihan mandiri (di luar sesi)</h2>
-      <p class="redup kecil" style="margin-top:0">Latihan tanpa pengawasan guru. Kemajuannya terpisah dan <b>tidak menaikkan kemajuan resmi</b>; dipakai untuk menilai ketekunan siswa.</p>
+      <p class="redup kecil" style="margin-top:0">Latihan tanpa pengawasan guru. Kemajuannya terpisah dan <b>tidak menaikkan kemajuan resmi</b>; dipakai untuk menilai ketekunan siswa.
+        ${(() => { const sb = HM.filter((h) => h.jenis === "sub" && h.rincian && h.rincian.soal); if (!sb.length) return "";
+          const urut = sb.map((h) => h.rincian.soal).sort((x, y) => x - y), med = urut[Math.floor(urut.length / 2)], tampil = sb.filter((h) => h.rincian.jawab).length;
+          return `Pilihan siswa: biasanya <b>${med} soal</b> per sub level, jawaban ditampilkan pada <b>${Math.round(100 * tampil / sb.length)}%</b> latihan.`; })()}</p>
       <div class="ubin">${ubinHtml([
         [Om.hari.filter((x) => (Date.now() - new Date(x.tanggal)) / 864e5 <= 7).length, "hari berlatih, 7 hari terakhir", "aktif", Om.hari.some((x) => (Date.now() - new Date(x.tanggal)) / 864e5 <= 7) ? "baik" : "emas"],
         [Om.hari.filter((x) => (Date.now() - new Date(x.tanggal)) / 864e5 <= 30).length, "hari berlatih, 30 hari terakhir", "waktu"],
         [HM.filter((h) => Date.now() - new Date(h.waktu) < 7 * 864e5).length, "kegiatan, 7 hari terakhir", "mulai"],
         [`${km.levelTuntas}`, `level tuntas jalur mandiri (resmi: ${k.levelTuntas})`, "level"],
+        ...(() => { const bc = HM.filter((h) => h.jenis === "baca").slice(0, 10); return [[bc.length ? Math.round(bc.reduce((x, h) => x + h.nilai, 0) / bc.length) + "%" : "–", `akurasi pengucapan di rumah (${HM.filter((h) => h.jenis === "baca").length} bacaan)`, "baca"]]; })(),
         [rataM == null ? "–" : rataM + "%", "rata-rata nilai mandiri", "akurasi", rataM != null && rataSub != null && Om.sub.length >= 3 && O.sub.length >= 3 && rataM - rataSub >= 25 ? "buruk" : ""],
       ])}</div>
       ${HM.length ? `<div class="gulir"><table class="tabel"><thead><tr><th>Waktu</th><th>Level</th><th>Kegiatan</th><th class="angka">Nilai</th></tr></thead><tbody>${HM.slice(0, 12).map((h) => { const b = levelDari(h.level);
@@ -1189,8 +1221,10 @@ function gambarSiswa() {
     </div>
     <div class="kartu ubah"><h2>Aturan dan tahapan siswa ini</h2>
       <p class="redup kecil" style="margin-top:0">Untuk siswa yang perlu remedial atau pengayaan sendiri. Pilihan siswa mengalahkan pilihan rombel; pilih <b>Ikut rombel</b> untuk kembali. Kemajuan siswa tidak berubah.</p>
-      <div class="baris"><span class="kecil redup" style="min-width:110px">Profil aturan</span><select id="an-aturan" class="tumbuh"><option value="">Ikut rombel</option>${ATPROFIL.map((x) => { const as = D.atur && D.atur.aturan && D.atur.aturan.siswa; return `<option value="${esc(x.id)}" ${as && as.id === x.id ? "selected" : ""}>${esc(x.nama)}</option>`; }).join("")}</select></div>
-      <div class="baris" style="margin-top:var(--j2)"><span class="kecil redup" style="min-width:110px">Tahapan</span><select id="an-profil" class="tumbuh"><option value="">Ikut rombel</option>${PROFIL.map((x) => `<option value="${esc(x.id)}" ${p && p.asal === "siswa" && p.id === x.id ? "selected" : ""}>${esc(x.nama)}</option>`).join("")}</select>
+      <div class="baris"><span class="kecil redup" style="min-width:110px">Aturan sesi</span><select id="an-aturan" class="tumbuh"><option value="">Ikut rombel</option>${ATPROFIL.map((x) => { const as = D.atur && D.atur.aturan && D.atur.aturan.siswa; return `<option value="${esc(x.id)}" ${as && as.id === x.id ? "selected" : ""}>${esc(x.nama)}</option>`; }).join("")}</select></div>
+      <div class="baris" style="margin-top:var(--j2)"><span class="kecil redup" style="min-width:110px">Aturan mandiri</span><select id="an-aturan-m" class="tumbuh"><option value="">Ikut rombel</option>${ATPROFIL.map((x) => { const am = D.atur_mandiri && D.atur_mandiri.aturan && D.atur_mandiri.aturan.siswa; return `<option value="${esc(x.id)}" ${am && am.id === x.id ? "selected" : ""}>${esc(x.nama)}</option>`; }).join("")}</select></div>
+      <div class="baris" style="margin-top:var(--j2)"><span class="kecil redup" style="min-width:110px">Saran mandiri</span><select id="an-saran-m" class="tumbuh"><option value="">Ikut rombel</option>${PROFIL.map((x) => { const sm = D.atur_mandiri && D.atur_mandiri.profil; return `<option value="${esc(x.id)}" ${sm && sm.asal === "siswa" && sm.id === x.id ? "selected" : ""}>${esc(x.nama)}</option>`; }).join("")}</select></div>
+      <div class="baris" style="margin-top:var(--j2)"><span class="kecil redup" style="min-width:110px">Tahapan sesi</span><select id="an-profil" class="tumbuh"><option value="">Ikut rombel</option>${PROFIL.map((x) => `<option value="${esc(x.id)}" ${p && p.asal === "siswa" && p.id === x.id ? "selected" : ""}>${esc(x.nama)}</option>`).join("")}</select>
         <button id="an-pasang">Simpan</button></div></div>
     <div class="kartu ubah bahaya-kartu"><h2>Hapus data latihan</h2>
       <p class="redup kecil" style="margin-top:0">Menghapus kemajuan, riwayat nilai, dan sesi siswa ini, misalnya setelah uji coba. Data siswa tidak terhapus. Tidak bisa dibatalkan.</p>
@@ -1208,6 +1242,8 @@ Tahapan: ${x ? `"${x.nama}"` : "ikut rombel"}`)) return;
     try {
       await rpc("er_atur_profil_siswa", { p_pin: PIN, p_nisn: [D.siswa.nisn], p_profil: vA || null });
       await rpc("er_pasang_siswa", { p_pin: PIN, p_nisn: [D.siswa.nisn], p_profil: vT || null });
+      await rpc("er_pasang_mandiri_siswa", { p_pin: PIN, p_nisn: [D.siswa.nisn], p_jenis: "aturan", p_profil: $("an-aturan-m").value || null });
+      await rpc("er_pasang_mandiri_siswa", { p_pin: PIN, p_nisn: [D.siswa.nisn], p_jenis: "saran", p_profil: $("an-saran-m").value || null });
       toast("Aturan dan tahapan siswa disimpan"); bukaSiswa(D.siswa.nisn); muatKelas(); muatProfil(true);
     } catch (e) { toast(e.message); }
   };
