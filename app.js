@@ -995,29 +995,79 @@
     }
     return terbaik;
   }
+  // ---------- Jumlah soal dan bentuk soal bergilir (10 Okt 2026) ----------
+  // Satu sesi berisi jumlahSoal() soal (Pengaturan, bawaan 10). Bila unitnya (kata, situasi, kalimat,
+  // bank soal) lebih sedikit, unit diulang dalam putaran acak berikutnya. Tiap sub level punya beberapa
+  // bentuk soal; untuk unit yang sama, bentuk yang belum dipakai di sesi itu didahulukan, sehingga unit
+  // yang muncul lagi (putaran berikut atau ulangan jawaban keliru) tampil dengan bentuk lain.
+  const PILIHAN_JUMLAH = [10, 15, 20, 25, 30, 40];
+  const jumlahSoal = () => (PILIHAN_JUMLAH.includes(setelan.jumlahSoal) ? setelan.jumlahSoal : 10);
+  function isiSampai(kolam, N) {
+    const hasil = [];
+    while (hasil.length < N && kolam.length) {
+      const putaran = kocok(kolam);
+      if (hasil.length && putaran.length > 1 && putaran[0] === hasil[hasil.length - 1]) putaran.push(putaran.shift());
+      hasil.push(...putaran);
+    }
+    return hasil.slice(0, N);
+  }
+  let varianDipakai = {};
+  function varian(n, w, daftar) {
+    const kunci = n + '|' + (typeof w === 'object' ? JSON.stringify(w) : w);
+    const pakai = varianDipakai[kunci] || (varianDipakai[kunci] = []);
+    let calon = daftar.filter(v => !pakai.includes(v));
+    if (!calon.length) { pakai.length = 0; calon = daftar; }
+    const v = ambil(calon);
+    pakai.push(v);
+    return v;
+  }
+  const petunjukHuruf = k => `Petunjuk: diawali “${k.charAt(0)}”, ${k.replace(/ /g, '').length} huruf${k.includes(' ') ? ` (${k.split(' ').length} kata)` : ''}.`;
+  const BS = ['Benar', 'Salah'];
+
   function buatSoalPola(b, n, w) {
     const it = window.POLA_GEN[b.id]();
     const en = kalimatPola(it.pre, it.kunci, it.post);
     const kosong = kalimatPola(it.pre, '_____', it.post);
+    const keliru = s => kalimatPola(it.pre, s, it.post);
     const dasar = { w, sesudah: en, alasan: it.alasan, suaraKunci: en };
     const ketik = () => ({ ...dasar, jenis: 'ketik', tanya: 'Ketik bentuk yang tepat.', kalimat: kosong, kecil: it.id,
       petunjukKetik: `Petunjuk: ${it.dasar}`, target: it.kunci, terima: [it.kunci], persis: true });
+    const banyakSalah = it.salah.length >= 2;
     if (n === 1) {
-      return { ...dasar, jenis: 'pilih', tanya: 'Pilih bentuk yang tepat.', kalimat: kosong, kecil: it.id,
-        ...pilihan(it.kunci, it.salah, Math.min(4, it.salah.length + 1)) };
+      return varian(n, w, ['pilih', 'kalimatBenar']) === 'pilih'
+        ? { ...dasar, jenis: 'pilih', tanya: 'Pilih bentuk yang tepat.', kalimat: kosong, kecil: it.id,
+          ...pilihan(it.kunci, it.salah, Math.min(4, it.salah.length + 1)) }
+        : { ...dasar, jenis: 'pilih', tanya: 'Kalimat mana yang benar?', kecil: it.id,
+          ...pilihan(en, it.salah.map(keliru), Math.min(4, it.salah.length + 1)) };
     }
     if (n === 2) {
-      const keliru = Math.random() < 0.5;
-      return { ...dasar, jenis: 'pilih', tanya: 'Apakah kalimat ini benar?', kalimat: keliru ? kalimatPola(it.pre, ambil(it.salah), it.post) : en,
-        kecil: it.id, p: ['Benar', 'Salah'], j: keliru ? 1 : 0 };
+      if (banyakSalah && varian(n, w, ['bs', 'perbaiki']) === 'perbaiki') {
+        const s = ambil(it.salah);
+        return { ...dasar, jenis: 'pilih', tanya: `Kalimat ini keliru. Apa pengganti “${s}” yang tepat?`, kalimat: keliru(s), kecil: it.id,
+          ...pilihan(it.kunci, it.salah.filter(x => x !== s), Math.min(4, it.salah.length)) };
+      }
+      const salah = Math.random() < 0.5;
+      return { ...dasar, jenis: 'pilih', tanya: 'Apakah kalimat ini benar?', kalimat: salah ? keliru(ambil(it.salah)) : en,
+        kecil: it.id, p: BS, j: salah ? 1 : 0 };
     }
-    if (n === 3) return ketik();
+    if (n === 3) {
+      if (varian(n, w, ['ketik', 'perbaikiKetik']) === 'ketik') return ketik();
+      const s = ambil(it.salah);
+      return { ...dasar, jenis: 'ketik', tanya: `Kalimat ini keliru. Ketik bentuk yang benar untuk mengganti “${s}”.`, kalimat: keliru(s),
+        kecil: it.id, petunjukKetik: `Petunjuk: ${it.dasar}`, target: it.kunci, terima: [it.kunci], persis: true };
+    }
     if (n === 4) {
       const token = en.split(/\s+/);
-      return token.length <= 14 ? { ...dasar, jenis: 'susun', tanya: 'Susun kata-kata ini menjadi kalimat.', kecil: it.id, token } : ketik();
+      if (token.length > 14) return ketik();
+      return varian(n, w, ['susun', 'dengarSusun']) === 'susun'
+        ? { ...dasar, jenis: 'susun', tanya: 'Susun kata-kata ini menjadi kalimat.', kecil: it.id, token }
+        : { ...dasar, jenis: 'susun', tanya: 'Dengarkan, lalu susun kalimat yang kamu dengar.', putar: en, token };
     }
-    return { ...dasar, jenis: 'ucapK', tanya: 'Ucapkan dalam bahasa Inggris:', kalimat: it.id, target: en, fokus: it.kunci,
-      fokusPos: urai(it.pre || '').length, alt: it.alt || [] };
+    return varian(n, w, ['ucapArti', 'ucapRumpang']) === 'ucapArti'
+      ? { ...dasar, jenis: 'ucapK', tanya: 'Ucapkan dalam bahasa Inggris:', kalimat: it.id, target: en, fokus: it.kunci,
+        fokusPos: urai(it.pre || '').length, alt: it.alt || [] }
+      : { ...dasar, jenis: 'ucapK', tanya: 'Ucapkan kalimat lengkapnya (isi bagian yang kosong):', kalimat: kosong,
+        kecil: `${it.id} · Petunjuk: ${it.dasar}`, target: en, fokus: it.kunci, fokusPos: urai(it.pre || '').length, alt: [] };
   }
 
   // ---------- Soal bacaan ----------
@@ -1027,36 +1077,90 @@
   const kalimatDenganKata = (b, kata) => kalimatBacaan(b).find(k => reKata(kata).test(k.en));
   const bankBacaan = b => [...soalDari(b).map(q => ({ pg: q })), ...((window.SOAL_BS || {})[b.id] || []).map(x => ({ bs: x }))];
   // Daftar "unit" satu sesi (w) per sub level.
-  function urutBacaan(b, n) {
+  function urutBacaan(b, n, N) {
     const G = window.KATA_BACAAN[b.id], K = kalimatBacaan(b);
     const panjang = K.map((k, i) => i).filter(i => cukupPanjang(K[i]));
-    if (n === 1) return kocok(G.map((_, i) => i));
-    if (n === 2) return kocok(panjang).slice(0, 10);
-    if (n === 3) return [0, 1, 2, 3, 4];
-    if (n === 4) return kocok(bankBacaan(b).map((_, i) => i)).slice(0, 10);
-    if (bacaSuara(b)) return kocok(panjang).slice(0, 6);
-    return kocok(G.map((_, i) => i).filter(i => kalimatDenganKata(b, G[i][0])));
+    if (n === 1) return isiSampai(G.map((_, i) => i), N);
+    if (n === 2 || (n === 5 && bacaSuara(b))) return isiSampai(panjang, N);
+    if (n === 3) return isiSampai(K.map((_, i) => i), N);
+    if (n === 4) return urutPemahaman(b, N);
+    return isiSampai(G.map((_, i) => i).filter(i => kalimatDenganKata(b, G[i][0])), N);
+  }
+  // Sub level Pemahaman: bank soal (SOAL + SOAL_BS) ditambah soal turunan dari bank: "apakah jawaban ini
+  // tepat?" dari soal pilihan ganda, tabel benar/salah dan "pilih semua yang benar" dari SOAL_BS acak.
+  // Paling sedikit 20% soal turunan; bila sesi lebih panjang dari bank, sisanya juga turunan.
+  function urutPemahaman(b, N) {
+    const bank = bankBacaan(b).map((_, i) => i);
+    const gen = [];
+    soalDari(b).forEach((q, i) => { if (!q.bs && !Array.isArray(q.j)) gen.push({ g: 'cocok', i }); });
+    if (((window.SOAL_BS || {})[b.id] || []).length >= 4) gen.push({ g: 'tabel' }, { g: 'semua' });
+    const nGen = gen.length ? Math.min(N, Math.max(Math.round(N * 0.2), N - bank.length)) : 0;
+    return kocok([...isiSampai(bank, N - nGen), ...isiSampai(gen, nGen)]);
+  }
+  function soalTurunan(b, w) {
+    const daftarBS = (window.SOAL_BS || {})[b.id] || [];
+    if (w.g === 'cocok') {
+      const q = soalDari(b)[w.i];
+      const tepat = Math.random() < 0.5;
+      const opsi = tepat ? q.p[q.j] : ambil(q.p.filter((_, i) => i !== q.j));
+      return { w, jenis: 'pilih', tanya: 'Apakah jawaban ini tepat untuk pertanyaannya?', kalimat: `${q.t} → ${opsi}`, p: BS, j: tepat ? 0 : 1,
+        alasan: `Jawaban yang tepat: ${q.p[q.j]}. ${q.b}`, bahasSelalu: true };
+    }
+    if (w.g === 'tabel') {
+      const baris = kocok(daftarBS).slice(0, 4);
+      return { w, jenis: 'tabel', tanya: 'Tentukan benar atau salah menurut bacaan.', baris: baris.map(x => [x[0], x[1]]),
+        alasan: baris.filter(x => !x[1] && x[2]).map(x => x[2]).join(' · '), bahasSelalu: true };
+    }
+    let pilih = kocok(daftarBS).slice(0, 5);
+    for (let c = 0; c < 20 && (pilih.every(x => x[1]) || pilih.every(x => !x[1])); c++) pilih = kocok(daftarBS).slice(0, 5);
+    return { w, jenis: 'multi', tanya: 'Pilih semua pernyataan yang BENAR menurut bacaan.', p: pilih.map(x => x[0]),
+      jj: pilih.map((x, i) => (x[1] ? i : -1)).filter(i => i >= 0), alasan: pilih.filter(x => !x[1] && x[2]).map(x => x[2]).join(' · '), bahasSelalu: true };
   }
   function buatSoalBacaan(b, n, w) {
     const G = window.KATA_BACAAN[b.id], K = kalimatBacaan(b);
     if (n === 1) {
       const [kata, arti] = G[w];
       const c = kalimatDenganKata(b, kata);
-      return Math.random() < 0.5
-        ? { w, jenis: 'pilih', tanya: 'Apa arti kata ini dalam bacaan?', besar: kata, suara: kata, kecil: c ? `“${c.en}”` : '', ...pilihan(arti, G.map(x => x[1])) }
-        : { w, jenis: 'pilih', tanya: 'Apa bahasa Inggrisnya dalam bacaan?', besar: arti, suaraKunci: kata, ...pilihan(kata, G.map(x => x[0])) };
+      const v = varian(n, w, ['kataArti', 'artiKata', 'pasangan', 'dengarArti', ...(c ? ['rumpang'] : [])]);
+      if (v === 'kataArti') return { w, jenis: 'pilih', tanya: 'Apa arti kata ini dalam bacaan?', besar: kata, suara: kata, kecil: c ? `“${c.en}”` : '', ...pilihan(arti, G.map(x => x[1])) };
+      if (v === 'artiKata') return { w, jenis: 'pilih', tanya: 'Apa bahasa Inggrisnya dalam bacaan?', besar: arti, suaraKunci: kata, ...pilihan(kata, G.map(x => x[0])) };
+      if (v === 'dengarArti') return { w, jenis: 'pilih', tanya: 'Dengarkan kata dari bacaan. Apa artinya?', putar: kata, tulisSesudah: kata, ...pilihan(arti, G.map(x => x[1])) };
+      if (v === 'rumpang') {
+        return { w, jenis: 'pilih', tanya: 'Kata apa yang hilang dari kalimat bacaan ini?', kalimat: c.en.replace(reKata(kata), '_____'), kecil: c.id,
+          suaraKunci: c.en, sesudah: c.en, ...pilihan(kata, G.map(x => x[0])) };
+      }
+      const cocok = Math.random() < 0.5;
+      const tampil = cocok ? arti : ambil(G.filter(x => x[1] !== arti).map(x => x[1]));
+      return { w, jenis: 'pilih', tanya: 'Benar atau salah?', kalimat: `“${kata}” artinya “${tampil}”.`, kecil: c ? `“${c.en}”` : '', p: BS, j: cocok ? 0 : 1,
+        alasan: `“${kata}” artinya “${arti}”.`, suaraKunci: kata };
     }
     if (n === 2) {
       const k = K[w];
-      return { w, jenis: 'pilih', tanya: 'Dengarkan kalimat dari bacaan. Apa artinya?', putar: k.en, tulisSesudah: k.en,
-        ...pilihan(k.id, K.filter(x => x !== k && cukupPanjang(x)).map(x => x.id)) };
+      const lain = K.filter(x => x !== k && cukupPanjang(x));
+      const ada = G.filter(x => reKata(x[0]).test(k.en)), tiada = G.filter(x => !reKata(x[0]).test(k.en));
+      const v = varian(n, w, ['dengarArti', 'artiInggris', 'dengarTulis', ...(ada.length && tiada.length >= 3 ? ['dengarKata'] : [])]);
+      if (v === 'dengarArti') return { w, jenis: 'pilih', tanya: 'Dengarkan kalimat dari bacaan. Apa artinya?', putar: k.en, tulisSesudah: k.en, ...pilihan(k.id, lain.map(x => x.id)) };
+      if (v === 'artiInggris') return { w, jenis: 'pilih', tanya: 'Kalimat bacaan mana yang artinya seperti ini?', kalimat: k.id, suaraKunci: k.en, ...pilihan(k.en, lain.map(x => x.en)) };
+      if (v === 'dengarTulis') return { w, jenis: 'pilih', tanya: 'Dengarkan. Kalimat mana yang kamu dengar?', putar: k.en, ...pilihan(k.en, lain.map(x => x.en)) };
+      const kunci = ambil(ada)[0];
+      return { w, jenis: 'pilih', tanya: 'Dengarkan kalimatnya. Kata mana yang ada di kalimat itu?', putar: k.en, tulisSesudah: k.en,
+        ...pilihan(kunci, tiada.map(x => x[0])) };
     }
     if (n === 3) {
-      const L = Math.min(K.length, b.tahap >= 4 ? 3 : 4);
-      const s = Math.floor(Math.random() * (K.length - L + 1));
-      return { w, jenis: 'susun', urutKalimat: true, tanya: 'Urutkan kalimat-kalimat ini sesuai bacaan.', token: K.slice(s, s + L).map(x => x.en) };
+      const daftar = ['urut', ...(w < K.length - 1 ? ['sesudah'] : []), ...(w > 0 ? ['sebelum'] : [])];
+      const v = varian(n, w, daftar);
+      if (v === 'urut') {
+        const L = Math.min(K.length, b.tahap >= 4 ? 3 : 4);
+        const s = Math.floor(Math.random() * (K.length - L + 1));
+        return { w, jenis: 'susun', urutKalimat: true, tanya: 'Urutkan kalimat-kalimat ini sesuai bacaan.', token: K.slice(s, s + L).map(x => x.en) };
+      }
+      const kunci = K[v === 'sesudah' ? w + 1 : w - 1];
+      return { w, jenis: 'pilih', tanya: v === 'sesudah' ? 'Dalam bacaan, kalimat mana yang tepat SESUDAH kalimat ini?' : 'Dalam bacaan, kalimat mana yang tepat SEBELUM kalimat ini?',
+        kalimat: K[w].en, kecil: K[w].id, sesudah: v === 'sesudah' ? `${K[w].en} ${kunci.en}` : `${kunci.en} ${K[w].en}`,
+        ...pilihan(kunci.en, K.filter(x => x !== K[w] && x !== kunci).map(x => x.en)) };
     }
     if (n === 4) {
+      if (typeof w === 'object') return soalTurunan(b, w);
       const x = bankBacaan(b)[w];
       // Bentuk soal TKA/SNBT: pilihan ganda (4–5 opsi), pilihan ganda kompleks (j = daftar indeks,
       // jawaban benar lebih dari satu), dan benar/salah per pernyataan (bs = [[pernyataan, benar?], ...]).
@@ -1067,18 +1171,22 @@
           alasan: x.pg.b, bahasSelalu: true };
       }
       if (x.pg) return { w, jenis: 'pilih', tanya: x.pg.t, ...pilihan(x.pg.p[x.pg.j], x.pg.p, x.pg.p.length), alasan: x.pg.b, bahasSelalu: true };
-      return { w, jenis: 'pilih', tanya: 'Benar atau salah menurut bacaan?', kalimat: x.bs[0], p: ['Benar', 'Salah'], j: x.bs[1] ? 0 : 1,
+      return { w, jenis: 'pilih', tanya: 'Benar atau salah menurut bacaan?', kalimat: x.bs[0], p: BS, j: x.bs[1] ? 0 : 1,
         alasan: x.bs[2] || '', bahasSelalu: true };
     }
     if (bacaSuara(b)) {
       const k = K[w];
-      return { w, jenis: 'ucapK', tanya: 'Bacalah kalimat dari bacaan ini dengan suara jelas:', kalimat: k.en, kecil: k.id,
-        target: k.en, fokus: '', fokusPos: 0, suaraKunci: k.en, bacaTeks: true };
+      const dengar = varian(n, w, ['baca', 'dengarBaca']) === 'dengarBaca';
+      return { w, jenis: 'ucapK', tanya: dengar ? 'Dengarkan dulu, lalu bacalah kalimat ini dengan suara jelas:' : 'Bacalah kalimat dari bacaan ini dengan suara jelas:',
+        putar: dengar ? k.en : '', kalimat: k.en, kecil: k.id, target: k.en, fokus: '', fokusPos: 0, suaraKunci: k.en, bacaTeks: true };
     }
     const [kata] = G[w];
     const c = kalimatDenganKata(b, kata);
-    return { w, jenis: 'pilih', tanya: 'Lengkapi kalimat dari bacaan.', kalimat: c.en.replace(reKata(kata), '_____'), kecil: c.id,
-      suaraKunci: c.en, sesudah: c.en, ...pilihan(kata, G.map(x => x[0])) };
+    const kosong = c.en.replace(reKata(kata), '_____');
+    return varian(n, w, ['pilih', 'ketik']) === 'pilih'
+      ? { w, jenis: 'pilih', tanya: 'Lengkapi kalimat dari bacaan.', kalimat: kosong, kecil: c.id, suaraKunci: c.en, sesudah: c.en, ...pilihan(kata, G.map(x => x[0])) }
+      : { w, jenis: 'ketik', tanya: 'Ketik kata yang hilang dari kalimat bacaan ini.', kalimat: kosong, kecil: c.id, suaraKunci: c.en,
+        sesudah: c.en, petunjukKetik: petunjukHuruf(kata), target: kata, terima: [kata] };
   }
 
   // Satu soal untuk kata ke-w (sub level 3: situasi ke-w).
@@ -1087,46 +1195,73 @@
     if (!b.kosakata) return buatSoalBacaan(b, n, w);
     const kk = b.kosakata, k = kk[w];
     const kata = kk.map(x => x[0]), arti = kk.map(x => x[1]);
-    if (n === 1) {
-      return Math.random() < 0.5
-        ? { w, jenis: 'pilih', tanya: 'Apa arti kata ini?', besar: k[0], suara: k[0], ...pilihan(k[1], arti) }
-        : { w, jenis: 'pilih', tanya: 'Apa bahasa Inggrisnya?', besar: k[1], suaraKunci: k[0], ...pilihan(k[0], kata) };
-    }
-    if (n === 2) {
-      if (Math.random() < 0.5) return { w, jenis: 'pilih', tanya: 'Dengarkan. Kata apa yang kamu dengar?', putar: k[0], ...pilihan(k[0], kata) };
-      const c = ambil(contohKata(b, k));
-      const lain = semuaContoh(b).filter(x => x.kata !== k[0]).map(x => x.id);
-      return { w, jenis: 'pilih', tanya: 'Dengarkan kalimatnya. Apa artinya?', putar: c[0], tulisSesudah: c[0], ...pilihan(c[1], lain) };
-    }
     if (n === 3) {
       const s = b.situasi[w];
+      const lainSit = b.situasi.filter(x => x.j !== s.j && !(x.juga || []).includes(s.j) && !(s.juga || []).includes(x.j));
+      if (lainSit.length >= 2 && varian(n, w, ['situasiKata', 'kataSituasi']) === 'kataSituasi') {
+        return { w, jenis: 'pilih', tanya: `Kapan ungkapan “${s.j}” paling tepat diucapkan?`, suaraKunci: s.j, ...pilihan(s.s, lainSit.map(x => x.s)) };
+      }
       const calon = kata.filter(x => x !== s.j && !(s.juga || []).includes(x));
       return { w, jenis: 'pilih', tanya: s.s, suaraKunci: s.j, ...pilihan(s.j, calon) };
     }
+    // Contoh kalimat acak untuk kata ini, beserta versi rumpangnya (null bila kata tidak tertulis utuh).
+    const contoh = kocok(contohKata(b, k));
+    const cR = contoh.find(c => rumpang(c[0], k[0])) || null;
+    const r = cR && rumpang(cR[0], k[0]);
+    const c = contoh[0];
+    const kalimatLain = semuaContoh(b).filter(x => x.kata !== k[0]);
+    const tidakMirip = kata.filter(x => !miripDengan(b, k[0]).includes(x));
+    if (n === 1) {
+      const v = varian(n, w, ['kataArti', 'artiKata', 'pasangan', ...(cR ? ['konteks'] : [])]);
+      if (v === 'kataArti') return { w, jenis: 'pilih', tanya: 'Apa arti kata ini?', besar: k[0], suara: k[0], ...pilihan(k[1], arti) };
+      if (v === 'artiKata') return { w, jenis: 'pilih', tanya: 'Apa bahasa Inggrisnya?', besar: k[1], suaraKunci: k[0], ...pilihan(k[0], kata) };
+      if (v === 'konteks') {
+        return { w, jenis: 'pilih', tanya: `Apa arti “${k[0]}” dalam kalimat ini?`, kalimat: cR[0], suaraKunci: cR[0], tulisSesudah: cR[0],
+          ...pilihan(k[1], arti) };
+      }
+      const cocok = Math.random() < 0.5;
+      const tampil = cocok ? k[1] : ambil(kk.filter(x => x[1] !== k[1]).map(x => x[1]));
+      return { w, jenis: 'pilih', tanya: 'Benar atau salah?', kalimat: `“${k[0]}” artinya “${tampil}”.`, p: BS, j: cocok ? 0 : 1,
+        alasan: `“${k[0]}” artinya “${k[1]}”.`, suaraKunci: k[0] };
+    }
+    if (n === 2) {
+      const v = varian(n, w, ['dengarKata', 'dengarKalimatArti', 'dengarKataArti', 'dengarKalimatTulis']);
+      if (v === 'dengarKata') return { w, jenis: 'pilih', tanya: 'Dengarkan. Kata apa yang kamu dengar?', putar: k[0], ...pilihan(k[0], kata) };
+      if (v === 'dengarKataArti') return { w, jenis: 'pilih', tanya: 'Dengarkan katanya. Apa artinya?', putar: k[0], tulisSesudah: k[0], ...pilihan(k[1], arti) };
+      if (v === 'dengarKalimatTulis') return { w, jenis: 'pilih', tanya: 'Dengarkan. Kalimat mana yang kamu dengar?', putar: c[0], ...pilihan(c[0], kalimatLain.map(x => x.en)) };
+      return { w, jenis: 'pilih', tanya: 'Dengarkan kalimatnya. Apa artinya?', putar: c[0], tulisSesudah: c[0], ...pilihan(c[1], kalimatLain.map(x => x.id)) };
+    }
     if (n === 4) {
-      const c = ambil(contohKata(b, k));
-      const r = rumpang(c[0], k[0]);
       const token = c[0].split(/\s+/);
       const bisaSusun = token.length >= 3 && token.length <= 8;
-      if (r && (!bisaSusun || Math.random() < 0.5)) {
-        const calon = kata.filter(x => !miripDengan(b, k[0]).includes(x));
-        return { w, jenis: 'pilih', tanya: 'Lengkapi kalimatnya.', besar: r, kecil: c[1], suaraKunci: c[0], ...pilihan(k[0], calon) };
+      const v = varian(n, w, [...(cR ? ['rumpangPilih', 'rumpangKetik'] : []), ...(bisaSusun ? ['susun'] : []), 'terjemah']);
+      if (v === 'rumpangPilih') return { w, jenis: 'pilih', tanya: 'Lengkapi kalimatnya.', besar: r, kecil: cR[1], suaraKunci: cR[0], ...pilihan(k[0], tidakMirip) };
+      if (v === 'rumpangKetik') {
+        return { w, jenis: 'ketik', tanya: 'Ketik kata yang hilang.', kalimat: r, kecil: cR[1], suaraKunci: cR[0], sesudah: cR[0],
+          petunjukKetik: petunjukHuruf(k[0]), target: k[0], terima: [k[0]] };
       }
-      if (bisaSusun) return { w, jenis: 'susun', tanya: 'Susun kata-kata ini menjadi kalimat.', kecil: c[1], token, suaraKunci: c[0] };
-      return { w, jenis: 'pilih', tanya: 'Apa bahasa Inggrisnya?', besar: k[1], suaraKunci: k[0], ...pilihan(k[0], kata) };
+      if (v === 'susun') return { w, jenis: 'susun', tanya: 'Susun kata-kata ini menjadi kalimat.', kecil: c[1], token, suaraKunci: c[0] };
+      return { w, jenis: 'pilih', tanya: 'Pilih kalimat bahasa Inggris yang artinya:', kalimat: c[1], suaraKunci: c[0], ...pilihan(c[0], kalimatLain.map(x => x.en)) };
     }
-    // Soal situasi: ungkapan lain yang juga pantas (juga) ikut diterima.
+    // Sub level 5 (Ucapkan): ungkapan lain yang juga pantas (juga) ikut diterima pada soal situasi.
     const sit = b.situasi.filter(s => s.j === k[0]);
-    const s = sit.length && Math.random() < 0.5 ? ambil(sit) : null;
-    return s
-      ? { w, jenis: 'ucap', tanya: s.s, target: k[0], terima: terimaUcap([k[0], ...(s.juga || [])]), petunjuk: 'Ucapkan kata yang tepat dalam bahasa Inggris.' }
-      : { w, jenis: 'ucap', tanya: 'Ucapkan dalam bahasa Inggris:', besar: k[1], target: k[0], terima: terimaUcap([k[0]]) };
+    const v = varian(n, w, ['arti', ...(sit.length ? ['situasi'] : []), ...(cR ? ['rumpang'] : [])]);
+    if (v === 'situasi') {
+      const s = ambil(sit);
+      return { w, jenis: 'ucap', tanya: s.s, target: k[0], terima: terimaUcap([k[0], ...(s.juga || [])]), petunjuk: 'Ucapkan kata yang tepat dalam bahasa Inggris.' };
+    }
+    if (v === 'rumpang') {
+      return { w, jenis: 'ucap', tanya: 'Ucapkan kata yang hilang dari kalimat ini:', kalimat: r, kecil: cR[1], target: k[0], terima: terimaUcap([k[0]]), suaraKunci: cR[0] };
+    }
+    return { w, jenis: 'ucap', tanya: 'Ucapkan dalam bahasa Inggris:', besar: k[1], target: k[0], terima: terimaUcap([k[0]]) };
   }
 
   let latih = null;   // { b, n, antre: [soal], i, benar, awal, sudah, rec }
   function mulaiLatih(b, n) {
-    const urut = b.pola ? Array.from({ length: 10 }, (_, i) => i) : !b.kosakata ? urutBacaan(b, n)
-      : n === 3 ? kocok(b.situasi.map((_, i) => i)).slice(0, 10) : kocok(b.kosakata.map((_, i) => i));
+    const N = jumlahSoal();
+    varianDipakai = {};
+    const urut = b.pola ? Array.from({ length: N }, (_, i) => i) : !b.kosakata ? urutBacaan(b, n, N)
+      : isiSampai((n === 3 ? b.situasi : b.kosakata).map((_, i) => i), N);
     latih = { b, n, antre: urut.map(w => buatSoal(b, n, w)), i: 0, benar: 0, awal: urut.length, sudah: false, rec: null };
   }
   function batalLatih() {
@@ -1408,7 +1543,7 @@
     const d = skorSub[b.id] || { s: [] };
     return `<section class="sub-level">
       <h2>🧩 Latihan bertahap</h2>
-      <p class="petunjuk">Pelajari ${b.pola ? 'polanya dan contoh kalimatnya' : b.kosakata ? 'kata-katanya' : 'teksnya (dengarkan dan baca)'} di atas, lalu kerjakan ${daftarSub(b).length} sub level secara berurutan. Tiap sub level lulus bila
+      <p class="petunjuk">Pelajari ${b.pola ? 'polanya dan contoh kalimatnya' : b.kosakata ? 'kata-katanya' : 'teksnya (dengarkan dan baca)'} di atas, lalu kerjakan ${daftarSub(b).length} sub level secara berurutan (${jumlahSoal()} soal per sub level). Tiap sub level lulus bila
         ≥ ${TUNTAS}% benar; soalnya diacak sehingga berbeda tiap kali dikerjakan.${d.lama ? ' Level ini sudah kamu tuntaskan sebelumnya, jadi semua sub level terbuka untuk mengulang.' : ''}</p>
       ${siapSub(b) ? '' : syaratSubHTML(b)}
       <div class="sub-daftar">${daftarSub(b).map((s, i) => {
@@ -1530,6 +1665,9 @@
       }).join('') +
       (bisaSuara ? '' : '<div class="pesan">Browser ini tidak bisa membacakan teks. Gunakan Google Chrome versi terbaru.</div>') +
       `<details class="pengaturan"><summary>⚙️ Pengaturan</summary>
+        <label>Jumlah soal per sub level
+          <select id="pilih-jumlah-soal">${PILIHAN_JUMLAH.map(v => `<option value="${v}"${v === jumlahSoal() ? ' selected' : ''}>${v} soal</option>`).join('')}</select></label>
+        <p>Makin banyak soal, makin yakin penguasaannya. Kata, kalimat, dan soal bacaan diulang dalam bentuk soal yang berbeda; lulus tetap ≥ ${TUNTAS}% benar pada percobaan pertama. Bawaan 10.</p>
         <label>Mendengar sebelum Latihan bertahap
           <select id="pilih-harus-dengar"><option value="1"${setelan.harusDengar ? ' selected' : ''}>Harus Dengar</option>
             <option value="0"${setelan.harusDengar ? '' : ' selected'}>Tanpa Dengar</option></select></label>
@@ -1542,6 +1680,7 @@
         <p>Harus Baca: teks level dibaca dulu dengan 🎤 Baca &amp; Koreksi sampai selesai dengan akurasi minimal ini (bawaan 75%).</p>
         <p>Keduanya berlaku sebelum sub level 1 di semua level yang punya Latihan bertahap. Level yang sub levelnya sudah
           mulai dikerjakan tidak terkunci lagi. Pengaturan tersimpan di perangkat ini saja.</p></details>`;
+    $('#pilih-jumlah-soal').onchange = e => { setelan.jumlahSoal = +e.target.value; simpanSetelan(); };
     $('#pilih-harus-dengar').onchange = e => { setelan.harusDengar = e.target.value === '1'; simpanSetelan(); };
     $('#pilih-harus-baca').onchange = e => {
       setelan.harusBaca = e.target.value === '1';

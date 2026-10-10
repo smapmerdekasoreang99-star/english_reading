@@ -152,6 +152,35 @@ datang dari teks itu sendiri (kalimat dan terjemahannya) dan bank soal.
 - Menambah bacaan baru dengan latihan bertahap: isi `SOAL` (≥ 8 soal), `SOAL_BS` (≥ 6), dan
   `KATA_BACAAN` (kata harus tertulis persis di teks). Terjemahan (`arti`) harus sejajar per kalimat.
 
+## Jumlah soal per sub level dan bentuk soal bergilir (10 Okt 2026)
+
+**⚙️ Pengaturan → Jumlah soal per sub level**: 10 (bawaan), 15, 20, 25, 30, atau 40 soal per sesi
+(`setelan.jumlahSoal`, per perangkat). Lulus tetap ≥ 80% benar pada percobaan pertama.
+
+Bila unitnya lebih sedikit dari jumlah soal (mis. 10 kata, 6–19 kalimat bacaan), unit diulang dalam
+putaran acak berikutnya. Untuk unit yang sama, bentuk soal yang belum dipakai di sesi itu didahulukan,
+jadi kata/kalimat yang muncul lagi tampil dalam bentuk lain:
+
+| Jenis level | Sub level | Bentuk soal yang bergilir |
+|---|---|---|
+| Kosakata | 1 Kenali | kata → arti · arti → kata · arti kata dalam kalimat · benar/salah pasangan kata–arti |
+| | 2 Dengar | dengar kata → tulisan · dengar kata → arti · dengar kalimat → arti · dengar kalimat → tulisan |
+| | 3 Situasi | situasi → ungkapan · ungkapan → situasi yang tepat |
+| | 4 Lengkapi & susun | rumpang pilih · rumpang ketik (petunjuk huruf awal) · susun kata · arti → kalimat Inggris |
+| | 5 Ucapkan | arti → ucapkan · situasi → ucapkan · kalimat rumpang → ucapkan kata yang hilang |
+| Pola kalimat | 1 | pilih bentuk · pilih kalimat yang benar |
+| | 2 | benar/salah · kalimat keliru → pilih penggantinya |
+| | 3 | ketik bentuk · kalimat keliru → ketik perbaikannya |
+| | 4 | susun dengan arti · dengar lalu susun |
+| | 5 | arti → ucapkan · kalimat rumpang → ucapkan kalimat lengkap |
+| Bacaan | 1 Kosakata bacaan | kata → arti · arti → kata · dengar kata → arti · benar/salah kata–arti · kata yang hilang dari kalimat teks |
+| | 2 Dengar & pahami | dengar → arti · arti → kalimat teks · dengar → tulisan · dengar → kata penting yang ada di kalimat |
+| | 3 Urutkan | urutkan kalimat · kalimat sesudahnya · kalimat sebelumnya |
+| | 4 Pemahaman | bank soal + soal turunan (≥ 20%): "apakah jawaban ini tepat?", tabel benar/salah dan "pilih semua yang benar" dari `SOAL_BS` acak |
+| | 5 | Tahap 1–2: baca kalimat · dengar lalu baca. Tahap 3–5: rumpang pilih · rumpang ketik |
+
+Kalimat Pola selalu dirakit baru oleh `pola.js`, jadi jumlah soal berapa pun tetap bervariasi.
+
 ## Level TKA dan Level UTBK/SNBT (10 Okt 2026)
 
 - **Tahap 4 · Level TKA** (B1–B1+): 6 bacaan dengan genre berbeda: discussion, analytical exposition,
