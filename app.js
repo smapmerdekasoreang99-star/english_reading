@@ -28,11 +28,15 @@
   function tulis(kunci, nilai) {
     try { localStorage.setItem(kunci, JSON.stringify(nilai)); } catch (e) { /* abaikan */ }
   }
-  const setelan = Object.assign({ suara: '', laju: 0.9, tampilArti: false, tanpaGrafik: false, syaratBaca: 75 }, baca('er_setelan', {}));
+  const setelan = Object.assign({ suara: '', laju: 0.9, tampilArti: false, tanpaGrafik: false, syaratBaca: 75, harusBaca: true, harusDengar: true },
+    baca('er_setelan', {}));
   delete setelan.arti;          // pengaturan lama (terjemahan tampil); diganti tampilArti
+  // Pengaturan lama "Tanpa syarat" (syaratBaca 0) menjadi Tanpa Baca.
+  if (setelan.syaratBaca === 0) { setelan.harusBaca = false; setelan.syaratBaca = 75; }
   const simpanSetelan = () => tulis('er_setelan', setelan);
   const skorTerbaik = baca('er_skor', {});   // pelafalan terbaik per level
   const skorPaham = baca('er_paham', {});     // soal pemahaman terbaik per level
+  const dengarSelesai = baca('er_dengar', {}); // level yang teksnya sudah didengar sampai selesai
 
   function esc(s) {
     return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -247,9 +251,25 @@
       for (const w of kal.kata) if (w.i >= 0 && w.posisi <= e.charIndex) pilih = w;
       sorotKata(pilih);
     };
-    u.onend = () => { if (token === putar.token) { sorotKata(null); ucapKalimat(k + 1, token); } };
+    u.onend = () => { if (token === putar.token) { sorotKata(null); tandaiDengar(k); ucapKalimat(k + 1, token); } };
     u.onerror = e => { if (token === putar.token && e.error !== 'interrupted' && e.error !== 'canceled') hentikanSuara(); };
     speechSynthesis.speak(u);
+  }
+
+  // Syarat Harus Dengar: tiap kalimat yang selesai dibacakan dicatat; bila semua kalimat sudah
+  // terdengar (boleh dalam beberapa kali putar), level dicatat "sudah didengar" (er_dengar).
+  function tandaiDengar(k) {
+    if (!kini || dengarSelesai[kini.b.id]) return;
+    kini.didengar.add(k);
+    if (kini.didengar.size < kini.kalimat.length) return;
+    const terbuka = punyaSub(kini.b) && !siapSub(kini.b);
+    dengarSelesai[kini.b.id] = 1;
+    tulis('er_dengar', dengarSelesai);
+    const el = layar.querySelector('.sub-level');
+    if (el) el.outerHTML = subHTML(kini.b);
+    const pt = $('#petunjuk');
+    if (pt && terbuka) pt.textContent = siapSub(kini.b) ? '🎧 Kamu sudah mendengarkan seluruh teks. Latihan bertahap sub level 1 sudah terbuka.'
+      : '🎧 Kamu sudah mendengarkan seluruh teks. Sekarang baca dengan 🎤 Baca & Koreksi.';
   }
 
   function ucapKata(teks, w) {
@@ -508,6 +528,7 @@
     }
     const s = syaratLevel(b);
     const kurang = [];
+    if (s.sub && !sudahDengar(b)) kurang.push('🎧 dengarkan teksnya dengan ▶ Dengarkan sampai selesai');
     if (s.sub && !sudahBaca(b)) kurang.push(`🎤 baca teksnya dengan Baca & Koreksi sampai selesai, akurasi ≥ ${syaratBaca()}%`);
     if (s.sub) kurang.push(`🧩 lulus ${SUB.length} sub level Latihan bertahap (sudah ${jumlahLulusSub(b)})`);
     if (s.ucap && !(skorTerbaik[b.id] >= TUNTAS)) {
@@ -528,7 +549,8 @@
   }
   function soalHTML(b) {
     const daftar = soalDari(b);
-    if (!daftar) return '';
+    // Bagian lama ini hanya untuk pilihan ganda biasa; bentuk TKA/SNBT lain hanya di Latihan bertahap.
+    if (!daftar || daftar.some(q => q.bs || Array.isArray(q.j))) return '';
     kini.urutan = daftar.map(q => acak(q.p.length));
     const s = syaratLevel(b);
     return `<section class="paham" id="paham">
@@ -806,9 +828,10 @@
     const baruTerbuka = punyaSub(kini.b) && !bacaSebelum && sudahBaca(kini.b);
     const elSub = layar.querySelector('.sub-level');
     if (elSub) elSub.outerHTML = subHTML(kini.b);
-    const syaratBaca = !punyaSub(kini.b) || bacaSebelum ? ''
-      : baruTerbuka ? `<p class="lanjut">🔓 Latihan bertahap sudah terbuka. <a href="#latih/${encodeURIComponent(kini.b.id)}/1">Mulai sub level 1 →</a></p>`
-      : `<p class="lanjut">Latihan bertahap terbuka setelah kamu membaca sampai selesai dengan akurasi minimal ${syaratBaca()}%.${lengkap ? ' Dengarkan contohnya, latih kata yang masih merah, lalu coba lagi.' : ''}</p>`;
+    const pesanSyarat = !punyaSub(kini.b) || bacaSebelum ? ''
+      : !baruTerbuka ? `<p class="lanjut">Latihan bertahap terbuka setelah kamu membaca sampai selesai dengan akurasi minimal ${syaratBaca()}%.${lengkap ? ' Dengarkan contohnya, latih kata yang masih merah, lalu coba lagi.' : ''}</p>`
+      : sudahDengar(kini.b) ? `<p class="lanjut">🔓 Latihan bertahap sudah terbuka. <a href="#latih/${encodeURIComponent(kini.b.id)}/1">Mulai sub level 1 →</a></p>`
+      : '<p class="lanjut">✓ Syarat membaca terpenuhi. Tinggal 🎧 dengarkan teksnya dengan ▶ Dengarkan sampai selesai, lalu sub level 1 terbuka.</p>';
 
     $('#legenda').hidden = false;
     hasilEl.innerHTML = `<div class="hasil">
@@ -820,7 +843,7 @@
           norm: x.w.norm, kata: bersihKata(x.w.asli), label: x.n + '%', kelas: kelasNilai(x.n)
         })).join('')}</div>`
         : (dibaca ? '<p>Semua kata yang kamu baca terdengar tepat. 👏</p>' : '')}
-      ${syaratBaca}
+      ${pesanSyarat}
       ${lengkap ? (baruTerbuka ? '' : statusLevelHTML()) : '<p class="lanjut">Baca sampai akhir agar skormu tercatat.</p>'}
       <details><summary>Yang terdengar oleh aplikasi</summary><p>${esc(teksUcap)}</p></details>
       <p class="catatan">Angka di bawah tiap kata adalah perkiraan dari pengenal suara otomatis: kata yang dikenali memakai
@@ -875,15 +898,19 @@
   const dataSub = b => skorSub[b.id] || (skorSub[b.id] = { s: [] });
   const lulusSub = (b, n) => { const d = skorSub[b.id]; return !!d && (!!d.lama || d.s[n - 1] >= TUNTAS); };
   const jumlahLulusSub = b => SUB.filter((_, i) => lulusSub(b, i + 1)).length;
-  // Sebelum sub level 1, teks level dibaca dulu dengan Baca & Koreksi sampai selesai, akurasi
-  // ≥ syaratBaca() (9 Okt 2026; bawaan 75%, diubah di Pengaturan halaman utama, 0 = tanpa syarat,
-  // tersimpan per perangkat). Dikecualikan: browser tanpa pengenal suara (tidak bisa dinilai),
-  // level yang tuntas sebelumnya, dan siswa yang sudah mulai mengerjakan sub level sebelum aturan ini.
-  const PILIHAN_SYARAT_BACA = [0, 50, 60, 70, 75, 80, 85, 90];
+  // Sebelum sub level 1 (diatur di Pengaturan halaman utama, tersimpan per perangkat):
+  // - Harus Dengar (10 Okt 2026): seluruh teks level didengarkan dengan ▶ Dengarkan sampai selesai.
+  // - Harus Baca (9 Okt 2026): teks dibaca dengan Baca & Koreksi sampai selesai, akurasi ≥ syaratBaca()
+  //   (bawaan 75%).
+  // Dikecualikan: browser tanpa suara/pengenal suara (tidak bisa dicatat/dinilai), level yang tuntas
+  // sebelumnya, dan siswa yang sudah mulai mengerjakan sub level sebelum aturan ini.
+  const PILIHAN_SYARAT_BACA = [50, 60, 70, 75, 80, 85, 90];
   const syaratBaca = () => (PILIHAN_SYARAT_BACA.includes(setelan.syaratBaca) ? setelan.syaratBaca : 75);
-  const sudahBaca = b => !SR || !syaratBaca() || skorTerbaik[b.id] >= syaratBaca() ||
-    (skorSub[b.id] && (skorSub[b.id].lama || skorSub[b.id].s.some(x => x != null)));
-  const terbukaSub = (b, n) => (n === 1 ? sudahBaca(b) : lulusSub(b, n - 1));
+  const sudahMulaiSub = b => !!(skorSub[b.id] && (skorSub[b.id].lama || skorSub[b.id].s.some(x => x != null)));
+  const sudahBaca = b => !SR || !setelan.harusBaca || skorTerbaik[b.id] >= syaratBaca() || sudahMulaiSub(b);
+  const sudahDengar = b => !bisaSuara || !setelan.harusDengar || !!dengarSelesai[b.id] || sudahMulaiSub(b);
+  const siapSub = b => sudahDengar(b) && sudahBaca(b);
+  const terbukaSub = (b, n) => (n === 1 ? siapSub(b) : lulusSub(b, n - 1));
   // Level yang sudah tuntas lewat Baca & Koreksi sebelum sub level dipasang dianggap lulus semua.
   (function () {
     const cek = baca('er_sub_cek', []);
@@ -1031,7 +1058,15 @@
     }
     if (n === 4) {
       const x = bankBacaan(b)[w];
-      if (x.pg) return { w, jenis: 'pilih', tanya: x.pg.t, ...pilihan(x.pg.p[x.pg.j], x.pg.p), alasan: x.pg.b, bahasSelalu: true };
+      // Bentuk soal TKA/SNBT: pilihan ganda (4–5 opsi), pilihan ganda kompleks (j = daftar indeks,
+      // jawaban benar lebih dari satu), dan benar/salah per pernyataan (bs = [[pernyataan, benar?], ...]).
+      if (x.pg && x.pg.bs) return { w, jenis: 'tabel', tanya: x.pg.t, baris: kocok(x.pg.bs), alasan: x.pg.b, bahasSelalu: true };
+      if (x.pg && Array.isArray(x.pg.j)) {
+        const u = kocok(x.pg.p.map((_, i) => i));
+        return { w, jenis: 'multi', tanya: x.pg.t, p: u.map(i => x.pg.p[i]), jj: u.map((i, k) => (x.pg.j.includes(i) ? k : -1)).filter(k => k >= 0),
+          alasan: x.pg.b, bahasSelalu: true };
+      }
+      if (x.pg) return { w, jenis: 'pilih', tanya: x.pg.t, ...pilihan(x.pg.p[x.pg.j], x.pg.p, x.pg.p.length), alasan: x.pg.b, bahasSelalu: true };
       return { w, jenis: 'pilih', tanya: 'Benar atau salah menurut bacaan?', kalimat: x.bs[0], p: ['Benar', 'Salah'], j: x.bs[1] ? 0 : 1,
         alasan: x.bs[2] || '', bahasSelalu: true };
     }
@@ -1112,6 +1147,8 @@
     layar.innerHTML = `
       <div class="bar-atas"><a href="#baca/${encodeURIComponent(b.id)}" class="kembali">← ${esc(b.judul)}</a><span class="label-tingkat">Sub level ${n}/${daftarSub(b).length}</span></div>
       <h1 class="judul-bacaan">${sub.ikon} ${esc(sub.nama)}</h1>
+      ${!b.kosakata && !b.pola && n === 4 && b.tahap >= 4 ? `<details class="lt-teks"><summary>📄 Lihat teks bacaan</summary>
+        ${b.teks.split(/\n\s*\n/).map(x => `<p>${esc(x.trim())}</p>`).join('')}</details>` : ''}
       <div class="lt-jalur"><span id="lt-isi"></span></div>
       <div id="lt-kotak"></div>`;
     gambarSoal();
@@ -1134,7 +1171,17 @@
       isi += `<form class="lt-ketik" id="lt-ketik"><input id="lt-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Ketik jawabanmu" aria-label="Jawaban">
           <button class="tombol utama">Periksa</button></form>${q.petunjukKetik ? `<p class="lt-kecil">${esc(q.petunjukKetik)}</p>` : ''}`;
     } else if (q.jenis === 'pilih') {
-      isi += `<div class="lt-pilihan">${q.p.map((x, i) => `<button class="lt-opsi" data-i="${i}"><span class="opsi-huruf">${'ABCD'[i]}</span><span>${esc(x)}</span></button>`).join('')}</div>`;
+      isi += `<div class="lt-pilihan">${q.p.map((x, i) => `<button class="lt-opsi" data-i="${i}"><span class="opsi-huruf">${'ABCDE'[i]}</span><span>${esc(x)}</span></button>`).join('')}</div>`;
+    } else if (q.jenis === 'multi') {
+      isi += `<p class="lt-kecil">Pilih semua jawaban yang benar (bisa lebih dari satu), lalu tekan Periksa.</p>
+        <div class="lt-pilihan">${q.p.map((x, i) => `<button class="lt-opsi" data-i="${i}" aria-pressed="false"><span class="opsi-huruf">${'ABCDE'[i]}</span><span>${esc(x)}</span></button>`).join('')}</div>
+        <div class="kendali"><button class="tombol utama" id="lt-cek-m" disabled>Periksa</button></div>`;
+    } else if (q.jenis === 'tabel') {
+      q.isi = q.baris.map(() => null);
+      isi += `<p class="lt-kecil">Tentukan Benar atau Salah untuk tiap pernyataan, lalu tekan Periksa.</p>
+        <div class="lt-tabel">${q.baris.map(([s], r) => `<div class="lt-baris" data-baris="${r}"><span class="lt-pernyataan">${esc(s)}</span>
+          <span class="lt-bs"><button class="lt-bs-tombol" data-r="${r}" data-v="1">Benar</button><button class="lt-bs-tombol" data-r="${r}" data-v="0">Salah</button></span></div>`).join('')}</div>
+        <div class="kendali"><button class="tombol utama" id="lt-cek-t" disabled>Periksa</button></div>`;
     } else if (q.jenis === 'susun') {
       q.urut = kocok(q.token.map((_, i) => i));
       q.pilih = [];
@@ -1168,6 +1215,49 @@
     if (e.target.closest('#lt-lanjut')) { L.i++; gambarSoal(); window.scrollTo(0, 0); return; }
     if (e.target.closest('#lt-suara-kunci')) { ucapLatih(L.dengar); return; }
     if (L.sudah) return;
+    const kotak = $('#lt-kotak');
+    if (q.jenis === 'multi') {
+      const opsi = [...kotak.querySelectorAll('.lt-opsi')];
+      const om = e.target.closest('.lt-opsi');
+      if (om) {
+        om.classList.toggle('dipilih');
+        om.setAttribute('aria-pressed', om.classList.contains('dipilih'));
+        $('#lt-cek-m').disabled = !opsi.some(x => x.classList.contains('dipilih'));
+        return;
+      }
+      if (!e.target.closest('#lt-cek-m')) return;
+      // Dinilai benar hanya bila semua jawaban benar dipilih dan tidak ada yang keliru (seperti TKA).
+      const pilih = opsi.map((x, i) => (x.classList.contains('dipilih') ? i : -1)).filter(i => i >= 0);
+      const ok = pilih.length === q.jj.length && pilih.every(i => q.jj.includes(i));
+      opsi.forEach((x, i) => {
+        x.disabled = true;
+        x.classList.toggle('kunci', q.jj.includes(i));
+        x.classList.toggle('keliru', pilih.includes(i) && !q.jj.includes(i));
+      });
+      $('#lt-cek-m').disabled = true;
+      nilaiSoal(ok, ok ? '' : `Jawaban yang tepat: ${q.jj.map(i => `<b>${'ABCDE'[i]}</b>`).join(', ')}.`);
+      return;
+    }
+    if (q.jenis === 'tabel') {
+      const tb = e.target.closest('.lt-bs-tombol');
+      if (tb) {
+        const r = +tb.dataset.r;
+        q.isi[r] = tb.dataset.v === '1';
+        kotak.querySelectorAll(`.lt-bs-tombol[data-r="${r}"]`).forEach(x => x.classList.toggle('dipilih', x === tb));
+        $('#lt-cek-t').disabled = q.isi.some(v => v === null);
+        return;
+      }
+      if (!e.target.closest('#lt-cek-t')) return;
+      const salah = q.baris.map(([, v], r) => (q.isi[r] === v ? -1 : r)).filter(r => r >= 0);
+      kotak.querySelectorAll('.lt-bs-tombol').forEach(x => { x.disabled = true; });
+      kotak.querySelectorAll('.lt-baris').forEach((el, r) => {
+        el.classList.add(salah.includes(r) ? 'keliru' : 'benar');
+        if (salah.includes(r)) el.insertAdjacentHTML('beforeend', `<span class="lt-bs-kunci">Seharusnya: ${q.baris[r][1] ? 'Benar' : 'Salah'}</span>`);
+      });
+      $('#lt-cek-t').disabled = true;
+      nilaiSoal(!salah.length, salah.length ? `${salah.length} dari ${q.baris.length} pernyataan belum tepat.` : '');
+      return;
+    }
     const o = e.target.closest('.lt-opsi');
     if (o) {
       const pilih = +o.dataset.i;
@@ -1320,8 +1410,7 @@
       <h2>🧩 Latihan bertahap</h2>
       <p class="petunjuk">Pelajari ${b.pola ? 'polanya dan contoh kalimatnya' : b.kosakata ? 'kata-katanya' : 'teksnya (dengarkan dan baca)'} di atas, lalu kerjakan ${daftarSub(b).length} sub level secara berurutan. Tiap sub level lulus bila
         ≥ ${TUNTAS}% benar; soalnya diacak sehingga berbeda tiap kali dikerjakan.${d.lama ? ' Level ini sudah kamu tuntaskan sebelumnya, jadi semua sub level terbuka untuk mengulang.' : ''}</p>
-      ${sudahBaca(b) ? '' : `<p class="sub-syarat">🔒 Baca dulu ${b.kosakata ? 'semua kata dan contohnya' : b.pola ? 'contoh kalimatnya' : 'teksnya'} di atas dengan
-        <b>🎤 Baca &amp; Koreksi</b> sampai selesai, dengan akurasi minimal <b>${syaratBaca()}%</b>. Setelah itu sub level 1 terbuka.${skorTerbaik[b.id] != null ? ` Akurasi terbaikmu sekarang ${skorTerbaik[b.id]}%.` : ''}</p>`}
+      ${siapSub(b) ? '' : syaratSubHTML(b)}
       <div class="sub-daftar">${daftarSub(b).map((s, i) => {
         const n = i + 1, buka = terbukaSub(b, n), sk = d.s[i], ok = sk >= TUNTAS;
         const isi = `<span class="sub-no">${ok ? '✓' : buka ? n : '🔒'}</span>
@@ -1329,9 +1418,22 @@
           <span class="kartu-info">${esc(s.ket)}${sk != null ? ` · terbaik <b>${sk}%</b>` : ''}</span></span>`;
         return buka
           ? `<a class="sub-kartu${ok ? ' lulus' : ''}" href="#latih/${encodeURIComponent(b.id)}/${n}">${isi}</a>`
-          : `<span class="sub-kartu kunci" title="${n === 1 ? `Baca dulu dengan Baca & Koreksi, akurasi ≥ ${syaratBaca()}%` : `Luluskan sub level ${n - 1} dulu`}">${isi}</span>`;
+          : `<span class="sub-kartu kunci" title="${n === 1 ? 'Penuhi syarat di atas dulu' : `Luluskan sub level ${n - 1} dulu`}">${isi}</span>`;
       }).join('')}</div>
     </section>`;
+  }
+  // Daftar syarat sebelum sub level 1 (yang aktif di Pengaturan), dengan tanda yang sudah terpenuhi.
+  function syaratSubHTML(b) {
+    const isi = b.kosakata ? 'semua kata dan contohnya' : b.pola ? 'contoh kalimatnya' : 'teksnya';
+    const daftar = [];
+    if (bisaSuara && setelan.harusDengar) {
+      daftar.push(`<li class="${sudahDengar(b) ? 'ok' : ''}">${sudahDengar(b) ? '✓' : '🎧'} Dengarkan ${isi} dengan <b>▶ Dengarkan</b> sampai selesai.</li>`);
+    }
+    if (SR && setelan.harusBaca) {
+      daftar.push(`<li class="${sudahBaca(b) ? 'ok' : ''}">${sudahBaca(b) ? '✓' : '🎤'} Baca ${isi} dengan <b>🎤 Baca &amp; Koreksi</b> sampai selesai, akurasi minimal
+        <b>${syaratBaca()}%</b>.${skorTerbaik[b.id] != null && !sudahBaca(b) ? ` Akurasi terbaikmu sekarang ${skorTerbaik[b.id]}%.` : ''}</li>`);
+    }
+    return `<div class="sub-syarat">🔒 Sebelum sub level 1 terbuka:<ol>${daftar.join('')}</ol></div>`;
   }
 
   // ---------- Saran browser ----------
@@ -1428,10 +1530,24 @@
       }).join('') +
       (bisaSuara ? '' : '<div class="pesan">Browser ini tidak bisa membacakan teks. Gunakan Google Chrome versi terbaru.</div>') +
       `<details class="pengaturan"><summary>⚙️ Pengaturan</summary>
-        <label>Akurasi membaca minimal untuk membuka Latihan bertahap
-          <select id="pilih-syarat-baca">${PILIHAN_SYARAT_BACA.map(v => `<option value="${v}"${v === syaratBaca() ? ' selected' : ''}>${v ? v + '%' : 'Tanpa syarat'}</option>`).join('')}</select></label>
-        <p>Sebelum mengerjakan sub level 1, teks level dibaca dulu dengan 🎤 Baca &amp; Koreksi sampai selesai dengan akurasi ini.
-          Bawaan 75%. Pengaturan tersimpan di perangkat ini saja.</p></details>`;
+        <label>Mendengar sebelum Latihan bertahap
+          <select id="pilih-harus-dengar"><option value="1"${setelan.harusDengar ? ' selected' : ''}>Harus Dengar</option>
+            <option value="0"${setelan.harusDengar ? '' : ' selected'}>Tanpa Dengar</option></select></label>
+        <p>Harus Dengar: teks level didengarkan dulu dengan ▶ Dengarkan sampai kalimat terakhir (boleh berhenti lalu dilanjutkan).</p>
+        <label>Membaca sebelum Latihan bertahap
+          <select id="pilih-harus-baca"><option value="1"${setelan.harusBaca ? ' selected' : ''}>Harus Baca</option>
+            <option value="0"${setelan.harusBaca ? '' : ' selected'}>Tanpa Baca</option></select></label>
+        <label id="label-syarat-baca"${setelan.harusBaca ? '' : ' hidden'}>Akurasi membaca minimal
+          <select id="pilih-syarat-baca">${PILIHAN_SYARAT_BACA.map(v => `<option value="${v}"${v === syaratBaca() ? ' selected' : ''}>${v}%</option>`).join('')}</select></label>
+        <p>Harus Baca: teks level dibaca dulu dengan 🎤 Baca &amp; Koreksi sampai selesai dengan akurasi minimal ini (bawaan 75%).</p>
+        <p>Keduanya berlaku sebelum sub level 1 di semua level yang punya Latihan bertahap. Level yang sub levelnya sudah
+          mulai dikerjakan tidak terkunci lagi. Pengaturan tersimpan di perangkat ini saja.</p></details>`;
+    $('#pilih-harus-dengar').onchange = e => { setelan.harusDengar = e.target.value === '1'; simpanSetelan(); };
+    $('#pilih-harus-baca').onchange = e => {
+      setelan.harusBaca = e.target.value === '1';
+      $('#label-syarat-baca').hidden = !setelan.harusBaca;
+      simpanSetelan();
+    };
     $('#pilih-syarat-baca').onchange = e => { setelan.syaratBaca = +e.target.value; simpanSetelan(); };
   }
 
@@ -1475,7 +1591,7 @@
 
   function tampilBaca(b) {
     const p = pecah(b.teks, b.arti);
-    kini = { b, kalimat: p.kalimat, kata: p.kata, pilihK: 0, sejajar: p.sejajar };
+    kini = { b, kalimat: p.kalimat, kata: p.kata, pilihK: 0, sejajar: p.sejajar, didengar: new Set() };
     // Kosakata: kalimat genap = kata (titik akhirnya disembunyikan, arti selalu tampil), ganjil = contoh.
     const kalHTML = (kal, k, kata) => `<div class="kal${kata ? ' kal-kata' : ''}${kal.paragrafBaru ? ' paragraf-baru' : ''}" data-k="${k}"><div class="kal-en">` +
       kal.kata.map((w, j) => {

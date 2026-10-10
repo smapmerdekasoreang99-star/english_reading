@@ -6,7 +6,7 @@ tanpa database dan tanpa login.
 | Berkas | Isi |
 |---|---|
 | `index.html` | Halaman aplikasi |
-| `bacaan.js` | Peta 5 tahap (TAHAP) dan daftar bacaan per tahap; urutan di daftar = urutan level. Tambah bacaan di sini |
+| `bacaan.js` | Peta 6 tahap (TAHAP, sampai Level TKA dan Level UTBK/SNBT) dan daftar bacaan per tahap; urutan di daftar = urutan level. Tambah bacaan di sini |
 | `soal.js` | Soal pemahaman per bacaan (pertanyaan, pilihan, kunci, pembahasan), pernyataan benar/salah (`SOAL_BS`), dan kata penting tiap bacaan (`KATA_BACAAN`) |
 | `pola.js` | Perakit kalimat acak untuk Latihan bertahap level Pola kalimat |
 | `app.js` | Pemutar suara, koreksi bacaan, soal pemahaman, ulang kosakata |
@@ -57,24 +57,31 @@ Mikrofon tidak diizinkan dari `file://`. Jalankan server lokal, misalnya
 
 ## Soal pemahaman dan syarat tuntas
 
-Tiap level *Bacaan* punya soal pilihan ganda di `soal.js` (3 soal Tahap 1, 4 soal
-Tahap 2–3, 5 soal Tahap 4 gaya TKA). Urutan pilihan diacak tiap kali tampil.
+Tiap level *Bacaan* punya soal di `soal.js` (3 soal Tahap 1, 4 soal Tahap 2–3, lalu bank soal
+gaya TKA di Tahap 4 dan gaya UTBK/SNBT di Tahap 5; lihat bagian terakhir). Urutan pilihan diacak tiap kali tampil.
 Skor terbaik disimpan di perangkat (`er_paham`).
 
 | Jenis level | Syarat tuntas (≥ 80%) |
 |---|---|
 | Kosakata, pola kalimat | pelafalan |
 | Bacaan Tahap 1–2 | pelafalan **dan** pemahaman |
-| Bacaan Tahap 3–4 | pemahaman (pelafalan sebagai latihan) |
+| Bacaan Tahap 3–5 | pemahaman (pelafalan sebagai latihan) |
 | Semua level yang punya latihan bertahap (kosakata, pola, bacaan) | kelima sub level lulus (Baca & Koreksi sebagai latihan) |
 
 ## Latihan bertahap (sub level kosakata)
 
-**Syarat membaca dulu (9 Okt 2026):** di semua level yang punya latihan bertahap, sub level 1 baru
-terbuka setelah teks level itu dibaca dengan Baca & Koreksi sampai selesai dengan akurasi ≥ 75%
-Angkanya bisa diubah di **⚙️ Pengaturan** di bagian bawah halaman utama (50–90%, atau tanpa
-syarat); tersimpan per perangkat (`setelan.syaratBaca`). Dikecualikan: browser tanpa pengenal suara, level yang sudah tuntas
-sebelumnya, dan siswa yang sudah mulai mengerjakan sub level sebelum aturan ini.
+**Syarat sebelum sub level 1** (diatur di **⚙️ Pengaturan** di bagian bawah halaman utama, tersimpan per
+perangkat di `er_setelan`), berlaku di semua level yang punya latihan bertahap:
+
+| Pengaturan | Pilihan | Artinya |
+|---|---|---|
+| Mendengar | **Harus Dengar** (bawaan) / Tanpa Dengar | Teks level didengarkan dengan ▶ Dengarkan sampai kalimat terakhir. Boleh berhenti lalu dilanjutkan (mis. dari kalimat yang diketuk); yang dihitung, semua kalimat pernah selesai dibacakan. Tercatat per level di `er_dengar` (10 Okt 2026). |
+| Membaca | **Harus Baca** (bawaan) / Tanpa Baca | Teks dibaca dengan Baca & Koreksi sampai selesai dengan akurasi minimal 50–90% (bawaan 75%; 9 Okt 2026). |
+
+Halaman level menampilkan syarat yang masih berlaku, dengan ✓ untuk yang sudah terpenuhi. Dikecualikan:
+browser tanpa suara (syarat dengar) atau tanpa pengenal suara (syarat baca), level yang sudah tuntas
+sebelumnya, dan level yang sub levelnya sudah mulai dikerjakan. Pengaturan lama "Tanpa syarat" otomatis
+menjadi Tanpa Baca.
 
 Percontohan di **Greetings** (9 Okt 2026), lalu dipasang di ke-17 kelompok kosakata Tahap 0.
 Aktif otomatis di level kosakata yang punya `situasi` di `bacaan.js`.
@@ -144,4 +151,27 @@ datang dari teks itu sendiri (kalimat dan terjemahannya) dan bank soal.
   semua sub level.
 - Menambah bacaan baru dengan latihan bertahap: isi `SOAL` (≥ 8 soal), `SOAL_BS` (≥ 6), dan
   `KATA_BACAAN` (kata harus tertulis persis di teks). Terjemahan (`arti`) harus sejajar per kalimat.
+
+## Level TKA dan Level UTBK/SNBT (10 Okt 2026)
+
+- **Tahap 4 · Level TKA** (B1–B1+): 6 bacaan dengan genre berbeda: discussion, analytical exposition,
+  news item (`river-cleanup`), email resmi (`email-science-fair`), report (`komodo`), dan narrative
+  (`lake-toba`). 12–14 soal + 6 benar/salah per bacaan.
+- **Tahap 5 · Level UTBK/SNBT** (B2): 4 bacaan lebih panjang: ilmiah populer (`sleep-memory`), isu
+  lingkungan kota (`urban-heat`), teknologi/discussion (`ai-classroom`), dan sejarah (`spice-trade`).
+  14 soal + 6 benar/salah per bacaan; pilihan ganda 5 opsi (A–E).
+- Kisi-kisi soal mengikuti TKA/SNBT: pemahaman (ide pokok, judul, informasi rinci, makna kata, rujukan),
+  penerapan (tujuan teks, menerapkan isi teks ke situasi baru), dan penalaran (inferensi, simpulan, sikap
+  dan nada penulis, organisasi teks, hubungan antarparagraf, pernyataan yang memperkuat/melemahkan
+  argumen). Tingkat kesulitan dari setara sampai satu tingkat di atasnya.
+- Bentuk soal di `SOAL` (sub level 4 Pemahaman mengambil 10 soal acak dari `SOAL` + `SOAL_BS`):
+
+  | Bentuk | Penulisan di `soal.js` |
+  |---|---|
+  | Pilihan ganda (4–5 opsi) | `{ t, p: [...], j: 0, b }` |
+  | Pilihan ganda kompleks (jawaban benar lebih dari satu) | `{ t, p: [...], j: [0, 2], b }`; benar bila semua kunci dipilih dan tidak ada yang keliru |
+  | Benar/salah per pernyataan (tabel) | `{ t, bs: [[pernyataan, true/false], ...], b }`; benar bila semua baris tepat, baris yang keliru ditunjukkan |
+
+  Bentuk kompleks dan tabel hanya tampil di Latihan bertahap (bagian *Soal pemahaman* lama melewatinya).
+- Di sub level 4 Tahap 4–5 ada **📄 Lihat teks bacaan**, seperti ujian sungguhan yang menyertakan teksnya.
 

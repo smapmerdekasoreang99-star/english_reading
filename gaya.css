@@ -291,3 +291,26 @@ a.sub-kartu:hover { border-color: var(--biru); }
 .pengaturan label { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; font-weight: 700; color: var(--tinta); }
 .pengaturan select { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--garis-2); background: var(--kertas); font-size: 15px; }
 .pengaturan p { margin: 8px 0 0; font-size: 14px; }
+
+/* ---------- Syarat sub level, soal TKA/SNBT (10 Okt 2026) ---------- */
+.pengaturan label[hidden] { display: none; }
+.sub-syarat ol { margin: 6px 0 0; padding-left: 22px; }
+.sub-syarat li { margin: 2px 0; }
+.sub-syarat li.ok { color: var(--hijau-tua); }
+.lt-opsi.dipilih:not(.kunci):not(.keliru) { border-color: var(--biru); background: var(--biru-muda); }
+.lt-opsi.dipilih:not(.kunci):not(.keliru) .opsi-huruf { background: var(--biru); color: #fff; }
+.lt-tabel { display: grid; gap: 8px; margin-top: 10px; }
+.lt-baris { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 10px 12px;
+  border: 1.5px solid var(--garis-2); border-radius: var(--r2); background: var(--kertas); }
+.lt-baris.benar { border-color: var(--hijau); background: var(--hijau-muda); }
+.lt-baris.keliru { border-color: var(--merah); background: var(--merah-muda); }
+.lt-pernyataan { flex: 1 1 220px; font-size: 16px; line-height: 1.4; }
+.lt-bs { display: flex; gap: 6px; }
+.lt-bs-tombol { min-height: 40px; padding: 6px 14px; border-radius: var(--r1); border: 1.5px solid var(--garis-2); background: var(--kertas);
+  font: inherit; font-weight: 700; cursor: pointer; }
+.lt-bs-tombol.dipilih { border-color: var(--biru); background: var(--biru); color: #fff; }
+.lt-bs-tombol:disabled { cursor: default; }
+.lt-bs-kunci { flex-basis: 100%; font-size: 14px; font-weight: 700; color: var(--merah-tua); }
+.lt-teks { margin: 0 0 12px; padding: 10px 14px; border: 1px solid var(--garis); border-radius: var(--r2); background: var(--kertas); }
+.lt-teks summary { cursor: pointer; font-weight: 800; color: var(--biru-tua); }
+.lt-teks p { margin: 8px 0 0; font-size: 16px; line-height: 1.55; }
