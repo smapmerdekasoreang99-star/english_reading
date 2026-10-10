@@ -763,3 +763,472 @@ window.SOAL_BS = {
     ['The author thinks the history of Banda is unimportant.', false, 'Penulis menyebutnya salah satu babak paling kelam dan mengambil pelajaran darinya.']
   ]
 };
+
+
+/* ---------- Sub level 6–10 bacaan TKA (Tahap 4) dan UTBK/SNBT (Tahap 5), 10 Okt 2026 ----------
+   IDE_POKOK: ide pokok tiap paragraf, urut sesuai paragraf teks (dipisah baris kosong); null = paragraf
+     bukan isi (salam/penutup surat), tidak dinomori. Pengecoh soal ide pokok = ide paragraf lain.
+   RUJUKAN: [kata rujukan, potongan teks yang memuatnya (persis), yang dirujuk, [pengecoh]].
+   SINONIM: [kata seperti tertulis di teks, padanan dalam konteks, [pengecoh]].
+   TKA: 3 pengecoh (4 opsi); UTBK/SNBT: 4 pengecoh (5 opsi).
+   SOAL_UJIAN: soal tambahan bertanda jenis k (inferensi, tujuan, evaluasi, sikap); digabung ke SOAL di bawah. */
+window.IDE_POKOK = {
+  'school-uniforms': [
+    'People have different opinions about whether students should wear school uniforms.',
+    'Supporters believe uniforms bring equality, save time, and make schools safer.',
+    'Opponents argue that uniforms limit self-expression, cost money, and can be uncomfortable.',
+    'Both sides have good reasons, so a simple uniform with some free-dress days may be best.'],
+  'reading-habit': [
+    'The writer believes every student should read every day.',
+    'Reading increases our knowledge and vocabulary.',
+    'Reading trains the brain to focus for a long time.',
+    'Reading helps us relax and become more creative.',
+    'Reading is easy and cheap to start, so students should begin now.'],
+  'river-cleanup': [
+    'Students joined a clean-up of the Citarum River to mark World Environment Day.',
+    'The volunteers collected a huge amount of rubbish, mostly from households.',
+    'The organizer says people must change their daily habits, not just clean once a year.',
+    'The students enjoyed the event, and the organizers plan to hold it regularly.'],
+  'email-science-fair': [null,
+    'Raka asks permission to hold a science fair next month and gives its date and time.',
+    'The fair will let students show their projects and inspire younger students.',
+    'The Student Council asks the school for rooms, judges, and a small budget.',
+    'Raka mentions the attached documents and thanks the principal.', null],
+  'komodo': [
+    'The Komodo dragon is the largest lizard and lives only on a few Indonesian islands.',
+    'Komodo dragons have strong bodies and use their tongues to smell.',
+    'Komodo dragons eat meat and weaken their prey with harmful saliva.',
+    'Young Komodo dragons hatch from eggs and live in trees to stay safe.',
+    'Komodo dragons are endangered and are protected in a national park.'],
+  'lake-toba': [
+    'A young farmer named Toba catches a golden fish that becomes a woman.',
+    'The woman marries Toba on the condition that he keeps her secret.',
+    'Toba gets angry at his hungry son and reveals the secret.',
+    'The mother disappears after the promise is broken, and heavy rain begins.',
+    'The flood creates Lake Toba and Samosir Island.'],
+  'sleep-memory': [
+    'Staying up late to study may be harmful because sleep is essential for learning.',
+    'During sleep, the brain moves important memories into long-term storage.',
+    'Experiments show that people who sleep remember more than those who stay awake.',
+    'Lack of sleep weakens attention, reaction time, and emotional control.',
+    'Students should study smarter by spreading their revision and sleeping regularly.'],
+  'urban-heat': [
+    'Cities are becoming much hotter than the countryside around them.',
+    'City materials and the loss of green areas are the main causes of urban heat.',
+    'Urban heat increases energy use, pollution, and health risks.',
+    'Trees, parks, light-colored roofs, and better street design can cool cities.',
+    'These solutions are costly, but doing nothing would cost even more.'],
+  'ai-classroom': [
+    'AI tools have started a debate about their place in schools.',
+    'Supporters say AI can act as a personal tutor and save teachers time.',
+    'Critics warn that AI may stop students from really learning and may give wrong information.',
+    'Many educators prefer teaching students to use AI responsibly instead of banning it.',
+    'Like a calculator, AI is a tool whose value depends on how it is used.'],
+  'spice-trade': [
+    'The Banda Islands were once extremely valuable because only they grew nutmeg.',
+    'Nutmeg reached Europe through many traders, which made it very expensive.',
+    'European countries competed violently to control the spice trade.',
+    'The Dutch took control of nutmeg by attacking and conquering Banda.',
+    'The story shows how ordinary products can have dark and important histories.']
+};
+
+window.RUJUKAN = {
+  'school-uniforms': [
+    ['they', 'Teenagers are developing their identity, and the way they dress', 'teenagers', ['parents', 'teachers', 'uniforms']],
+    ['which', 'recognize students easily, which makes the school environment safer', 'helping teachers and guards recognize students easily', ['the school environment', 'fashion trends', 'the morning']],
+    ['they', 'but they may also reduce freedom', 'school uniforms', ['parents', 'both sides', 'students']],
+    ['their', 'Some students also complain that their uniforms are uncomfortable', "some students'", ["teachers'", "parents'", "schools'"]]],
+  'reading-habit': [
+    ['it', 'Students who read regularly usually find it easier to understand lessons', 'to understand lessons and express their thoughts', ['reading', 'the book', 'vocabulary']],
+    ['This ability', 'This ability to concentrate is very useful', 'focusing on one story or idea for a long time', ['watching short videos', 'solving difficult problems', 'studying for exams']],
+    ['which', 'we imagine other places and other lives, which helps us relax', 'imagining other places and other lives', ['other lives', 'stress', 'problems']],
+    ['We', 'We can borrow books from the school library', 'students, including the writer and the readers', ['librarians', 'teachers', 'parents']]],
+  'river-cleanup': [
+    ['It', 'It was held to celebrate World Environment Day', 'the river clean-up event', ['the regency government', 'the Citarum River', 'the environmental group']],
+    ['they', 'they collected plastic bottles', 'the volunteers', ['the organizers', 'the households', 'the boots']],
+    ['She', 'She explained that people must change their daily habits', 'the head of the environmental group', ['one of the students', 'a teacher', 'a government official']],
+    ['them', 'hope that more schools will join them', 'the organizers', ['the students', 'the households', 'the rivers']]],
+  'email-science-fair': [
+    ['your', 'to ask for your permission', "Mrs Lestari's", ["Raka's", "the parents'", "the judges'"]],
+    ['their', 'their projects range from simple water filters', 'the thirty-two groups', ['the teachers', 'the parents', 'the judges']],
+    ['which', 'a list of the committee members, which I have attached', 'the schedule and the list of committee members', ['the science fair', 'the classrooms', 'the prizes']],
+    ['me', 'please do not hesitate to contact me', 'Raka Pratama', ['Mrs Lestari', 'the science teachers', 'the parents']]],
+  'komodo': [
+    ['It', 'It is found only on a few islands', 'the Komodo dragon', ['the world', 'eastern Indonesia', 'Flores']],
+    ['which', 'a long yellow tongue, which they use to smell the air', 'a long yellow tongue', ['sharp claws', 'rough grey skin', 'a long tail']],
+    ['them', 'lay around twenty eggs at a time and bury them', 'the eggs', ['the female dragons', 'young dragons', 'larger dragons']],
+    ['they', 'where they are safe from larger dragons', 'young Komodo dragons', ['female dragons', 'the eggs', 'the trees']]],
+  'lake-toba': [
+    ['she', 'that she had once been a fish', "the woman (Toba's wife)", ['a neighbor', 'Samosir', 'the river']],
+    ['him', 'his mother asked him to take lunch', 'Samosir', ['Toba', 'the farmer next door', 'the fish']],
+    ['he', 'he ate most of the food', 'Samosir', ['Toba', 'the woman', 'a stranger']],
+    ['She', 'She told Samosir to climb the highest hill nearby', "Samosir's mother", ['Toba', 'an old woman in the village', 'a neighbor']]],
+  'sleep-memory': [
+    ['this habit', 'this habit may actually do more harm than good', 'staying up late to study', ['sleeping early', 'preparing for an exam', 'doing research', 'organizing information']],
+    ['which', 'the hippocampus, which acts like a temporary storage space', 'the hippocampus', ['the cortex', 'our senses', 'the information', 'the day']],
+    ['ones', 'into stable long-term ones', 'memories', ['experiences', 'stages of sleep', 'senses', 'words']],
+    ['those', 'those who slept usually remember significantly more words', 'the participants in the group that slept', ['the words', 'the experiments', 'the researchers', 'the days']],
+    ['it', 'it suggests that they should study smarter', 'the evidence about sleep and memory', ['the exam', 'a single night', 'the brain', 'the schedule']]],
+  'urban-heat': [
+    ['This phenomenon', 'This phenomenon, known as the urban heat island effect', 'a city centre being warmer than the countryside', ['people moving to cities', 'a hot afternoon', 'the growth of Jakarta', 'a serious concern']],
+    ['which', 'trees and open fields, which naturally cool the air', 'trees and open fields', ['new buildings', 'dark rooftops', 'the urban environment', 'air conditioners']],
+    ['This', 'This, in turn, leads to more fossil fuels being burned', 'the higher demand for electricity', ['extreme heat', 'fans', 'greenhouse gases', 'outdoor workers']],
+    ['them', 'or to cover them with plants', 'rooftops', ['cities', 'plants', 'streets', 'buildings']],
+    ['they', 'how liveable they are for the next generation', 'cities', ['experts', 'solutions', 'planners', 'generations']]],
+  'ai-classroom': [
+    ['Their', 'Their arrival has sparked a heated debate', 'AI tools', ['educators', 'phones', 'schools', 'students']],
+    ['it', 'that it can act as a personal tutor', 'AI', ['education', 'the student', 'the school', 'a phone']],
+    ['they', 'so that they can focus on guiding students personally', 'teachers', ['students', 'AI tools', 'exercises', 'critics']],
+    ['this', 'Over time, this could weaken their ability', 'students copying answers produced by AI', ['completing assignments', 'learning something new', 'asking questions', 'using a calculator']],
+    ['it', 'its value depends on how it is used', 'AI as a tool', ['mathematics', 'a calculator', 'the world', 'education']]],
+  'spice-trade': [
+    ['them', 'Indonesian sailors carried them to ports', 'nutmeg and other spices', ['traders', 'Arab merchants', 'the ports', 'Europeans']],
+    ['their', 'their price had increased many times', "the spices'", ["Venice's", "the traders'", "the sailors'", "Europe's"]],
+    ['it', 'the enormous profits it promised', 'the spice trade', ['Maluku', 'the Dutch', 'the competition', 'the sea route']],
+    ['who', 'Dutch planters who used enslaved workers', 'Dutch planters', ['the Bandanese', 'the company', 'enslaved workers', 'the islands']],
+    ['It', 'It also shows how the desire for wealth', 'the story of the Banda Islands', ['nutmeg', 'the kitchen', 'the modern world', 'wealth']]]
+};
+
+window.SINONIM = {
+  'school-uniforms': [
+    ['debated', 'discussed', ['ignored', 'celebrated', 'solved']], ['equality', 'fairness', ['wealth', 'discipline', 'fashion']],
+    ['recognize', 'identify', ['forget', 'punish', 'avoid']], ['claim', 'state', ['deny', 'doubt', 'hide']],
+    ['express', 'show', ['hide', 'buy', 'change']], ['require', 'demand', ['refuse', 'sell', 'forget']],
+    ['reasonable', 'sensible', ['strange', 'expensive', 'careless']], ['affordable', 'inexpensive', ['luxurious', 'colorful', 'uncomfortable']]],
+  'reading-habit': [
+    ['valuable', 'useful', ['cheap', 'boring', 'difficult']], ['develop', 'build', ['lose', 'sell', 'forget']],
+    ['regularly', 'often', ['rarely', 'quickly', 'badly']], ['express', 'communicate', ['hide', 'forget', 'delay']],
+    ['concentrate', 'focus', ['relax', 'sleep', 'guess']], ['requires', 'needs', ['avoids', 'gives', 'stops']],
+    ['imagine', 'picture', ['forget', 'ignore', 'copy']], ['borrow', 'take temporarily', ['buy', 'sell', 'throw away']]],
+  'river-cleanup': [
+    ['joined', 'took part in', ['left', 'watched', 'cancelled']], ['organized', 'arranged', ['stopped', 'attended', 'criticized']],
+    ['celebrate', 'commemorate', ['forget', 'protest', 'replace']], ['awareness', 'understanding', ['anger', 'money', 'pollution']],
+    ['collected', 'gathered', ['dropped', 'sold', 'burned']], ['manage', 'handle', ['ignore', 'produce', 'increase']],
+    ['admitted', 'confessed', ['refused', 'forgot', 'denied']], ['similar', 'comparable', ['different', 'larger', 'dangerous']]],
+  'email-science-fair': [
+    ['permission', 'approval', ['payment', 'complaint', 'invitation']], ['purpose', 'aim', ['problem', 'price', 'result']],
+    ['registered', 'signed up', ['given up', 'won', 'paid']], ['range', 'vary', ['stop', 'grow', 'fall']],
+    ['motivate', 'encourage', ['discourage', 'punish', 'confuse']], ['request', 'ask for', ['refuse', 'offer', 'send']],
+    ['grateful', 'thankful', ['angry', 'worried', 'surprised']], ['hesitate', 'pause', ['hurry', 'refuse', 'promise']]],
+  'komodo': [
+    ['found', 'located', ['lost', 'hidden', 'born']], ['rough', 'coarse', ['smooth', 'soft', 'shiny']],
+    ['detect', 'notice', ['ignore', 'attack', 'hide']], ['prey', 'hunted animal', ['owner', 'enemy', 'partner']],
+    ['suddenly', 'unexpectedly', ['slowly', 'carefully', 'rarely']], ['harmful', 'dangerous', ['helpful', 'harmless', 'tasty']],
+    ['bury', 'cover with soil', ['dig up', 'break', 'throw']], ['endangered', 'at risk of dying out', ['very dangerous', 'growing quickly', 'well protected']]],
+  'lake-toba': [
+    ['caught', 'captured', ['released', 'sold', 'cooked']], ['condition', 'requirement', ['gift', 'problem', 'reason']],
+    ['promised', 'swore', ['refused', 'forgot', 'doubted']], ['truly', 'really', ['never', 'hardly', 'sadly']],
+    ['heartbroken', 'deeply sad', ['very angry', 'very proud', 'very tired']], ['nearby', 'close by', ['far away', 'very high', 'behind']],
+    ['disappeared', 'vanished', ['appeared', 'returned', 'shouted']], ['flooded', 'covered with water', ['dried up', 'burned', 'cleaned']]],
+  'sleep-memory': [
+    ['essential', 'crucial', ['optional', 'harmful', 'minor', 'unclear']], ['temporary', 'short-term', ['permanent', 'large', 'hidden', 'damaged']],
+    ['gradually', 'slowly over time', ['suddenly', 'rarely', 'completely', 'randomly']], ['fragile', 'easily broken', ['very strong', 'well organized', 'permanent', 'huge']],
+    ['typical', 'usual', ['rare', 'strange', 'recent', 'difficult']], ['significantly', 'considerably', ['slightly', 'rarely', 'barely', 'equally']],
+    ['efficiently', 'productively', ['slowly', 'wastefully', 'carelessly', 'rarely']], ['exhausting', 'tiring', ['relaxing', 'exciting', 'useful', 'short']]],
+  'urban-heat': [
+    ['phenomenon', 'occurrence', ['solution', 'theory', 'mistake', 'building']], ['noticeable', 'clear', ['hidden', 'tiny', 'planned', 'false']],
+    ['absorb', 'take in', ['give off', 'reflect', 'destroy', 'measure']], ['release', 'give off', ['keep', 'store', 'block', 'ignore']],
+    ['consequences', 'results', ['causes', 'reasons', 'solutions', 'plans']], ['rely', 'depend', ['refuse', 'complain', 'save', 'wait']],
+    ['powerless', 'helpless', ['powerful', 'wealthy', 'careless', 'crowded']], ['commitment', 'dedication', ['hesitation', 'payment', 'argument', 'permission']]],
+  'ai-classroom': [
+    ['sparked', 'triggered', ['ended', 'avoided', 'calmed', 'hidden']], ['restricted', 'limited', ['welcomed', 'required', 'improved', 'ignored']],
+    ['adjust', 'adapt', ['repeat', 'remove', 'ignore', 'copy']], ['struggling', 'having difficulty', ['succeeding', 'relaxing', 'complaining', 'cheating']],
+    ['convincing', 'believable', ['doubtful', 'boring', 'obvious', 'confusing']], ['blindly', 'without questioning', ['carefully', 'rarely', 'angrily', 'slowly']],
+    ['demonstrate', 'show', ['hide', 'forget', 'copy', 'doubt']], ['advantage', 'benefit', ['problem', 'cost', 'risk', 'weakness']]],
+  'spice-trade': [
+    ['prized', 'valued', ['hated', 'ignored', 'feared', 'cheap']], ['transported', 'carried', ['grew', 'hid', 'burned', 'tasted']],
+    ['precious', 'valuable', ['common', 'dangerous', 'heavy', 'fresh']], ['enormous', 'huge', ['tiny', 'fair', 'secret', 'regular']],
+    ['violent', 'brutal', ['peaceful', 'friendly', 'quiet', 'fair']], ['refused', 'declined', ['agreed', 'offered', 'promised', 'pretended']],
+    ['forced', 'compelled', ['allowed', 'invited', 'encouraged', 'paid']], ['extraordinary', 'remarkable', ['ordinary', 'boring', 'simple', 'cheap']]]
+};
+
+window.SOAL_UJIAN = {
+  'school-uniforms': [
+    { k: 'inferensi', t: 'Which group would most likely agree with the opponents of school uniforms?', p: ['Students who like to show their personal style', 'Security guards who want to recognize students', 'Parents who want to save time in the morning', 'Teachers who want equality among students'], j: 0,
+      b: 'Penentang menekankan kebebasan berekspresi; siswa yang ingin menunjukkan gaya pribadi paling mungkin setuju.' },
+    { k: 'tujuan', t: 'Why does the writer mention "hot weather" in paragraph 3?', p: ['To give an example of why uniforms can be uncomfortable', 'To describe the climate of Indonesia', 'To explain why uniforms are cheap', 'To support the idea of equality'], j: 0,
+      b: '"… uncomfortable, particularly in hot weather" adalah contoh ketidaknyamanan seragam.' },
+    { k: 'evaluasi', t: 'Which fact would most WEAKEN the opponents\' argument about cost?', p: ['The government gives free uniforms to every student.', 'Uniforms are sold in many shops.', 'Some students have three sets of uniforms.', 'Fashion trends change every year.'], j: 0,
+      b: 'Argumen biaya melemah bila seragam diberikan gratis.' },
+    { k: 'sikap', t: 'The tone of the conclusion can best be described as …', p: ['balanced', 'angry', 'humorous', 'pessimistic'], j: 0,
+      b: 'Penulis menimbang kedua pihak dan mengusulkan jalan tengah.' }],
+  'reading-habit': [
+    { k: 'inferensi', t: 'It can be inferred that the writer thinks social media …', p: ['takes time that could be used for reading', 'is the best way to build vocabulary', 'helps students concentrate', 'should replace books'], j: 0,
+      b: 'Kalimat kedua mengeluhkan waktu yang habis untuk media sosial dibanding membaca.' },
+    { k: 'tujuan', t: 'What is the purpose of the last paragraph?', p: ['To show that reading is easy to start and to invite readers to read', 'To list the prices of books', 'To compare libraries in different schools', 'To explain how digital books are made'], j: 0,
+      b: 'Paragraf terakhir: membaca tidak mahal atau sulit, lalu ajakan "let us … open a book".' },
+    { k: 'evaluasi', t: 'Which statement, if true, would best SUPPORT the writer\'s second reason?', p: ['Students who read daily can focus longer in class.', 'Many students prefer videos to books.', 'Books are heavier than phones.', 'Some libraries close on Sundays.'], j: 0,
+      b: 'Alasan kedua: membaca melatih konsentrasi.' },
+    { k: 'sikap', t: 'How does the writer feel about short videos?', p: ['They are less helpful for concentration than books.', 'They are the best learning tool.', 'They should be watched every day.', 'They are more creative than stories.'], j: 0,
+      b: 'Video pendek dikontraskan dengan buku yang menuntut fokus lama.' }],
+  'river-cleanup': [
+    { k: 'inferensi', t: 'What can be inferred about the condition of the Citarum River?', p: ['It is polluted by a lot of household rubbish.', 'It is the cleanest river in Indonesia.', 'It has no fish or plants at all.', 'It is too far from the city to visit.'], j: 0,
+      b: 'Lebih dari seribu karung sampah, sebagian besar dari rumah tangga.' },
+    { k: 'tujuan', t: 'Why does the writer mention "more than one thousand sacks"?', p: ['To show how much rubbish was found', 'To describe the size of the sacks', 'To explain the cost of the event', 'To compare the students with the volunteers'], j: 0,
+      b: 'Angka itu menunjukkan banyaknya sampah.' },
+    { k: 'evaluasi', t: 'Which action would best follow the advice of the head of the environmental group?', p: ['A school starts a weekly waste-sorting program.', 'A family burns rubbish near the river.', 'A shop gives out more plastic bags.', 'Students clean the river only once a year.'], j: 0,
+      b: 'Ia menyarankan perubahan kebiasaan sehari-hari dan pendidikan pengelolaan sampah di sekolah.' },
+    { k: 'sikap', t: 'How did the student who "admitted" being shocked probably feel?', p: ['Surprised and concerned', 'Bored and tired', 'Proud and relaxed', 'Angry at her friends'], j: 0,
+      b: 'Shocked = terkejut; ia kaget melihat banyaknya sampah.' }],
+  'email-science-fair': [
+    { k: 'inferensi', t: 'What can be inferred about the science fair?', p: ['It has not been approved yet.', 'It has already finished.', 'It will be held every month.', 'It is organized by the teachers.'], j: 0,
+      b: 'Raka masih meminta izin, jadi pameran belum disetujui.' },
+    { k: 'tujuan', t: 'Why does Raka mention the water filters and solar-powered cars?', p: ['To show the variety of the projects', 'To ask for money to buy them', 'To complain about the projects', 'To describe the prizes'], j: 0,
+      b: 'Contoh itu menunjukkan ragam proyek.' },
+    { k: 'evaluasi', t: 'Which addition would make Raka\'s request more convincing?', p: ['A short description of how the fair will be supervised', 'A list of his favorite songs', 'A complaint about the school hall', 'A request for a holiday'], j: 0,
+      b: 'Rincian pengawasan menambah keyakinan kepala sekolah.' },
+    { k: 'sikap', t: 'Raka\'s attitude toward Mrs Lestari is …', p: ['respectful', 'rude', 'indifferent', 'angry'], j: 0,
+      b: 'Bahasanya sopan: "we would be grateful", "please do not hesitate".' }],
+  'komodo': [
+    { k: 'inferensi', t: 'Why do young Komodo dragons probably avoid larger dragons?', p: ['Larger dragons may eat them.', 'Larger dragons are their teachers.', 'They cannot see larger dragons.', 'Larger dragons live in trees.'], j: 0,
+      b: 'Anak komodo aman di pohon dari komodo besar; artinya komodo besar bisa memangsanya.' },
+    { k: 'tujuan', t: 'Why does the writer mention that Komodo dragons can detect a dead animal from several kilometres away?', p: ['To show how powerful their sense of smell is', 'To explain how fast they run', 'To describe the size of the island', 'To show that they eat only plants'], j: 0,
+      b: 'Menunjukkan kuatnya penciuman lewat lidah.' },
+    { k: 'evaluasi', t: 'Which action would best help protect Komodo dragons?', p: ['Protecting their habitat and the animals they hunt', 'Taking their eggs to the city', 'Hunting deer on Komodo Island', 'Building more roads in the national park'], j: 0,
+      b: 'Ancamannya: habitat menyempit dan buruan berkurang.' },
+    { k: 'sikap', t: 'The writer presents the information in a … way.', p: ['factual', 'humorous', 'angry', 'emotional'], j: 0,
+      b: 'Teks report menyajikan fakta secara objektif.' }],
+  'lake-toba': [
+    { k: 'inferensi', t: 'What can be inferred about the woman\'s secret?', p: ['It was very important to her.', 'She wanted everyone to know it.', 'Samosir already knew it.', 'It was about her family\'s money.'], j: 0,
+      b: 'Ia menjadikannya syarat pernikahan dan sangat sedih saat rahasia itu terbongkar.' },
+    { k: 'tujuan', t: 'What is the function of the last paragraph?', p: ['To tell how the lake and the island were formed', 'To introduce the main characters', 'To describe the problem', 'To give the moral directly'], j: 0,
+      b: 'Resolusi: asal-usul Danau Toba dan Pulau Samosir.' },
+    { k: 'evaluasi', t: 'Which proverb best matches the message of the story?', p: ['A promise is a debt that must be paid.', 'The early bird catches the worm.', 'Practice makes perfect.', 'Better late than never.'], j: 0,
+      b: 'Inti cerita: janji harus ditepati.' },
+    { k: 'sikap', t: 'How did Toba most likely feel after the flood?', p: ['Regretful', 'Proud', 'Amused', 'Relieved'], j: 0,
+      b: 'Ia kehilangan keluarganya karena melanggar janji; ia tentu menyesal.' }],
+  'sleep-memory': [
+    { k: 'inferensi', t: 'Based on the text, which student is likely to remember the most for an exam?', p: ['A student who studies a little every day and sleeps well', 'A student who studies all night before the exam', 'A student who sleeps all day before the exam', 'A student who drinks coffee to stay awake', 'A student who studies only on the morning of the exam'], j: 0,
+      b: 'Mengulang bertahap + tidur teratur (paragraf 5).' },
+    { k: 'tujuan', t: 'Why does the author describe a typical experiment in paragraph 3?', p: ['To provide evidence for the claim about sleep and memory', 'To explain how to become a researcher', 'To criticize the participants', 'To show that words are hard to learn', 'To compare different universities'], j: 0,
+      b: 'Percobaan menjadi bukti klaim.' },
+    { k: 'evaluasi', t: 'Which finding would most STRENGTHEN the author\'s argument?', p: ['Students who sleep eight hours before a test score higher than those who sleep three hours.', 'Many students like studying with music.', 'Coffee is popular among university students.', 'Some exams are held online.', 'Most students own a phone.'], j: 0,
+      b: 'Temuan itu mendukung hubungan tidur dan prestasi.' },
+    { k: 'sikap', t: 'The author\'s tone toward students who study late at night is mainly …', p: ['advisory', 'mocking', 'angry', 'indifferent', 'admiring'], j: 0,
+      b: 'Penulis menasihati (advisory), bukan mengejek.' }],
+  'urban-heat': [
+    { k: 'inferensi', t: 'Which neighbourhood would probably be the hottest on a sunny afternoon?', p: ['One with dark roofs, wide roads, and no trees', 'One with many parks and trees', 'One near a cool forest', 'One with white roofs and gardens', 'One where wind flows freely between buildings'], j: 0,
+      b: 'Atap gelap dan aspal menyerap panas, dan tidak ada pohon yang menyejukkan.' },
+    { k: 'tujuan', t: 'Why does the author mention Jakarta, Surabaya, and Medan?', p: ['To give local examples of the problem', 'To compare their populations', 'To recommend places to live', 'To describe their history', 'To criticize their governments'], j: 0,
+      b: 'Contoh masalah di Indonesia.' },
+    { k: 'evaluasi', t: 'Which statement would most WEAKEN the claim that green areas cool cities?', p: ['A study finds that parks have no effect on nearby temperatures.', 'Many people enjoy walking in parks.', 'Parks need regular cleaning.', 'Trees grow slowly.', 'Some cities have few parks.'], j: 0,
+      b: 'Langsung membantah efek pendinginan taman.' },
+    { k: 'sikap', t: 'The author\'s attitude toward the future of cities is …', p: ['cautiously hopeful', 'completely hopeless', 'uninterested', 'angry', 'amused'], j: 0,
+      b: '"Fortunately, cities are not powerless", tetapi biayanya diakui: optimis dengan hati-hati.' }],
+  'ai-classroom': [
+    { k: 'inferensi', t: 'What can be inferred about students who trust AI tools blindly?', p: ['They may learn wrong information without noticing.', 'They always get the best grades.', 'They never use their phones.', 'They are better at mathematics.', 'They do not need teachers.'], j: 0,
+      b: 'Paragraf 3: informasi keliru yang meyakinkan bisa tidak disadari.' },
+    { k: 'tujuan', t: 'What is the main purpose of paragraph 4?', p: ['To present a middle way between supporting and banning AI', 'To list the dangers of AI', 'To describe how AI is built', 'To praise calculators', 'To explain oral presentations in detail'], j: 0,
+      b: 'Paragraf 4 menawarkan pendekatan seimbang.' },
+    { k: 'evaluasi', t: 'Which school policy best reflects the author\'s view?', p: ['AI is allowed for brainstorming, but students must explain their work orally.', 'AI is banned completely.', 'AI writes all homework.', 'Teachers are replaced by AI.', 'Phones are collected every morning.'], j: 0,
+      b: 'Sesuai pendekatan seimbang dan kesimpulan penulis.' },
+    { k: 'sikap', t: 'Which word best describes the author\'s view of AI?', p: ['balanced', 'fearful', 'unlimitedly enthusiastic', 'dismissive', 'hostile'], j: 0,
+      b: 'Penulis menimbang manfaat dan risikonya.' }],
+  'spice-trade': [
+    { k: 'inferensi', t: 'Why did Europeans most likely want to find a sea route to the spice islands?', p: ['To buy spices directly and avoid paying many traders', 'To learn the Malay language', 'To visit Venice', 'To sell nutmeg to Indonesians', 'To escape from Arab merchants'], j: 0,
+      b: 'Harga naik berkali-kali lipat lewat rantai pedagang yang panjang.' },
+    { k: 'tujuan', t: 'Why does the author compare a small bag of nutmeg to a house?', p: ['To show how valuable nutmeg was in Europe', 'To describe houses in Banda', 'To explain how nutmeg was stored', 'To show that houses were cheap', 'To criticize European homes'], j: 0,
+      b: 'Perbandingan itu menegaskan tingginya nilai pala.' },
+    { k: 'evaluasi', t: 'Which statement best supports the claim that "local people suffered the most"?', p: ['Thousands of Bandanese were killed or forced to leave.', 'Nutmeg is cheap today.', 'The Portuguese arrived first.', 'Venice was a rich city.', 'Spices are used in cooking.'], j: 0,
+      b: 'Bukti penderitaan penduduk setempat (paragraf 4).' },
+    { k: 'sikap', t: 'The author\'s attitude toward the Dutch East India Company\'s actions is …', p: ['disapproving', 'admiring', 'neutral', 'amused', 'grateful'], j: 0,
+      b: '"one of the darkest chapters" menunjukkan sikap tidak setuju.' }]
+};
+Object.keys(window.SOAL_UJIAN).forEach(id => { if (window.SOAL[id]) window.SOAL[id].push(...window.SOAL_UJIAN[id]); });
+// Tambahan agar sub level 9 (inferensi & sikap penulis) punya paling sedikit 10 soal per bacaan.
+window.SOAL_UJIAN_2 = {
+  'school-uniforms': [
+    { k: 'inferensi', t: 'According to the supporters, how might students from poorer families benefit from uniforms?', p: ['They may feel less pressure when everyone wears the same clothes.', 'They will never need to buy clothes.', 'They will become the best students.', 'They will not have to go to school early.'], j: 0,
+      b: 'Seragam membuat siswa kaya dan miskin tampak sama sehingga tekanan mengikuti mode berkurang.' },
+    { k: 'tujuan', t: 'Why does the writer begin the text with a question?', p: ['To introduce the issue that will be discussed', 'To test the readers\' knowledge', 'To show that the answer is obvious', 'To describe a school rule'], j: 0,
+      b: 'Pertanyaan pembuka memperkenalkan isu yang didiskusikan.' },
+    { k: 'evaluasi', t: 'Which situation best shows the "free-dress days" idea in the conclusion?', p: ['Students wear uniforms most days but their own clothes on one Friday each month.', 'Students never wear uniforms.', 'Students buy five different uniforms.', 'Teachers choose students\' clothes every day.'], j: 0,
+      b: 'Seragam sederhana ditambah beberapa hari bebas setiap bulan.' }],
+  'reading-habit': [
+    { k: 'inferensi', t: 'Which student follows the writer\'s advice best?', p: ['Dina reads ten pages of a library book every night before sleeping.', 'Budi watches short videos for three hours a day.', 'Rina buys many books but never opens them.', 'Andi reads only when there is an exam.'], j: 0,
+      b: 'Membaca rutin setiap hari, mulai dari sedikit.' },
+    { k: 'tujuan', t: 'Why does the writer use the words "First", "Second", and "Third"?', p: ['To organize the reasons clearly', 'To show the time of the day', 'To compare three books', 'To count the students'], j: 0,
+      b: 'Penanda urutan alasan.' },
+    { k: 'evaluasi', t: 'Which piece of evidence would make the first reason stronger?', p: ['A survey showing that students who read more know more words', 'A list of popular video games', 'A story about a library cat', 'The price of a new phone'], j: 0,
+      b: 'Alasan pertama: membaca menambah pengetahuan dan kosakata.' }],
+  'river-cleanup': [
+    { k: 'inferensi', t: 'Why will the organizers probably hold the event every three months?', p: ['Because one clean-up is not enough to solve the problem', 'Because the students did not enjoy it', 'Because the river is already clean', 'Because the government stopped them'], j: 0,
+      b: 'Sampah terus datang; membersihkan sekali tidak cukup.' },
+    { k: 'inferensi', t: 'What can be inferred about some people who live near the river?', p: ['They still throw rubbish into it.', 'They all joined the clean-up.', 'They organized the event.', 'They never use plastic bags.'], j: 0,
+      b: 'Sebagian besar sampah berasal dari rumah tangga yang masih membuangnya ke sungai.' },
+    { k: 'tujuan', t: 'What is the main purpose of paragraph 3?', p: ['To report the organizer\'s opinion about a long-term solution', 'To describe what the students wore', 'To list the types of rubbish', 'To announce the next event'], j: 0,
+      b: 'Paragraf 3 memuat pendapat ketua kelompok lingkungan.' },
+    { k: 'sikap', t: 'The writer reports the event in a … way.', p: ['neutral and informative', 'angry', 'funny', 'sad'], j: 0,
+      b: 'Teks berita melaporkan fakta tanpa memihak.' }],
+  'email-science-fair': [
+    { k: 'inferensi', t: 'Who will most likely judge the projects at the fair?', p: ['Two science teachers', 'The parents', 'Raka himself', 'Students from other schools'], j: 0,
+      b: '"we hope that two science teachers can act as judges".' },
+    { k: 'inferensi', t: 'What will probably happen if Mrs Lestari agrees?', p: ['The Student Council will use the hall and classrooms for the fair.', 'The fair will be cancelled.', 'Raka will move to another school.', 'The projects will be sold.'], j: 0,
+      b: 'Izin memungkinkan aula dan kelas dipakai untuk pameran.' },
+    { k: 'tujuan', t: 'Why does Raka write "So far, thirty-two groups have registered"?', p: ['To show that many students are interested', 'To complain about the number of groups', 'To ask for more judges', 'To explain the prizes'], j: 0,
+      b: 'Menunjukkan besarnya minat siswa.' },
+    { k: 'evaluasi', t: 'Which reply from Mrs Lestari would show that she accepts the request?', p: ['"You may use the hall. Please send me the budget details."', '"The school hall is closed forever."', '"I do not like science."', '"Please write to the parents instead."'], j: 0,
+      b: 'Balasan itu memberi izin.' }],
+  'komodo': [
+    { k: 'inferensi', t: 'Why is it dangerous for people to walk alone on Komodo Island?', p: ['Komodo dragons may attack suddenly.', 'The island has no roads.', 'Komodo dragons are very small.', 'The weather is always cold.'], j: 0,
+      b: 'Komodo menunggu diam lalu menyerang tiba-tiba, dan gigitannya berbahaya.' },
+    { k: 'inferensi', t: 'What would probably happen if deer disappeared from the islands?', p: ['Komodo dragons would have less food.', 'Komodo dragons would eat only plants.', 'Komodo dragons would grow bigger.', 'More Komodo eggs would hatch.'], j: 0,
+      b: 'Rusa adalah salah satu buruan; buruan yang berkurang adalah ancaman.' },
+    { k: 'tujuan', t: 'What is the purpose of the first paragraph?', p: ['To introduce the Komodo dragon in general', 'To tell a story about a hunter', 'To explain how eggs hatch', 'To persuade readers to visit Flores'], j: 0,
+      b: 'Klasifikasi umum dalam teks report.' },
+    { k: 'evaluasi', t: 'Which statement is an OPINION rather than a fact?', p: ['Komodo dragons are the most interesting animals in Indonesia.', 'Komodo dragons live on a few islands.', 'Komodo dragons are carnivores.', 'Komodo eggs hatch after about eight months.'], j: 0,
+      b: '"The most interesting" adalah pendapat; pilihan lain fakta dari teks.' }],
+  'lake-toba': [
+    { k: 'inferensi', t: 'Why did the mother most likely tell Samosir to climb the highest hill?', p: ['She knew a flood was coming and wanted to save him.', 'She wanted him to find his father.', 'She asked him to catch a fish.', 'She wanted him to look for food.'], j: 0,
+      b: 'Sesudah itu air membanjiri lembah; bukit menjadi tempat yang aman.' },
+    { k: 'tujuan', t: 'Why does the story include Samosir eating his father\'s lunch?', p: ['To create the conflict that leads to the broken promise', 'To show that Samosir was a good cook', 'To describe the food in North Sumatra', 'To explain why Toba was a farmer'], j: 0,
+      b: 'Peristiwa itu memicu kemarahan Toba (komplikasi).' },
+    { k: 'sikap', t: 'How would you describe Toba\'s words to his son?', p: ['Hurtful', 'Kind', 'Funny', 'Polite'], j: 0,
+      b: '"You are truly the child of a fish!" adalah kata-kata yang menyakitkan.' }],
+  'sleep-memory': [
+    { k: 'inferensi', t: 'What can be inferred from the studies about short afternoon naps?', p: ['Even a short rest can help the brain process new information.', 'Naps are more useful than a full night of sleep.', 'Students should sleep during lessons.', 'Naps make people forget words.', 'Only adults benefit from naps.'], j: 0,
+      b: 'Tidur siang singkat pun membantu sebagian tugas mengingat.' },
+    { k: 'evaluasi', t: 'Which assumption does the author make in the last paragraph?', p: ['Students can control how they plan their study time.', 'All students sleep ten hours.', 'Exams are always held in the morning.', 'Teachers do not give homework.', 'Reading is harmful at night.'], j: 0,
+      b: 'Saran mengatur jadwal belajar mengandaikan siswa dapat mengatur waktunya sendiri.' }],
+  'urban-heat': [
+    { k: 'inferensi', t: 'Why might an outdoor worker in Surabaya face more risk today than decades ago?', p: ['Temperatures in the city have risen noticeably.', 'There are fewer workers in the city.', 'Surabaya has more forests now.', 'Air conditioners are not sold there.', 'The rainy season has become longer.'], j: 0,
+      b: 'Kota-kota itu mengalami kenaikan suhu yang cukup terasa.' },
+    { k: 'tujuan', t: 'What is the function of paragraph 3 in the text?', p: ['To explain why the urban heat island effect is a serious problem', 'To describe the history of fans', 'To list the names of cities', 'To give solutions to the problem', 'To define the word "rooftop"'], j: 0,
+      b: 'Paragraf 3 menjelaskan akibatnya, yaitu mengapa masalah ini serius.' }],
+  'ai-classroom': [
+    { k: 'inferensi', t: 'What does the author imply by comparing AI to a calculator?', p: ['New technology changes what students need to learn.', 'Calculators are dangerous for students.', 'AI will disappear soon.', 'Mathematics is no longer important.', 'Students should not use calculators.'], j: 0,
+      b: 'Kalkulator mengubah apa yang perlu dipelajari, bukan menghapus pelajarannya.' },
+    { k: 'evaluasi', t: 'Which statement would the critics in paragraph 3 most likely agree with?', p: ['Students must still practise thinking and writing on their own.', 'AI should do all homework.', 'AI never makes mistakes.', 'Students should copy answers quickly.', 'Teachers are no longer needed.'], j: 0,
+      b: 'Pengkritik khawatir kemampuan berpikir dan menulis mandiri melemah.' }],
+  'spice-trade': [
+    { k: 'inferensi', t: 'What can be inferred about the people of Banda before the Dutch attack?', p: ['They wanted to sell nutmeg to more than one buyer.', 'They had never seen nutmeg.', 'They lived in Venice.', 'They were Dutch planters.', 'They did not grow any spices.'], j: 0,
+      b: 'Mereka menolak menjual pala hanya kepada Belanda.' },
+    { k: 'tujuan', t: 'What is the purpose of the last paragraph?', p: ['To connect the history to a lesson for readers today', 'To describe how nutmeg is cooked', 'To list European countries', 'To explain the sea route in detail', 'To praise the Dutch company'], j: 0,
+      b: 'Paragraf terakhir menarik pelajaran dari sejarah itu.' },
+    { k: 'evaluasi', t: 'Which statement in the text expresses an OPINION?', p: ['It was one of the darkest chapters in the history of the archipelago.', 'The Portuguese reached Maluku first.', 'Nutmeg trees grew in the Banda Islands.', 'Indonesian sailors carried spices to India.', 'Today, nutmeg is cheap.'], j: 0,
+      b: '"One of the darkest chapters" adalah penilaian penulis.' }]
+};
+Object.keys(window.SOAL_UJIAN_2).forEach(id => { if (window.SOAL[id]) window.SOAL[id].push(...window.SOAL_UJIAN_2[id]); });
+
+/* ---------- Sub level 6–10 bacaan Tahap 2: Teks Fungsional Pendek (A2), 10 Okt 2026 ----------
+   Teks satu paragraf, jadi sub level 6 memakai BAGIAN (struktur teks) sebagai ganti ide pokok paragraf:
+   BAGIAN[id] = { jenis, bagian: [[nama bagian, penjelasan, [indeks kalimat (mulai 0)]], ...] }.
+   Pengecoh soal bagian diambil dari BAGIAN_SEMUA (nama bagian jenis teks lain). Semua soal 4 opsi. */
+window.BAGIAN_SEMUA = ['identification', 'description', 'orientation', 'events', 'reorientation', 'goal', 'steps', 'opening', 'content', 'closing'];
+window.BAGIAN = {
+  'best-friend': { jenis: 'descriptive text', bagian: [
+    ['identification', 'memperkenalkan orang yang dideskripsikan', [0, 1]],
+    ['description', 'menggambarkan ciri fisik, sifat, kepandaian, dan kebiasaannya', [2, 3, 4, 5, 6, 7, 8]],
+    ['closing', 'kesan atau perasaan penulis', [9]]] },
+  'a-rainy-morning': { jenis: 'recount text', bagian: [
+    ['orientation', 'memperkenalkan waktu, keadaan, dan tokoh', [0, 1]],
+    ['events', 'urutan kejadian yang dialami tokoh', [2, 3, 4]],
+    ['reorientation', 'akhir cerita dan perasaan tokoh', [5]]] },
+  'make-tea': { jenis: 'procedure text', bagian: [
+    ['goal', 'tujuan: apa yang akan dibuat', [0]],
+    ['steps', 'langkah-langkah berurutan', [1, 2, 3, 4, 5, 6, 7, 8]],
+    ['closing', 'kalimat penutup untuk pembaca', [9]]] },
+  'announcement': { jenis: 'short announcement', bagian: [
+    ['opening', 'menarik perhatian dan menyebut untuk siapa pengumuman itu', [0, 1]],
+    ['content', 'isi: acara, waktu, dan hal yang harus dilakukan', [2, 3, 4, 5, 6, 7, 8]],
+    ['closing', 'ucapan terima kasih', [9]]] }
+};
+
+Object.assign(window.RUJUKAN, {
+  'best-friend': [
+    ['Her', 'Her name is Sinta', "the writer's best friend", ['the writer', 'the teacher', "the writer's mother"]],
+    ['She', 'She always wears glasses', 'Sinta', ['the writer', 'the librarian', 'the teacher']],
+    ['me', 'She often helps me when I have difficulty', 'the writer', ['Sinta', 'the teacher', 'Sinta\'s sister']],
+    ['we', 'Every weekend, we ride our bicycles', 'the writer and Sinta', ['Sinta and her mother', "the writer's family", 'the students']]],
+  'a-rainy-morning': [
+    ['He', 'He quickly ate his breakfast', 'Dimas', ['his father', 'his brother', 'his teacher']],
+    ['his', 'put on his raincoat', "Dimas's", ["his mother's", "his father's", "his teacher's"]],
+    ['him', 'His mother gave him an umbrella', 'Dimas', ['his father', 'his friend', 'the teacher']],
+    ['he', 'but he was happy because he was not late', 'Dimas', ['his mother', 'his teacher', 'the driver']]],
+  'make-tea': [
+    ['it', 'and stir it well', 'the tea with sugar', ['the kettle', 'the tea bag', 'the lemon']],
+    ['you', 'If you like, you can also add some milk', 'the reader who makes the tea', ["the writer's mother", 'a seller', 'a teacher']],
+    ['your', 'Finally, your tea is ready', "the reader's", ["the writer's", "the seller's", "the guest's"]],
+    ['it', 'Enjoy it while it is warm', 'the cup of tea', ['the kettle', 'the sugar', 'the lemon']]],
+  'announcement': [
+    ['This', 'This is an announcement for all students', 'the message being read', ['the school yard', 'the prize', 'next Friday']],
+    ['its', 'Each class will clean its own classroom', "each class's", ["the headmaster's", "the school's", "the teacher's"]],
+    ['we', 'we will have breakfast together in the hall', 'all the students together', ['the headmaster only', 'the cleaners', 'the parents']],
+    ['your', 'Do not forget to wear your sports uniform', "the students'", ["the headmaster's", "the teachers'", "the parents'"]]]
+});
+
+Object.assign(window.SINONIM, {
+  'best-friend': [
+    ['kind', 'nice', ['rude', 'lazy', 'tall']], ['friendly', 'easy to talk to', ['angry', 'shy', 'tired']],
+    ['often', 'many times', ['never', 'once', 'rarely']], ['helps', 'assists', ['bothers', 'calls', 'leaves']],
+    ['difficulty', 'problem', ['success', 'holiday', 'game']], ['good at', 'skilled at', ['bad at', 'afraid of', 'tired of']],
+    ['together', 'with each other', ['alone', 'late', 'apart']], ['lucky', 'fortunate', ['unhappy', 'careless', 'lonely']]],
+  'a-rainy-morning': [
+    ['heavily', 'a lot', ['a little', 'quietly', 'slowly']], ['woke up', 'got up', ['went to bed', 'sat down', 'fell down']],
+    ['wet', 'not dry', ['dry', 'hot', 'clean']], ['quickly', 'fast', ['slowly', 'sadly', 'late']],
+    ['gave', 'handed', ['took', 'sold', 'lost']], ['arrived', 'reached the place', ['left', 'forgot', 'called']],
+    ['happy', 'glad', ['sad', 'angry', 'tired']], ['late', 'not on time', ['early', 'on time', 'ready']]],
+  'make-tea': [
+    ['boil', 'heat until it bubbles', ['freeze', 'wash', 'cut']], ['pour', 'let the water flow', ['cut', 'fry', 'blow']],
+    ['wait', 'stay for a moment', ['hurry', 'run', 'sleep']], ['take out', 'remove', ['put in', 'break', 'drink']],
+    ['add', 'put in', ['remove', 'burn', 'hide']], ['stir', 'mix', ['cut', 'boil', 'freeze']],
+    ['finally', 'at last', ['first', 'next', 'never']], ['warm', 'a little hot', ['frozen', 'cold', 'icy']]],
+  'announcement': [
+    ['attention', 'notice', ['noise', 'holiday', 'question']], ['hold', 'organize', ['cancel', 'forget', 'break']],
+    ['bring', 'take with you', ['leave', 'sell', 'buy']], ['each', 'every', ['no', 'only one', 'some']],
+    ['together', 'with one another', ['alone', 'separately', 'quietly']], ['prize', 'award', ['punishment', 'test', 'broom']],
+    ['forget', 'fail to remember', ['remember', 'hope', 'try']], ['must', 'have to', ['may not', 'do not need to', 'will never']]]
+});
+
+window.SOAL_TAHAP2 = {
+  'best-friend': [
+    { k: 'sikap', t: 'How does the writer feel about Sinta?', p: ['Thankful and happy', 'Angry', 'Jealous', 'Bored'], j: 0, b: '"I am lucky to have a friend like her."' },
+    { k: 'inferensi', t: 'Why does the writer probably ask Sinta for help with lessons?', p: ['Because Sinta is kind and helpful', 'Because Sinta is a teacher', 'Because Sinta lives in the library', 'Because Sinta is older than the teacher'], j: 0, b: 'Sinta baik hati dan sering membantu.' },
+    { k: 'inferensi', t: 'Where do the writer and Sinta probably live?', p: ['In a village', 'In the center of a big city', 'On a ship', 'In another country'], j: 0, b: '"we ride our bicycles around the village".' },
+    { k: 'tujuan', t: 'What is the purpose of the text?', p: ["To describe the writer's best friend", 'To tell a funny story', 'To explain how to ride a bicycle', 'To announce a school event'], j: 0, b: 'Teks deskriptif menggambarkan seseorang.' },
+    { k: 'tujuan', t: 'Why does the writer mention that Sinta wears glasses?', p: ['To describe what Sinta looks like', 'To show that Sinta is sick', 'To explain why Sinta likes drawing', 'To say that Sinta is a teacher'], j: 0, b: 'Bagian deskripsi ciri fisik.' },
+    { k: 'evaluasi', t: 'Which sentence is an OPINION?', p: ['I am lucky to have a friend like her.', 'Her name is Sinta.', 'She always wears glasses.', 'Sometimes we go to the library together.'], j: 0, b: 'Perasaan atau penilaian penulis adalah opini.' },
+    { k: 'evaluasi', t: 'Which activity would Sinta most likely enjoy?', p: ['Joining a drawing competition', 'Fixing a car engine', 'Swimming in the sea', 'Selling fish at the market'], j: 0, b: 'Sinta pandai menggambar dan bernyanyi.' },
+    { k: 'inferensi', t: 'What kind of friend is Sinta?', p: ['A helpful friend', 'A lazy friend', 'An angry friend', 'A selfish friend'], j: 0, b: 'Ia sering membantu penulis.' }],
+  'a-rainy-morning': [
+    { k: 'inferensi', t: 'Why did Dimas eat his breakfast quickly?', p: ['Because he woke up late and did not want to be late', 'Because the food was cold', 'Because his mother was angry', 'Because he was not hungry'], j: 0, b: 'Ia bangun kesiangan.' },
+    { k: 'inferensi', t: 'Why were his shoes wet?', p: ['Because he walked on the wet street', 'Because he washed them', 'Because he swam in a river', 'Because his mother poured water on them'], j: 0, b: 'Jalanan basah dan penuh genangan.' },
+    { k: 'sikap', t: 'How did Dimas feel at the end of the story?', p: ['Happy', 'Angry', 'Afraid', 'Bored'], j: 0, b: '"he was happy because he was not late".' },
+    { k: 'tujuan', t: 'What is the purpose of the text?', p: ['To tell what happened to Dimas one rainy morning', 'To describe a raincoat', 'To explain how rain is formed', 'To announce a school rule'], j: 0, b: 'Recount menceritakan pengalaman.' },
+    { k: 'tujuan', t: 'Why does the writer say the street was "full of puddles"?', p: ['To show how much it had rained', 'To describe a new road', 'To explain why Dimas woke up late', 'To show that Dimas likes water'], j: 0, b: 'Menggambarkan hujan lebat.' },
+    { k: 'evaluasi', t: 'What lesson can we learn from the story?', p: ['Be prepared when the weather is bad.', 'Never eat breakfast.', 'Do not go to school when it rains.', 'Always wake up late.'], j: 0, b: 'Dimas memakai jas hujan dan membawa payung sehingga tidak terlambat.' },
+    { k: 'inferensi', t: 'What kind of mother does Dimas have?', p: ['A caring mother', 'A careless mother', 'An angry mother', 'A lazy mother'], j: 0, b: 'Ia memberi Dimas payung.' },
+    { k: 'evaluasi', t: 'What would probably happen if Dimas had not hurried?', p: ['He would be late for school.', 'He would win a prize.', 'The rain would stop.', 'His shoes would stay dry.'], j: 0, b: 'Ia bangun kesiangan; tanpa bergegas ia akan terlambat.' }],
+  'make-tea': [
+    { k: 'inferensi', t: 'What would probably happen if you never took out the tea bag?', p: ['The tea would become too strong.', 'The water would freeze.', 'The sugar would disappear.', 'The cup would break.'], j: 0, b: 'Kantong teh yang terlalu lama membuat teh terlalu pekat.' },
+    { k: 'inferensi', t: 'Who is the text written for?', p: ['Anyone who wants to make tea', 'Tea farmers only', 'Doctors', 'Teachers only'], j: 0, b: 'Prosedur ditujukan kepada pembaca ("you").' },
+    { k: 'tujuan', t: 'Why does the writer use words like "First", "Next", and "Then"?', p: ['To show the order of the steps', 'To compare different teas', 'To describe the cup', 'To tell a story about tea'], j: 0, b: 'Penanda urutan langkah.' },
+    { k: 'tujuan', t: 'What is the function of the first sentence?', p: ['To introduce the goal of the text', 'To give the last step', 'To list the prices', 'To describe a tea farm'], j: 0, b: 'Kalimat pertama adalah goal.' },
+    { k: 'evaluasi', t: 'Which step can you skip without spoiling the tea?', p: ['Adding milk or lemon', 'Boiling the water', 'Putting the tea bag into the cup', 'Pouring the hot water'], j: 0, b: '"If you like" berarti boleh dilewati.' },
+    { k: 'sikap', t: 'The last sentence "Enjoy it while it is warm!" sounds …', p: ['friendly', 'angry', 'sad', 'worried'], j: 0, b: 'Ajakan yang ramah.' },
+    { k: 'evaluasi', t: 'Which thing is NOT needed to follow the steps?', p: ['A knife', 'A kettle', 'A cup', 'A spoon'], j: 0, b: 'Pisau tidak disebut dalam langkah-langkahnya.' },
+    { k: 'inferensi', t: 'Why should you drink the tea while it is warm?', p: ['Because warm tea tastes better', 'Because cold tea is dangerous', 'Because the cup will break', 'Because the sugar disappears'], j: 0, b: 'Penulis menyarankan menikmati teh selagi hangat.' }],
+  'announcement': [
+    { k: 'tujuan', t: 'What is the purpose of the text?', p: ['To inform students about the clean school day', 'To describe the school building', 'To tell a story about a headmaster', 'To explain how to make breakfast'], j: 0, b: 'Pengumuman memberi informasi.' },
+    { k: 'inferensi', t: 'Who most likely reads out this announcement?', p: ['A teacher or a school staff member', 'A parent at home', 'A seller at the market', 'A tourist'], j: 0, b: 'Pengumuman sekolah dibacakan pihak sekolah.' },
+    { k: 'inferensi', t: 'Why should students bring brooms and dustpans?', p: ['To clean their classrooms and the school yard', 'To play a game', 'To buy breakfast', 'To decorate the hall'], j: 0, b: 'Setiap kelas membersihkan kelas dan halaman.' },
+    { k: 'inferensi', t: 'Why should students probably wear their sports uniform?', p: ['Because they will do physical work', 'Because they will have a test', 'Because it is a holiday', 'Because they will meet the president'], j: 0, b: 'Bersih-bersih adalah kerja fisik.' },
+    { k: 'sikap', t: 'The tone of the announcement is …', p: ['polite and clear', 'angry', 'funny', 'sad'], j: 0, b: '"Attention, please", "Thank you for your attention".' },
+    { k: 'evaluasi', t: 'Which student follows the announcement correctly?', p: ['Rina comes at seven in her sports uniform with a broom.', 'Budi comes at nine in his batik shirt.', 'Dina brings only a ball.', 'Andi stays at home on Friday.'], j: 0, b: 'Sesuai semua petunjuk.' },
+    { k: 'evaluasi', t: 'Which information is NOT stated in the announcement?', p: ['The kind of prize', 'The time students must come', 'The things to bring', 'What to wear'], j: 0, b: 'Jenis hadiahnya tidak disebutkan.' },
+    { k: 'tujuan', t: 'Why does the announcement mention a prize?', p: ['To encourage the classes to clean well', 'To ask for money', 'To describe the headmaster', 'To end the event'], j: 0, b: 'Hadiah mendorong kelas bersih-bersih dengan baik.' }]
+};
+Object.keys(window.SOAL_TAHAP2).forEach(id => { if (window.SOAL[id]) window.SOAL[id].push(...window.SOAL_TAHAP2[id]); });
+// Tambahan agar sub level 9 Tahap 2 punya paling sedikit 10 soal per bacaan.
+[['best-friend', [
+  { k: 'inferensi', t: 'What can we learn about the writer from the text?', p: ['The writer sometimes needs help with lessons.', 'The writer is a teacher.', 'The writer cannot ride a bicycle.', 'The writer does not like the library.'], j: 0, b: '"She often helps me when I have difficulty with my lessons."' },
+  { k: 'tujuan', t: 'Why does the writer mention the library?', p: ['To show an activity they do together', 'To describe where the writer works', 'To explain how to borrow books', 'To complain about the library'], j: 0, b: 'Perpustakaan disebut sebagai salah satu kegiatan bersama mereka.' }]],
+ ['a-rainy-morning', [
+  { k: 'inferensi', t: 'What did Dimas probably think when he looked out of the window?', p: ['That he needed to protect himself from the rain', 'That it was a sunny day', 'That school was closed', 'That he wanted to go swimming'], j: 0, b: 'Sesudah itu ia memakai jas hujan.' },
+  { k: 'tujuan', t: 'Why does the writer mention the umbrella?', p: ['To show how his mother helped him stay dry', 'To describe the color of the umbrella', 'To show that Dimas lost it', 'To explain why Dimas woke up late'], j: 0, b: 'Ibu membantu dengan memberinya payung.' }]],
+ ['make-tea', [
+  { k: 'evaluasi', t: 'Which instruction would be a good extra step at the end?', p: ['Wash the cup after you finish drinking.', 'Throw the kettle away.', 'Put the used tea bag back into the box.', 'Boil the sugar.'], j: 0, b: 'Langkah tambahan yang wajar setelah selesai.' }]],
+ ['announcement', [
+  { k: 'inferensi', t: 'Why will the best class get a prize?', p: ['Because it cleaned its area best', 'Because it came first in a test', 'Because it brought the most food', 'Because it sang the best song'], j: 0, b: 'Hadiah diberikan untuk kelas yang paling baik membersihkan.' },
+  { k: 'tujuan', t: 'Why does the announcement begin with "Attention, please"?', p: ['To get the students to listen', 'To end the announcement', 'To give the time of the event', 'To name the prize'], j: 0, b: 'Pembuka untuk menarik perhatian.' }]]
+].forEach(([id, soal]) => { window.SOAL_TAHAP2[id].push(...soal); window.SOAL[id].push(...soal); });

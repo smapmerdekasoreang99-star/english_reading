@@ -175,6 +175,31 @@ datang dari teks itu sendiri (kalimat dan terjemahannya) dan bank soal.
 - Menambah bacaan baru dengan latihan bertahap: isi `SOAL` (≥ 8 soal), `SOAL_BS` (≥ 6), dan
   `KATA_BACAAN` (kata harus tertulis persis di teks). Terjemahan (`arti`) harus sejajar per kalimat.
 
+## Sepuluh sub level untuk Teks Fungsional Pendek, Level TKA, dan Level UTBK/SNBT (10 Okt 2026)
+
+**Tahap 2 (Teks Fungsional Pendek)** juga punya 10 sub level di keempat bacaannya (pola kalimat tetap 5), sebagai bekal ke
+Tahap 3. Bedanya: teksnya satu paragraf, jadi sub level 6 menjadi **Ide pokok & struktur teks**. Kalimat teks ditanyakan
+termasuk bagian apa (identification/description/closing, orientation/events/reorientation, goal/steps/closing,
+opening/content/closing) dari `BAGIAN` di `soal.js`. Pengecohnya nama bagian jenis teks lain (`BAGIAN_SEMUA`).
+Sub level 10 bernama **Uji siap naik tahap**. Semua soal 4 opsi, setingkat A2 (`SOAL_TAHAP2`, `RUJUKAN`, `SINONIM`).
+
+Bacaan Tahap 4 (TKA) dan Tahap 5 (UTBK/SNBT) punya **10 sub level**: sub level 1–5 seperti bacaan lain, lalu lima sub level
+menurut kisi-kisi ujian. Pilihan ganda 4 opsi di TKA dan 5 opsi di UTBK/SNBT. Level tuntas bila kesepuluhnya lulus.
+
+| Sub level | Isi | Sumber soal |
+|---|---|---|
+| 6 Ide pokok & organisasi | ide pokok paragraf ke-n, paragraf mana yang membahas ide tertentu, judul, susunan teks | `IDE_POKOK` + bank jenis ide/organisasi |
+| 7 Rincian & rujukan | informasi tersurat, kata rujukan (it, they, which, this …), benar/salah, tabel | `RUJUKAN` + bank jenis rinci/rujukan + `SOAL_BS` |
+| 8 Makna kata | kata dalam kalimat teks → padanannya, dan padanan → kata di teks | `SINONIM` + bank jenis kata |
+| 9 Inferensi & sikap penulis | kesimpulan, tujuan bagian teks, sikap/nada, fakta vs opini, memperkuat/melemahkan | bank jenis inferensi/tujuan/sikap/evaluasi (termasuk `SOAL_UJIAN`, `SOAL_UJIAN_2`) |
+| 10 Simulasi TKA / Simulasi UTBK/SNBT | campuran semua jenis | semua di atas |
+
+- Jenis soal bank ditentukan `kategoriSoal` di `app.js` dari kalimat pertanyaannya, atau langsung dengan `k` di `soal.js`.
+- Di sub level 4 dan 6–10 ada **📄 Lihat teks bacaan** dengan nomor paragraf (salam dan penutup surat tidak dinomori;
+  di Simulasi teksnya langsung terbuka).
+- Menambah bacaan TKA/UTBK: isi juga `IDE_POKOK` (satu per paragraf), `RUJUKAN` (potongan harus persis dari teks),
+  `SINONIM`, dan beberapa soal bertanda `k` agar sub level 9 punya paling sedikit 10 soal.
+
 ## Bila jawaban salah (10 Okt 2026)
 
 Di **⚙️ Pengaturan → Bila jawaban salah** (per perangkat, seperti di Matdas):

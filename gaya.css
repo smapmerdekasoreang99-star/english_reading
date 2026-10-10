@@ -451,3 +451,4 @@ a.sub-kartu:hover { border-color: var(--biru); }
 .pengaturan .atur-sub { margin: 16px 0 0; font-size: 16px; color: var(--gelap); }
 .lt-salah { color: var(--merah-tua); }
 .lt-batas { font-weight: 800; }
+.lt-no-par { display: inline-grid; place-items: center; min-width: 1.6em; height: 1.6em; margin-right: 4px; border-radius: 50%; background: var(--gelap); color: #fff; font-size: 12px; }

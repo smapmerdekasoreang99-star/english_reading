@@ -548,7 +548,7 @@
   }
   function tuntas(b) {
     const s = syaratLevel(b);
-    if (s.sub) return jumlahLulusSub(b) === SUB.length;
+    if (s.sub) return jumlahLulusSub(b) === daftarSub(b).length;
     return (!s.ucap || skorTerbaik[b.id] >= TUNTAS) && (!s.paham || skorPaham[b.id] >= TUNTAS);
   }
 
@@ -566,7 +566,7 @@
     const kurang = [];
     if (s.sub && !sudahDengar(b)) kurang.push('🎧 dengarkan teksnya dengan ▶ Dengarkan sampai selesai');
     if (s.sub && !sudahBaca(b)) kurang.push(`🎤 baca teksnya dengan Baca & Koreksi sampai selesai, akurasi ≥ ${syaratBaca()}%`);
-    if (s.sub) kurang.push(`🧩 lulus ${SUB.length} sub level Latihan bertahap (sudah ${jumlahLulusSub(b)})`);
+    if (s.sub) kurang.push(`🧩 lulus ${daftarSub(b).length} sub level Latihan bertahap (sudah ${jumlahLulusSub(b)})`);
     if (s.ucap && !(skorTerbaik[b.id] >= TUNTAS)) {
       kurang.push(`🎤 pelafalan ≥ ${TUNTAS}%${skorTerbaik[b.id] != null ? ` (terbaikmu ${skorTerbaik[b.id]}%)` : ''}`);
     }
@@ -928,12 +928,27 @@
   const punyaPola = b => !!(b && b.pola && window.POLA_GEN && window.POLA_GEN[b.id]);
   const punyaBacaan = b => !!(b && !b.kosakata && !b.pola && window.KATA_BACAAN && window.KATA_BACAAN[b.id] && soalDari(b));
   const punyaSub = b => !!(b && ((b.kosakata && b.situasi) || punyaPola(b) || punyaBacaan(b)));
-  const daftarSub = b => (b.pola ? SUB_POLA : b.kosakata ? SUB : [...SUB_BACAAN, bacaSuara(b) ? SUB5_BACA : SUB5_RUMPANG]);
+  // Bacaan Tahap 2 (Teks Fungsional Pendek), 4 (TKA), dan 5 (UTBK/SNBT): lima sub level tambahan menurut
+  // kisi-kisi ujian (10 Okt 2026). Tahap 2 (teks satu paragraf): sub level 6 = struktur teks, bukan ide pokok paragraf.
+  const punyaUjian = b => !b.kosakata && !b.pola && (b.tahap === 2 || b.tahap >= 4);
+  const SUB_UJIAN = [
+    { nama: 'Ide pokok & organisasi', ikon: '💡', ket: 'Ide pokok paragraf, judul, susunan teks' },
+    { nama: 'Rincian & rujukan', ikon: '🔎', ket: 'Informasi tersurat dan kata rujukan' },
+    { nama: 'Makna kata', ikon: '📖', ket: 'Arti kata sesuai konteks (sinonim)' },
+    { nama: 'Inferensi & sikap penulis', ikon: '🧠', ket: 'Kesimpulan, tujuan, sikap, menilai argumen' }
+  ];
+  const SUB6_STRUKTUR = { nama: 'Ide pokok & struktur teks', ikon: '💡', ket: 'Topik, tujuan, jenis teks, dan bagian-bagiannya' };
+  const subSimulasi = b => (b.tahap >= 5 ? { nama: 'Simulasi UTBK/SNBT', ikon: '⏱️', ket: 'Campuran semua jenis soal ujian' }
+    : b.tahap === 4 ? { nama: 'Simulasi TKA', ikon: '⏱️', ket: 'Campuran semua jenis soal ujian' }
+    : { nama: 'Uji siap naik tahap', ikon: '🚀', ket: 'Campuran semua jenis soal, bekal ke Tahap 3' });
+  const daftarSub = b => (b.pola ? SUB_POLA : b.kosakata ? SUB
+    : [...SUB_BACAAN, bacaSuara(b) ? SUB5_BACA : SUB5_RUMPANG,
+      ...(punyaUjian(b) ? [b.tahap === 2 ? SUB6_STRUKTUR : SUB_UJIAN[0], ...SUB_UJIAN.slice(1), subSimulasi(b)] : [])]);
   const skorSub = baca('er_sub', {});          // id → { s: [skor terbaik sub 1–5], lama }
   const simpanSub = () => tulis('er_sub', skorSub);
   const dataSub = b => skorSub[b.id] || (skorSub[b.id] = { s: [] });
   const lulusSub = (b, n) => { const d = skorSub[b.id]; return !!d && (!!d.lama || d.s[n - 1] >= TUNTAS); };
-  const jumlahLulusSub = b => SUB.filter((_, i) => lulusSub(b, i + 1)).length;
+  const jumlahLulusSub = b => daftarSub(b).filter((_, i) => lulusSub(b, i + 1)).length;
   // Sebelum sub level 1 (diatur di Pengaturan halaman utama, tersimpan per perangkat):
   // - Harus Dengar (10 Okt 2026): seluruh teks level didengarkan dengan ▶ Dengarkan sampai selesai.
   // - Harus Baca (9 Okt 2026): teks dibaca dengan Baca & Koreksi sampai selesai, akurasi ≥ syaratBaca()
@@ -1116,6 +1131,7 @@
   const bankBacaan = b => [...soalDari(b).map(q => ({ pg: q })), ...((window.SOAL_BS || {})[b.id] || []).map(x => ({ bs: x }))];
   // Daftar "unit" satu sesi (w) per sub level.
   function urutBacaan(b, n, N) {
+    if (n >= 6) return urutUjian(b, n, N);
     const G = window.KATA_BACAAN[b.id], K = kalimatBacaan(b);
     const panjang = K.map((k, i) => i).filter(i => cukupPanjang(K[i]));
     if (n === 1) return isiSampai(G.map((_, i) => i), N);
@@ -1153,6 +1169,107 @@
     for (let c = 0; c < 20 && (pilih.every(x => x[1]) || pilih.every(x => !x[1])); c++) pilih = kocok(daftarBS).slice(0, 5);
     return { w, jenis: 'multi', tanya: 'Pilih semua pernyataan yang BENAR menurut bacaan.', p: pilih.map(x => x[0]),
       jj: pilih.map((x, i) => (x[1] ? i : -1)).filter(i => i >= 0), alasan: pilih.filter(x => !x[1] && x[2]).map(x => x[2]).join(' · '), bahasSelalu: true };
+  }
+  // ---------- Sub level 6–10 bacaan TKA/UTBK (10 Okt 2026) ----------
+  // Sumber: bank soal (SOAL + SOAL_BS) yang dikelompokkan menurut jenis kisi-kisi, ditambah soal yang
+  // dibuat dari IDE_POKOK (ide pokok tiap paragraf), RUJUKAN (kata rujukan), dan SINONIM (makna kata) di soal.js.
+  // Opsi pilihan ganda: 4 untuk TKA (Tahap 4), 5 untuk UTBK/SNBT (Tahap 5).
+  const opsiUjian = b => (b.tahap >= 5 ? 5 : 4);
+  const paragrafBacaan = b => b.teks.split(/\n\s*\n/);
+  const idePokok = b => (window.IDE_POKOK || {})[b.id] || [];
+  // Nomor paragraf isi: paragraf yang ide pokoknya null (salam, penutup surat) tidak dinomori.
+  function nomorParagraf(b, p) {
+    const ide = idePokok(b);
+    if (!ide.length) return p + 1;
+    if (!ide[p]) return 0;
+    return ide.slice(0, p + 1).filter(Boolean).length;
+  }
+  // Jenis soal bank menurut kisi-kisi; boleh ditulis langsung sebagai q.k di soal.js.
+  function kategoriSoal(q) {
+    if (q.k) return q.k;
+    const t = q.t || '';
+    if (/refers? to/i.test(t)) return 'rujukan';
+    if (/closest in meaning|^The word .* means|"\w+" .* means/i.test(t)) return 'kata';
+    if (/main idea|mainly about|main topic|main argument|best title|type of text/i.test(t)) return 'ide';
+    if (/organi[sz]ed|relationship between|Which paragraph|climax/i.test(t)) return 'organisasi';
+    if (/purpose|Why does the (author|writer) (mention|compare|describe)|function of/i.test(t)) return 'tujuan';
+    if (/attitude|tone|position|feel about/i.test(t)) return 'sikap';
+    if (/strengthen|weaken|agree with|best (fit|reflect)|proverb/i.test(t)) return 'evaluasi';
+    if (/infer|most likely|suggest|imply|moral|lesson|probably/i.test(t)) return 'inferensi';
+    return 'rinci';
+  }
+  const KAT_SUB = { 6: ['ide', 'organisasi'], 7: ['rinci', 'rujukan'], 8: ['kata'], 9: ['inferensi', 'sikap', 'tujuan', 'evaluasi'] };
+  function urutUjian(b, n, N) {
+    const bank = bankBacaan(b), ide = idePokok(b);
+    const R = (window.RUJUKAN || {})[b.id] || [], S = (window.SINONIM || {})[b.id] || [];
+    const kat = bank.map(x => (x.bs ? 'rinci' : kategoriSoal(x.pg)));
+    const dariBank = ks => bank.map((_, i) => i).filter(i => !ks || ks.includes(kat[i])).map(i => ({ g: 'bank', i }));
+    const gIde = ide.map((t, p) => (t ? { g: 'ide', p } : null)).filter(Boolean);
+    const gRujuk = R.map((_, i) => ({ g: 'rujuk', i }));
+    const gSin = S.map((_, i) => ({ g: 'sinonim', i }));
+    const gBS = ((window.SOAL_BS || {})[b.id] || []).length >= 4 ? [{ g: 'tabel' }, { g: 'semua' }] : [];
+    // Struktur teks (Tahap 2): satu unit per kalimat yang punya bagian di BAGIAN.
+    const gBagian = (((window.BAGIAN || {})[b.id] || {}).bagian || []).flatMap(([, , ks]) => ks.map(k => ({ g: 'bagian', k })));
+    let kolam = n === 6 ? [...gIde, ...gBagian, ...dariBank(KAT_SUB[6])]
+      : n === 7 ? [...dariBank(KAT_SUB[7]), ...gRujuk, ...gBS]
+      : n === 8 ? [...gSin, ...dariBank(KAT_SUB[8])]
+      : n === 9 ? dariBank(KAT_SUB[9])
+      : [...dariBank(), ...gIde, ...gBagian, ...gRujuk, ...gSin];
+    if (!kolam.length) kolam = dariBank();
+    return isiSampai(kolam, N);
+  }
+  function soalUjian(b, n, w) {
+    const nOpsi = opsiUjian(b);
+    if (w.g === 'bank') return soalBank(b, w.i, w);
+    if (w.g === 'tabel' || w.g === 'semua' || w.g === 'cocok') return soalTurunan(b, w);
+    if (w.g === 'bagian') {
+      // Pengecoh: nama bagian dari jenis teks lain (BAGIAN_SEMUA), sehingga siswa perlu mengenali jenis teksnya.
+      const B = window.BAGIAN[b.id], K = kalimatBacaan(b);
+      const [nama, arti] = B.bagian.find(([, , ks]) => ks.includes(w.k));
+      const milik = B.bagian.map(x => x[0]);
+      const p = kocok([...milik, ...kocok((window.BAGIAN_SEMUA || []).filter(x => !milik.includes(x))).slice(0, Math.max(0, nOpsi - milik.length))]);
+      return { w, jenis: 'pilih', tanya: `This sentence comes from a ${B.jenis}. Which part of the text is it?`, kalimat: K[w.k].en, kecil: K[w.k].id,
+        p, j: p.indexOf(nama), alasan: `Kalimat ini termasuk bagian ${nama}: ${arti}.`, bahasSelalu: true };
+    }
+    if (w.g === 'ide') {
+      const ide = idePokok(b), isi = ide.map((t, p) => ({ t, p })).filter(x => x.t);
+      const no = nomorParagraf(b, w.p), kunci = ide[w.p];
+      const alasan = `Paragraf ${no} membahas: ${kunci}`;
+      if (varian(n, w, ['ide', 'mana']) === 'ide') {
+        return { w, jenis: 'pilih', tanya: `What is the main idea of paragraph ${no}?`, ...pilihan(kunci, isi.map(x => x.t), Math.min(nOpsi, isi.length)), alasan, bahasSelalu: true };
+      }
+      const p = isi.map(x => `Paragraph ${nomorParagraf(b, x.p)}`);
+      return { w, jenis: 'pilih', tanya: 'Which paragraph mainly discusses this idea?', kalimat: kunci, p, j: p.indexOf(`Paragraph ${no}`), alasan, bahasSelalu: true };
+    }
+    if (w.g === 'rujuk') {
+      const [kata, potongan, benar, pengecoh] = window.RUJUKAN[b.id][w.i];
+      return { w, jenis: 'pilih', tanya: `In this part of the text, “${kata}” refers to …`, kalimat: `“… ${potongan} …”`,
+        ...pilihan(benar, pengecoh, Math.min(nOpsi, pengecoh.length + 1)), alasan: `“${kata}” merujuk pada ${benar}.`, bahasSelalu: true };
+    }
+    // Sinonim: kata dalam kalimat teks → padanannya, atau sebaliknya.
+    const S = window.SINONIM[b.id], [kata, sin, pengecoh] = S[w.i];
+    const c = kalimatDenganKata(b, kata);
+    const alasan = `“${kata}” di sini bermakna “${sin}”.`;
+    if (!c || varian(n, w, ['sin', 'balik']) === 'balik') {
+      return { w, jenis: 'pilih', tanya: `Which word from the text is closest in meaning to “${sin}”?`, ...pilihan(kata, S.map(x => x[0]), nOpsi), alasan, bahasSelalu: true };
+    }
+    return { w, jenis: 'pilih', tanya: `The word “${kata}” in the sentence below is closest in meaning to …`, kalimat: c.en,
+      ...pilihan(sin, pengecoh, Math.min(nOpsi, pengecoh.length + 1)), alasan, bahasSelalu: true };
+  }
+  // Satu soal dari bank (SOAL + SOAL_BS) bacaan, indeks i.
+  function soalBank(b, i, w) {
+    const x = bankBacaan(b)[i];
+      // Bentuk soal TKA/SNBT: pilihan ganda (4–5 opsi), pilihan ganda kompleks (j = daftar indeks,
+      // jawaban benar lebih dari satu), dan benar/salah per pernyataan (bs = [[pernyataan, benar?], ...]).
+      if (x.pg && x.pg.bs) return { w, jenis: 'tabel', tanya: x.pg.t, baris: kocok(x.pg.bs), alasan: x.pg.b, bahasSelalu: true };
+      if (x.pg && Array.isArray(x.pg.j)) {
+        const u = kocok(x.pg.p.map((_, i) => i));
+        return { w, jenis: 'multi', tanya: x.pg.t, p: u.map(i => x.pg.p[i]), jj: u.map((i, k) => (x.pg.j.includes(i) ? k : -1)).filter(k => k >= 0),
+          alasan: x.pg.b, bahasSelalu: true };
+      }
+      if (x.pg) return { w, jenis: 'pilih', tanya: x.pg.t, ...pilihan(x.pg.p[x.pg.j], x.pg.p, x.pg.p.length), alasan: x.pg.b, bahasSelalu: true };
+      return { w, jenis: 'pilih', tanya: 'Benar atau salah menurut bacaan?', kalimat: x.bs[0], p: BS, j: x.bs[1] ? 0 : 1,
+        alasan: x.bs[2] || '', bahasSelalu: true };
   }
   function buatSoalBacaan(b, n, w) {
     const G = window.KATA_BACAAN[b.id], K = kalimatBacaan(b);
@@ -1197,21 +1314,8 @@
         kalimat: K[w].en, kecil: K[w].id, sesudah: v === 'sesudah' ? `${K[w].en} ${kunci.en}` : `${kunci.en} ${K[w].en}`,
         ...pilihan(kunci.en, K.filter(x => x !== K[w] && x !== kunci).map(x => x.en)) };
     }
-    if (n === 4) {
-      if (typeof w === 'object') return soalTurunan(b, w);
-      const x = bankBacaan(b)[w];
-      // Bentuk soal TKA/SNBT: pilihan ganda (4–5 opsi), pilihan ganda kompleks (j = daftar indeks,
-      // jawaban benar lebih dari satu), dan benar/salah per pernyataan (bs = [[pernyataan, benar?], ...]).
-      if (x.pg && x.pg.bs) return { w, jenis: 'tabel', tanya: x.pg.t, baris: kocok(x.pg.bs), alasan: x.pg.b, bahasSelalu: true };
-      if (x.pg && Array.isArray(x.pg.j)) {
-        const u = kocok(x.pg.p.map((_, i) => i));
-        return { w, jenis: 'multi', tanya: x.pg.t, p: u.map(i => x.pg.p[i]), jj: u.map((i, k) => (x.pg.j.includes(i) ? k : -1)).filter(k => k >= 0),
-          alasan: x.pg.b, bahasSelalu: true };
-      }
-      if (x.pg) return { w, jenis: 'pilih', tanya: x.pg.t, ...pilihan(x.pg.p[x.pg.j], x.pg.p, x.pg.p.length), alasan: x.pg.b, bahasSelalu: true };
-      return { w, jenis: 'pilih', tanya: 'Benar atau salah menurut bacaan?', kalimat: x.bs[0], p: BS, j: x.bs[1] ? 0 : 1,
-        alasan: x.bs[2] || '', bahasSelalu: true };
-    }
+    if (n >= 6) return soalUjian(b, n, w);
+    if (n === 4) return typeof w === 'object' ? soalTurunan(b, w) : soalBank(b, w, w);
     if (bacaSuara(b)) {
       const k = K[w];
       const dengar = varian(n, w, ['baca', 'dengarBaca']) === 'dengarBaca';
@@ -1320,8 +1424,8 @@
     layar.innerHTML = `
       <div class="bar-atas"><a href="#baca/${encodeURIComponent(b.id)}" class="kembali">← ${esc(b.judul)}</a><span class="label-tingkat">Sub level ${n}/${daftarSub(b).length}</span></div>
       <h1 class="judul-bacaan">${sub.ikon} ${esc(sub.nama)}</h1>
-      ${!b.kosakata && !b.pola && n === 4 && b.tahap >= 4 ? `<details class="lt-teks"><summary>📄 Lihat teks bacaan</summary>
-        ${b.teks.split(/\n\s*\n/).map(x => `<p>${esc(x.trim())}</p>`).join('')}</details>` : ''}
+      ${!b.kosakata && !b.pola && ((n === 4 && b.tahap >= 4) || n >= 6) ?`<details class="lt-teks"${n === 10 ? ' open' : ''}><summary>📄 Lihat teks bacaan</summary>
+        ${paragrafBacaan(b).map((x, p) => `<p>${nomorParagraf(b, p) ? `<b class="lt-no-par">${nomorParagraf(b, p)}</b> ` : ''}${esc(x.trim())}</p>`).join('')}</details>` : ''}
       <div class="lt-jalur"><span id="lt-isi"></span></div>
       <div id="lt-kotak"></div>`;
     gambarSoal();
@@ -1715,7 +1819,7 @@
             return `<a class="kartu${ok ? ' tuntas' : ''}" href="#baca/${encodeURIComponent(b.id)}">
               <span class="kartu-level">${ok ? '✓' : i + 1}</span>
               <span class="kartu-isi"><span class="kartu-judul">${esc(b.judul)}</span>
-              <span class="kartu-info"><span class="jenis jenis-${jenis.kunci}">${jenis.nama}</span> Level ${i + 1} · ${ukuran}${punyaSub(b) ? ` · 🧩 <b>${jumlahLulusSub(b)}/${SUB.length}</b> sub level` : ''}${s != null ? ` · 🎤 <b>${s}%</b>` : ''}${sp != null ? ` · 📝 <b>${sp}%</b>` : ''}${soalDari(b) && sp == null && !punyaSub(b) ? ` · ${soalDari(b).length} soal` : ''}</span></span></a>`;
+              <span class="kartu-info"><span class="jenis jenis-${jenis.kunci}">${jenis.nama}</span> Level ${i + 1} · ${ukuran}${punyaSub(b) ? ` · 🧩 <b>${jumlahLulusSub(b)}/${daftarSub(b).length}</b> sub level` : ''}${s != null ? ` · 🎤 <b>${s}%</b>` : ''}${sp != null ? ` · 📝 <b>${sp}%</b>` : ''}${soalDari(b) && sp == null && !punyaSub(b) ? ` · ${soalDari(b).length} soal` : ''}</span></span></a>`;
           }).join('')}</div></section>`;
       }).join('') +
       (bisaSuara ? '' : '<div class="pesan">Browser ini tidak bisa membacakan teks. Gunakan Google Chrome versi terbaru.</div>') +
@@ -2248,11 +2352,11 @@
     batalkanRekam();
     batalUlang();
     batalLatih();
-    const ml = location.hash.match(/^#latih\/([^/]+)\/(\d)$/);
+    const ml = location.hash.match(/^#latih\/([^/]+)\/(\d+)$/);
     if (ml) {
       const bl = window.BACAAN.find(x => x.id === decodeURIComponent(ml[1]));
       const n = +ml[2];
-      if (punyaSub(bl) && n >= 1 && n <= SUB.length) {
+      if (punyaSub(bl) && n >= 1 && n <= daftarSub(bl).length) {
         if (terbukaSub(bl, n)) tampilLatih(bl, n);
         else location.replace(`#baca/${encodeURIComponent(bl.id)}`);
         window.scrollTo(0, 0);
