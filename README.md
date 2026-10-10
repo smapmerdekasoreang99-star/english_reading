@@ -35,7 +35,15 @@ penilaian fonetik rinci (tekanan, intonasi).
 ## Ilustrasi level (10 Okt 2026)
 
 Level yang diberi `ilustrasi` di `bacaan.js` mendapat gambar bantu di atas teksnya (`ilustrasiHTML` di `app.js`).
-Saat ini `ilustrasi: 'jam'` di *Telling the Time*: muka jam (SVG buatan sendiri) dengan sebutan tiap 5 menit, sisi kanan
+Jenis yang ada (10 Okt 2026): `jam` (*Telling the Time*), `pekan` (*Days of the Week*), `kalender` (*Months of the Year*),
+`belanja` (*Money and Shopping*: rak berlabel harga + struk dan kembalian), `tubuh` (*Parts of the Body*), `denah` (*Rooms of the House*),
+`kisi` (kisi emoji dari `ikon` di `bacaan.js`, mis. *Feelings*, *Weather*, *Clothes*, *Animals*, *Jobs*, *Transportation*, *Hobbies*,
+*Classroom Expressions*; `catatanIlus` opsional), serta untuk level lama `warna` (*Colors*), `keluarga` (*Family*), `peta`
+(*Places and Directions*), dan `preposisi` (*Prepositions*: bola dan kotak). Ketuk bagian gambar: kalimatnya tampil dan dibacakan.
+
+Kecepatan suara bawaan **Pelan** (0,75) sejak 10 Okt 2026; pilihan Kecepatan yang pernah dipilih siswa sendiri (`setelan.lajuDipilih`) tetap dipakai.
+
+Rincian jam: muka jam (SVG buatan sendiri) dengan sebutan tiap 5 menit, sisi kanan
 *past* (hijau) dan sisi kiri *to* (biru), serta tabel contoh satu jam penuh (2:00 It's two o'clock … 2:55 It's five to three).
 Jamnya bisa diganti dengan ◀ ▶. Ketuk sebutan atau contoh: jarum bergerak dan kalimatnya dibacakan.
 
@@ -59,7 +67,7 @@ Mikrofon tidak diizinkan dari `file://`. Jalankan server lokal, misalnya
 
 ## Jenis level dan pengulangan
 
-- **Kosakata** (Tahap 0): 22 kelompok × 10 kata (sejak 10 Okt 2026 termasuk *Numbers 11 to 100*,
+- **Kosakata** (Tahap 0): 35 kelompok × 10 kata (Months of the Year 12) (sejak 10 Okt 2026 termasuk *Numbers 11 to 100*,
   *Big Numbers* sampai puluhan juta, *Ordinal Numbers* 1st–10th dan 11th–50th, dan *Telling the Time*). Tiap kata punya arti dan satu
   contoh kalimat. Ditulis di `bacaan.js` sebagai `kosakata: [kata, arti, contoh, arti contoh]`;
   teksnya dibentuk otomatis menjadi "kata. contoh kalimat." agar bisa didengar dan dikoreksi.
@@ -166,6 +174,18 @@ datang dari teks itu sendiri (kalimat dan terjemahannya) dan bank soal.
   semua sub level.
 - Menambah bacaan baru dengan latihan bertahap: isi `SOAL` (≥ 8 soal), `SOAL_BS` (≥ 6), dan
   `KATA_BACAAN` (kata harus tertulis persis di teks). Terjemahan (`arti`) harus sejajar per kalimat.
+
+## Bila jawaban salah (10 Okt 2026)
+
+Di **⚙️ Pengaturan → Bila jawaban salah** (per perangkat, seperti di Matdas):
+
+| Pengaturan | Pilihan | Artinya |
+|---|---|---|
+| Jawaban benar dan penjelasannya | **Ditampilkan** (bawaan) / Tidak ditampilkan | Bila tidak: hanya "✗ Belum tepat"; pilihan yang benar tidak ditandai, baris tabel benar/salah tidak ditandai, jawaban tidak dibacakan. Pembahasan tetap tampil bila jawaban benar. |
+| Soal yang dijawab salah | **Diulang di akhir sesi** (bawaan) / Diulang di nomor itu sampai benar / Maju terus | Pengulangan selalu memakai soal baru untuk kata atau kalimat yang sama (`setelan.bilaSalah`: `akhir` / `ulang` / `lanjut`). |
+| Batas salah dalam satu sub level | **Tanpa batas** (bawaan), lebih dari 3 / 5 / 8 / 10 kali | Salah melebihi batas: sub level dimulai lagi dari nomor 1 dengan soal yang berbeda. Hitungan salah tampil di samping nomor soal. |
+
+Nilai lulus tetap ≥ 80% benar pada **percobaan pertama** tiap nomor; soal pengulangan tidak menambah nilai.
 
 ## Jumlah soal per sub level dan bentuk soal bergilir (10 Okt 2026)
 

@@ -14,7 +14,7 @@
    Hindari angka (tulis "twenty", bukan "20"), jam ("seven o'clock"), dan singkatan
    bertitik ("Mr.") agar pemecahan kalimat dan koreksi bacaan tetap tepat. */
 window.TAHAP = [
-  { no: 0, nama: 'Fondasi', setara: 'Pre-A1 · setara SD', fokus: 'Kosakata dasar berkelompok (22 kelompok, 220 kata), termasuk angka sampai jutaan, bilangan bertingkat, dan menyatakan jam. Tiap kata dengan arti dan contoh kalimat.' },
+  { no: 0, nama: 'Fondasi', setara: 'Pre-A1 · setara SD', fokus: 'Kosakata dasar berkelompok (35 kelompok), termasuk angka sampai jutaan, bilangan bertingkat, dan menyatakan jam. Tiap kata dengan arti dan contoh kalimat.' },
   { no: 1, nama: 'Kalimat Sederhana', setara: 'A1 · SD akhir–SMP 7', fokus: 'Pola kalimat dasar (I am, there is, simple present, want to, kata tanya) dan bacaan pendek.' },
   { no: 2, nama: 'Teks Fungsional Pendek', setara: 'A2 · SMP', fokus: 'Pola masa lalu, masa depan, dan modal; teks deskripsi, recount, prosedur, pengumuman.' },
   { no: 3, nama: 'Genre Teks', setara: 'A2+–B1 · SMP 9–SMA 10', fokus: 'Pola menyampaikan pendapat; narrative, report, exposition singkat; kata sambung.' },
@@ -340,7 +340,7 @@ window.BACAAN = [
     ]
   },
   {
-    id: 'colors', tahap: 0, judul: 'Colors', kelompok: 'Warna',
+    id: 'colors', tahap: 0, judul: 'Colors', kelompok: 'Warna', ilustrasi: 'warna',
     kosakata: [
       ['red', 'merah', 'The apple is red.', 'Apel itu merah.'],
       ['blue', 'biru', 'The sky is blue.', 'Langit berwarna biru.'],
@@ -383,7 +383,7 @@ window.BACAAN = [
     ]
   },
   {
-    id: 'family-words', tahap: 0, judul: 'Family', kelompok: 'Keluarga dan orang',
+    id: 'family-words', tahap: 0, judul: 'Family', kelompok: 'Keluarga dan orang', ilustrasi: 'keluarga',
     kosakata: [
       ['father', 'ayah', 'My father is a farmer.', 'Ayahku seorang petani.'],
       ['mother', 'ibu', 'My mother cooks every day.', 'Ibuku memasak setiap hari.'],
@@ -425,6 +425,132 @@ window.BACAAN = [
       { s: 'Istri pamanmu adalah …', j: 'aunt' }
     ]
   },
+  // Tambahan 10 Okt 2026: anggota tubuh, perasaan, pakaian (dengan ilustrasi).
+  {
+    id: 'body-parts', tahap: 0, judul: 'Parts of the Body', kelompok: 'Anggota tubuh', ilustrasi: 'tubuh',
+    kosakata: [
+      ['head', 'kepala', 'Wear a helmet to protect your head.', 'Pakailah helm untuk melindungi kepalamu.'],
+      ['eye', 'mata', 'I have something in my eye.', 'Ada sesuatu di mataku.'],
+      ['ear', 'telinga', 'Put your hand on your ear.', 'Letakkan tanganmu di telingamu.'],
+      ['nose', 'hidung', 'I smell with my nose.', 'Saya mencium bau dengan hidungku.'],
+      ['mouth', 'mulut', 'Open your mouth, please.', 'Tolong buka mulutmu.'],
+      ['hand', 'tangan', 'Raise your hand, please.', 'Tolong angkat tanganmu.'],
+      ['arm', 'lengan', 'He broke his arm.', 'Lengannya patah.'],
+      ['leg', 'kaki (tungkai)', 'My leg hurts after the game.', 'Kakiku sakit setelah pertandingan.'],
+      ['foot', 'telapak kaki', 'I hurt my foot.', 'Telapak kakiku terluka.'],
+      ['stomach', 'perut', 'My stomach hurts.', 'Perutku sakit.']
+    ],
+    contohLain: {
+      'head': [['My head hurts.', 'Kepalaku sakit.'], ['She puts a hat on her head.', 'Dia memakai topi di kepalanya.']],
+      'eye': [['Close one eye.', 'Tutup satu mata.'], ['My right eye is red.', 'Mata kananku merah.']],
+      'ear': [['My left ear hurts.', 'Telinga kiriku sakit.'], ['The cat has one white ear.', 'Kucing itu punya satu telinga putih.']],
+      'nose': [['My nose is cold.', 'Hidungku dingin.'], ['An elephant has a long nose.', 'Gajah punya hidung yang panjang.']],
+      'mouth': [['Do not talk with your mouth full.', 'Jangan bicara saat mulutmu penuh.'], ['Cover your mouth when you cough.', 'Tutup mulutmu saat batuk.']],
+      'hand': [['I write with my right hand.', 'Saya menulis dengan tangan kananku.'], ['Give me your hand.', 'Berikan tanganmu.']],
+      'arm': [['She has a bag on her arm.', 'Dia membawa tas di lengannya.'], ['Raise your left arm.', 'Angkat lengan kirimu.']],
+      'leg': [['Stand on one leg.', 'Berdirilah dengan satu kaki.'], ['The dog has a hurt leg.', 'Kaki anjing itu terluka.']],
+      'foot': [['Put your left foot forward.', 'Majukan kaki kirimu.'], ['I go to school on foot.', 'Saya pergi ke sekolah berjalan kaki.']],
+      'stomach': [['Do not swim with a full stomach.', 'Jangan berenang dengan perut kenyang.'], ['My stomach is full.', 'Perutku kenyang.']]
+    },
+    situasi: [
+      { s: 'Bagian tubuh untuk melihat …', j: 'eye' },
+      { s: 'Bagian tubuh untuk mendengar …', j: 'ear' },
+      { s: 'Bagian tubuh untuk mencium bau …', j: 'nose' },
+      { s: 'Bagian tubuh untuk makan dan berbicara …', j: 'mouth' },
+      { s: 'Bagian tubuh untuk menulis dan memegang pensil …', j: 'hand' },
+      { s: 'Topi dipakai di …', j: 'head' },
+      { s: 'Helm melindungi …', j: 'head' },
+      { s: 'Bagian tubuh antara bahu dan tangan …', j: 'arm' },
+      { s: 'Bagian tubuh untuk berlari dan menendang bola …', j: 'leg', juga: ['foot'] },
+      { s: 'Sepatu dipakai di …', j: 'foot' },
+      { s: 'Setelah makan terlalu banyak, bagian ini terasa penuh …', j: 'stomach' },
+      { s: 'Temanmu sakit maag. Yang sakit adalah …', j: 'stomach' }
+    ]
+  },
+  {
+    id: 'feelings', tahap: 0, judul: 'Feelings', kelompok: 'Perasaan', ilustrasi: 'kisi',
+    ikon: { 'happy': '😄', 'sad': '😢', 'angry': '😠', 'tired': '😩', 'hungry': '🤤', 'thirsty': '🥤', 'scared': '😨', 'bored': '🥱', 'excited': '🤩', 'sick': '🤒' },
+    kosakata: [
+      ['happy', 'senang', 'I am happy to see you.', 'Saya senang bertemu denganmu.'],
+      ['sad', 'sedih', 'He is sad because his cat is sick.', 'Dia sedih karena kucingnya sakit.'],
+      ['angry', 'marah', 'My father is angry with me.', 'Ayahku marah kepadaku.'],
+      ['tired', 'lelah', 'I am tired after school.', 'Saya lelah sepulang sekolah.'],
+      ['hungry', 'lapar', 'I am hungry, so I eat rice.', 'Saya lapar, jadi saya makan nasi.'],
+      ['thirsty', 'haus', 'I am thirsty after playing football.', 'Saya haus setelah bermain sepak bola.'],
+      ['scared', 'takut', 'My little sister is scared of the dark.', 'Adik perempuanku takut gelap.'],
+      ['bored', 'bosan', 'I am bored at home.', 'Saya bosan di rumah.'],
+      ['excited', 'bersemangat, sangat senang', 'We are excited about the school trip.', 'Kami bersemangat menyambut darmawisata sekolah.'],
+      ['sick', 'sakit', 'I am sick, so I stay at home.', 'Saya sakit, jadi saya tinggal di rumah.']
+    ],
+    contohLain: {
+      'happy': [['She is happy with her new bag.', 'Dia senang dengan tas barunya.'], ['We are happy today.', 'Kami senang hari ini.']],
+      'sad': [['Do not be sad.', 'Jangan sedih.'], ['I feel sad today.', 'Saya merasa sedih hari ini.']],
+      'angry': [['Please do not be angry.', 'Tolong jangan marah.'], ['The teacher looks angry.', 'Guru itu terlihat marah.']],
+      'tired': [['You look tired.', 'Kamu terlihat lelah.'], ['The farmer is tired.', 'Petani itu lelah.']],
+      'hungry': [['Are you hungry?', 'Apakah kamu lapar?'], ['The baby is hungry.', 'Bayi itu lapar.']],
+      'thirsty': [['Drink some water if you are thirsty.', 'Minumlah air jika kamu haus.'], ['The cat is thirsty.', 'Kucing itu haus.']],
+      'scared': [['Are you scared of snakes?', 'Apakah kamu takut ular?'], ['Do not be scared.', 'Jangan takut.']],
+      'bored': [['The students look bored.', 'Para siswa terlihat bosan.'], ['He is never bored.', 'Dia tidak pernah bosan.']],
+      'excited': [['I am excited to meet you.', 'Saya sangat senang akan bertemu denganmu.'], ['The children are excited.', 'Anak-anak itu bersemangat.']],
+      'sick': [['My grandmother is sick.', 'Nenekku sakit.'], ['He feels sick today.', 'Dia merasa sakit hari ini.']]
+    },
+    situasi: [
+      { s: 'Kamu mendapat hadiah ulang tahun. Kamu merasa …', j: 'happy', juga: ['excited'] },
+      { s: 'Teman baikmu pindah ke kota lain. Kamu merasa …', j: 'sad' },
+      { s: 'Adikmu merusak mainanmu dengan sengaja. Kamu merasa …', j: 'angry' },
+      { s: 'Kamu baru selesai lari jauh dan ingin istirahat. Kamu merasa …', j: 'tired' },
+      { s: 'Kamu belum makan sejak pagi. Kamu merasa …', j: 'hungry' },
+      { s: 'Hari sangat panas dan kamu ingin minum. Kamu merasa …', j: 'thirsty' },
+      { s: 'Kamu mendengar suara aneh di malam hari. Kamu merasa …', j: 'scared' },
+      { s: 'Tidak ada yang bisa dikerjakan di rumah. Kamu merasa …', j: 'bored' },
+      { s: 'Besok kamu akan pergi ke Bali untuk pertama kali. Kamu merasa …', j: 'excited', juga: ['happy'] },
+      { s: 'Kamu demam dan batuk. Kamu merasa …', j: 'sick' },
+      { s: 'Nilai ujianmu seratus. Kamu merasa …', j: 'happy', juga: ['excited'] },
+      { s: 'Kamu melihat ular besar di kebun. Kamu merasa …', j: 'scared' }
+    ]
+  },
+  {
+    id: 'clothes', tahap: 0, judul: 'Clothes', kelompok: 'Pakaian', ilustrasi: 'kisi',
+    ikon: { 'shirt': '👕', 'trousers': '👖', 'skirt': '👗', 'shoes': '👞', 'socks': '🧦', 'hat': '🧢', 'jacket': '🧥', 'uniform': '👔', 'headscarf': '🧕', 'sandals': '🩴' },
+    kosakata: [
+      ['shirt', 'kemeja, baju', 'My school shirt is white.', 'Kemeja sekolahku putih.'],
+      ['trousers', 'celana panjang', 'Boys wear grey trousers to school.', 'Anak laki-laki memakai celana panjang abu-abu ke sekolah.'],
+      ['skirt', 'rok', 'She wears a long skirt.', 'Dia memakai rok panjang.'],
+      ['shoes', 'sepatu', 'My shoes are black.', 'Sepatuku hitam.'],
+      ['socks', 'kaus kaki', 'Wear white socks on Monday.', 'Pakailah kaus kaki putih pada hari Senin.'],
+      ['hat', 'topi', 'Wear a hat in the sun.', 'Pakailah topi saat panas.'],
+      ['jacket', 'jaket', 'Take your jacket because it is cold.', 'Bawalah jaketmu karena dingin.'],
+      ['uniform', 'seragam', 'We wear our uniform every school day.', 'Kami memakai seragam setiap hari sekolah.'],
+      ['headscarf', 'kerudung', 'She wears a white headscarf.', 'Dia memakai kerudung putih.'],
+      ['sandals', 'sandal', 'I wear sandals at home.', 'Saya memakai sandal di rumah.']
+    ],
+    contohLain: {
+      'shirt': [['He wears a blue shirt.', 'Dia memakai kemeja biru.'], ['Please iron my shirt.', 'Tolong setrika kemejaku.']],
+      'trousers': [['My trousers are too long.', 'Celanaku terlalu panjang.'], ['These trousers are new.', 'Celana ini baru.']],
+      'skirt': [['Girls wear a grey skirt to school.', 'Anak perempuan memakai rok abu-abu ke sekolah.'], ['This skirt is beautiful.', 'Rok ini cantik.']],
+      'shoes': [['Take off your shoes, please.', 'Tolong lepas sepatumu.'], ['I need new shoes.', 'Saya perlu sepatu baru.']],
+      'socks': [['My socks are wet.', 'Kaus kakiku basah.'], ['Where are my socks?', 'Di mana kaus kakiku?']],
+      'hat': [['I wear a hat for the flag ceremony.', 'Saya memakai topi saat upacara bendera.'], ['His hat is red.', 'Topinya merah.']],
+      'jacket': [['My jacket is warm.', 'Jaketku hangat.'], ['She wears a jacket on the motorcycle.', 'Dia memakai jaket saat naik sepeda motor.']],
+      'uniform': [['My uniform is clean.', 'Seragamku bersih.'], ['The nurse wears a white uniform.', 'Perawat itu memakai seragam putih.']],
+      'headscarf': [['My mother has a blue headscarf.', 'Ibuku punya kerudung biru.'], ['Her headscarf is new.', 'Kerudungnya baru.']],
+      'sandals': [['Do not wear sandals to school.', 'Jangan memakai sandal ke sekolah.'], ['My sandals are under the bed.', 'Sandalku di bawah tempat tidur.']]
+    },
+    situasi: [
+      { s: 'Pakaian atas berkancing untuk ke sekolah …', j: 'shirt', juga: ['uniform'] },
+      { s: 'Anak laki-laki SMA memakai … abu-abu.', j: 'trousers' },
+      { s: 'Anak perempuan SMA memakai … abu-abu.', j: 'skirt' },
+      { s: 'Alas kaki tertutup untuk ke sekolah …', j: 'shoes' },
+      { s: 'Dipakai di kaki sebelum memakai sepatu …', j: 'socks' },
+      { s: 'Dipakai di kepala saat upacara bendera …', j: 'hat' },
+      { s: 'Dipakai saat udara dingin atau naik motor …', j: 'jacket' },
+      { s: 'Pakaian yang sama yang dipakai semua siswa …', j: 'uniform' },
+      { s: 'Penutup kepala yang dipakai banyak siswi muslim …', j: 'headscarf' },
+      { s: 'Alas kaki terbuka untuk dipakai di rumah …', j: 'sandals' },
+      { s: 'Hujan dan dingin. Sebelum berangkat, kamu memakai …', j: 'jacket' },
+      { s: 'Kakimu berkeringat di dalam sepatu. Kamu perlu mengganti …', j: 'socks' }
+    ]
+  },
   {
     id: 'classroom', tahap: 0, judul: 'Things at Home and School', kelompok: 'Benda di rumah dan kelas',
     kosakata: [
@@ -464,6 +590,48 @@ window.BACAAN = [
       { s: 'Benda tempat kamu tidur.', j: 'bed' },
       { s: 'Benda untuk menelepon dan mengirim pesan.', j: 'phone' },
       { s: 'Benda kecil bertangkai untuk minum teh atau kopi.', j: 'cup' }
+    ]
+  },
+  // Tambahan 10 Okt 2026: ruangan di rumah (denah).
+  {
+    id: 'rooms', tahap: 0, judul: 'Rooms of the House', kelompok: 'Ruangan di rumah', ilustrasi: 'denah',
+    kosakata: [
+      ['living room', 'ruang tamu, ruang keluarga', 'We watch TV in the living room.', 'Kami menonton TV di ruang keluarga.'],
+      ['bedroom', 'kamar tidur', 'I sleep in my bedroom.', 'Saya tidur di kamar tidurku.'],
+      ['kitchen', 'dapur', 'My mother cooks in the kitchen.', 'Ibuku memasak di dapur.'],
+      ['bathroom', 'kamar mandi', 'I take a bath in the bathroom.', 'Saya mandi di kamar mandi.'],
+      ['dining room', 'ruang makan', 'We have dinner in the dining room.', 'Kami makan malam di ruang makan.'],
+      ['garage', 'garasi', 'Dad parks the car in the garage.', 'Ayah memarkir mobil di garasi.'],
+      ['garden', 'kebun, taman', 'My grandmother grows flowers in the garden.', 'Nenekku menanam bunga di kebun.'],
+      ['terrace', 'teras', 'We drink tea on the terrace.', 'Kami minum teh di teras.'],
+      ['study room', 'ruang belajar', 'I do my homework in the study room.', 'Saya mengerjakan PR di ruang belajar.'],
+      ['prayer room', 'musala', 'We pray in the prayer room.', 'Kami salat di musala.']
+    ],
+    contohLain: {
+      'living room': [['Guests sit in the living room.', 'Tamu duduk di ruang tamu.'], ['The living room is big.', 'Ruang tamunya besar.']],
+      'bedroom': [['My bedroom is small.', 'Kamar tidurku kecil.'], ['I share a bedroom with my brother.', 'Saya sekamar dengan kakakku.']],
+      'kitchen': [['The kitchen is clean.', 'Dapurnya bersih.'], ['Put the plates in the kitchen.', 'Taruh piring-piring di dapur.']],
+      'bathroom': [['The bathroom is next to the kitchen.', 'Kamar mandi ada di sebelah dapur.'], ['Please clean the bathroom.', 'Tolong bersihkan kamar mandi.']],
+      'dining room': [['The dining room has six chairs.', 'Ruang makan punya enam kursi.'], ['Breakfast is ready in the dining room.', 'Sarapan sudah siap di ruang makan.']],
+      'garage': [['My bicycle is in the garage.', 'Sepedaku ada di garasi.'], ['The garage door is open.', 'Pintu garasi terbuka.']],
+      'garden': [['The children play in the garden.', 'Anak-anak bermain di taman.'], ['There is a mango tree in our garden.', 'Ada pohon mangga di kebun kami.']],
+      'terrace': [['Leave your shoes on the terrace.', 'Tinggalkan sepatumu di teras.'], ['The cat sleeps on the terrace.', 'Kucing tidur di teras.']],
+      'study room': [['The study room is quiet.', 'Ruang belajarnya tenang.'], ['There are many books in the study room.', 'Ada banyak buku di ruang belajar.']],
+      'prayer room': [['The prayer room is clean and quiet.', 'Musalanya bersih dan tenang.'], ['Our house has a small prayer room.', 'Rumah kami punya musala kecil.']]
+    },
+    situasi: [
+      { s: 'Ruangan untuk menerima tamu dan menonton TV …', j: 'living room' },
+      { s: 'Ruangan untuk tidur …', j: 'bedroom' },
+      { s: 'Ruangan untuk memasak …', j: 'kitchen' },
+      { s: 'Ruangan untuk mandi dan menggosok gigi …', j: 'bathroom' },
+      { s: 'Ruangan dengan meja makan untuk makan bersama …', j: 'dining room' },
+      { s: 'Tempat menyimpan mobil dan sepeda motor …', j: 'garage' },
+      { s: 'Tempat menanam bunga dan sayuran di sekitar rumah …', j: 'garden' },
+      { s: 'Bagian depan rumah yang terbuka, tempat duduk-duduk pada sore hari …', j: 'terrace' },
+      { s: 'Ruangan yang tenang untuk mengerjakan PR …', j: 'study room' },
+      { s: 'Ruangan untuk salat di rumah …', j: 'prayer room' },
+      { s: 'Kamu ingin mengambil air dingin dari kulkas. Kamu pergi ke …', j: 'kitchen' },
+      { s: 'Kamu baru bangun tidur. Kamu berada di …', j: 'bedroom' }
     ]
   },
   {
@@ -672,6 +840,95 @@ window.BACAAN = [
     ]
   },
   // Tambahan 10 Okt 2026: menyatakan waktu (jam). Gaya past/to; hindari a.m./p.m. (titiknya memecah kalimat).
+  // Tambahan 10 Okt 2026: nama hari dan nama bulan (dengan pita pekan dan kalender).
+  {
+    id: 'days-week', tahap: 0, judul: 'Days of the Week', kelompok: 'Nama hari', ilustrasi: 'pekan',
+    kosakata: [
+      ['Monday', 'Senin', 'We have a flag ceremony on Monday.', 'Kami upacara bendera pada hari Senin.'],
+      ['Tuesday', 'Selasa', 'We play football on Tuesday.', 'Kami bermain sepak bola pada hari Selasa.'],
+      ['Wednesday', 'Rabu', 'Wednesday is in the middle of the week.', 'Rabu ada di tengah pekan.'],
+      ['Thursday', 'Kamis', 'We wear batik on Thursday.', 'Kami memakai batik pada hari Kamis.'],
+      ['Friday', 'Jumat', 'We go home early on Friday.', 'Kami pulang lebih awal pada hari Jumat.'],
+      ['Saturday', 'Sabtu', 'I help my mother on Saturday.', 'Saya membantu ibuku pada hari Sabtu.'],
+      ['Sunday', 'Minggu', 'My family goes to the park on Sunday.', 'Keluargaku pergi ke taman pada hari Minggu.'],
+      ['weekend', 'akhir pekan', 'What do you do on the weekend?', 'Apa yang kamu lakukan pada akhir pekan?'],
+      ['weekday', 'hari kerja, hari sekolah', 'Monday is a weekday.', 'Senin adalah hari kerja.'],
+      ['every day', 'setiap hari', 'I read a book every day.', 'Saya membaca buku setiap hari.']
+    ],
+    contohLain: {
+      'Monday': [['School starts again on Monday.', 'Sekolah dimulai lagi pada hari Senin.'], ['I have English on Monday.', 'Saya belajar bahasa Inggris pada hari Senin.']],
+      'Tuesday': [['Today is Tuesday.', 'Hari ini hari Selasa.'], ['The test is on Tuesday.', 'Ujiannya hari Selasa.']],
+      'Wednesday': [['I go to the library on Wednesday.', 'Saya pergi ke perpustakaan pada hari Rabu.'], ['See you on Wednesday.', 'Sampai jumpa hari Rabu.']],
+      'Thursday': [['Thursday comes after Wednesday.', 'Kamis datang setelah Rabu.'], ['My aunt visits us on Thursday.', 'Bibiku mengunjungi kami pada hari Kamis.']],
+      'Friday': [['Friday is my favorite day.', 'Jumat adalah hari favoritku.'], ['We do sports on Friday morning.', 'Kami berolahraga pada Jumat pagi.']],
+      'Saturday': [['There is no school on Saturday.', 'Tidak ada sekolah pada hari Sabtu.'], ['We visit Grandma on Saturday.', 'Kami mengunjungi Nenek pada hari Sabtu.']],
+      'Sunday': [['Sunday comes after Saturday.', 'Minggu datang setelah Sabtu.'], ['I wake up late on Sunday.', 'Saya bangun siang pada hari Minggu.']],
+      'weekend': [['We go camping on the weekend.', 'Kami berkemah pada akhir pekan.'], ['Saturday and Sunday are the weekend.', 'Sabtu dan Minggu adalah akhir pekan.']],
+      'weekday': [['Every weekday I wake up at five.', 'Setiap hari sekolah saya bangun pukul lima.'], ['Friday is the last weekday.', 'Jumat adalah hari kerja terakhir.']],
+      'every day': [['We pray every day.', 'Kami berdoa setiap hari.'], ['She drinks milk every day.', 'Dia minum susu setiap hari.']]
+    },
+    situasi: [
+      { s: 'Hari pertama sekolah dalam sepekan, hari upacara bendera …', j: 'Monday' },
+      { s: 'Hari setelah Senin …', j: 'Tuesday' },
+      { s: 'Hari di tengah pekan, setelah Selasa …', j: 'Wednesday' },
+      { s: 'Hari sebelum Jumat …', j: 'Thursday' },
+      { s: 'Hari salat Jumat …', j: 'Friday' },
+      { s: 'Hari sebelum Minggu …', j: 'Saturday' },
+      { s: 'Hari setelah Sabtu …', j: 'Sunday' },
+      { s: 'Sabtu dan Minggu disebut …', j: 'weekend' },
+      { s: 'Senin sampai Jumat masing-masing disebut …', j: 'weekday' },
+      { s: 'Kamu menggosok gigi setiap pagi, yaitu …', j: 'every day' },
+      { s: 'Kemarin hari Minggu. Hari ini hari …', j: 'Monday' },
+      { s: 'Hari ini Jumat. Besok hari …', j: 'Saturday' },
+      { s: 'Besok hari Kamis. Hari ini hari …', j: 'Wednesday' }
+    ]
+  },
+  {
+    id: 'months', tahap: 0, judul: 'Months of the Year', kelompok: 'Nama bulan dan tanggal', ilustrasi: 'kalender',
+    kosakata: [
+      ['January', 'Januari', 'The new year starts in January.', 'Tahun baru dimulai pada bulan Januari.'],
+      ['February', 'Februari', 'February is the shortest month.', 'Februari adalah bulan terpendek.'],
+      ['March', 'Maret', 'We have a holiday in March.', 'Kami libur di bulan Maret.'],
+      ['April', 'April', 'Kartini Day is in April.', 'Hari Kartini jatuh di bulan April.'],
+      ['May', 'Mei', 'Labour Day is in May.', 'Hari Buruh jatuh di bulan Mei.'],
+      ['June', 'Juni', 'The school holiday starts in June.', 'Libur sekolah dimulai di bulan Juni.'],
+      ['July', 'Juli', 'The new school year starts in July.', 'Tahun ajaran baru dimulai di bulan Juli.'],
+      ['August', 'Agustus', 'We celebrate Independence Day in August.', 'Kami merayakan Hari Kemerdekaan di bulan Agustus.'],
+      ['September', 'September', 'September comes after August.', 'September datang setelah Agustus.'],
+      ['October', 'Oktober', 'Youth Pledge Day is in October.', 'Hari Sumpah Pemuda jatuh di bulan Oktober.'],
+      ['November', 'November', "Teachers' Day is in November.", 'Hari Guru jatuh di bulan November.'],
+      ['December', 'Desember', 'December is the last month of the year.', 'Desember adalah bulan terakhir dalam setahun.']
+    ],
+    contohLain: {
+      'January': [['My birthday is in January.', 'Ulang tahunku di bulan Januari.'], ['It often rains in January.', 'Sering hujan di bulan Januari.']],
+      'February': [['February has twenty-eight days.', 'Februari punya dua puluh delapan hari.'], ['We have a test in February.', 'Kami ada ujian di bulan Februari.']],
+      'March': [['March comes after February.', 'Maret datang setelah Februari.'], ['My cousin was born in March.', 'Sepupuku lahir di bulan Maret.']],
+      'April': [['April has thirty days.', 'April punya tiga puluh hari.'], ['The dry season starts in April.', 'Musim kemarau dimulai di bulan April.']],
+      'May': [['May comes after April.', 'Mei datang setelah April.'], ['We plant trees in May.', 'Kami menanam pohon di bulan Mei.']],
+      'June': [['June is the sixth month.', 'Juni adalah bulan keenam.'], ['It is dry and sunny in June.', 'Di bulan Juni cuacanya kering dan cerah.']],
+      'July': [['My sister was born in July.', 'Adik perempuanku lahir di bulan Juli.'], ['July comes after June.', 'Juli datang setelah Juni.']],
+      'August': [['There are many games in August.', 'Ada banyak lomba di bulan Agustus.'], ['August has thirty-one days.', 'Agustus punya tiga puluh satu hari.']],
+      'September': [['We go on a school trip in September.', 'Kami darmawisata di bulan September.'], ['My father was born in September.', 'Ayahku lahir di bulan September.']],
+      'October': [['The rainy season starts in October.', 'Musim hujan dimulai di bulan Oktober.'], ['We have a big test in October.', 'Kami ada ujian besar di bulan Oktober.']],
+      'November': [['It rains a lot in November.', 'Banyak hujan di bulan November.'], ['November has thirty days.', 'November punya tiga puluh hari.']],
+      'December': [['We have a long holiday in December.', 'Kami libur panjang di bulan Desember.'], ['The year ends in December.', 'Tahun berakhir di bulan Desember.']]
+    },
+    situasi: [
+      { s: 'Bulan pertama dalam setahun …', j: 'January' },
+      { s: 'Bulan sebelum Februari …', j: 'January' },
+      { s: 'Bulan yang hanya punya 28 atau 29 hari …', j: 'February' },
+      { s: 'Bulan ketiga dalam setahun …', j: 'March' },
+      { s: 'Hari Kartini (21 April) jatuh di bulan …', j: 'April' },
+      { s: 'Hari Buruh (1 Mei) jatuh di bulan …', j: 'May' },
+      { s: 'Hari Lahir Pancasila (1 Juni) jatuh di bulan …', j: 'June' },
+      { s: 'Bulan ketujuh dalam setahun …', j: 'July' },
+      { s: 'Hari Kemerdekaan Indonesia (17 Agustus) jatuh di bulan …', j: 'August' },
+      { s: 'Bulan kesembilan dalam setahun …', j: 'September' },
+      { s: 'Hari Sumpah Pemuda (28 Oktober) jatuh di bulan …', j: 'October' },
+      { s: 'Hari Guru Nasional (25 November) jatuh di bulan …', j: 'November' },
+      { s: 'Bulan terakhir dalam setahun …', j: 'December' }
+    ]
+  },
   {
     id: 'telling-time', tahap: 0, judul: 'Telling the Time', kelompok: 'Menyatakan jam', ilustrasi: 'jam',
     kosakata: [
@@ -715,6 +972,50 @@ window.BACAAN = [
       { s: 'Kamu berangkat sekolah pukul 06.30 pagi: "at half past six …"', j: 'in the morning' }
     ]
   },
+  // Tambahan 10 Okt 2026: cuaca dan musim.
+  {
+    id: 'weather', tahap: 0, judul: 'Weather and Seasons', kelompok: 'Cuaca dan musim', ilustrasi: 'kisi',
+    catatanIlus: 'Di Indonesia ada dua musim: dry season (musim kemarau, kira-kira April–Oktober) dan rainy season (musim hujan, kira-kira Oktober–Maret).',
+    ikon: { 'sunny': '☀️', 'rainy': '🌧️', 'cloudy': '☁️', 'windy': '🌬️', 'cool': '🍃', 'storm': '⛈️', 'rainbow': '🌈', 'umbrella': '☂️', 'dry season': '🏜️', 'rainy season': '☔' },
+    kosakata: [
+      ['sunny', 'cerah', 'It is sunny today.', 'Hari ini cerah.'],
+      ['rainy', 'hujan', 'It is rainy this afternoon.', 'Siang ini hujan.'],
+      ['cloudy', 'berawan', 'The sky is cloudy.', 'Langitnya berawan.'],
+      ['windy', 'berangin', 'It is windy at the beach.', 'Di pantai berangin.'],
+      ['cool', 'sejuk', 'The air is cool in the mountains.', 'Udaranya sejuk di pegunungan.'],
+      ['storm', 'badai', 'There is a big storm tonight.', 'Ada badai besar malam ini.'],
+      ['rainbow', 'pelangi', 'Look, there is a rainbow in the sky!', 'Lihat, ada pelangi di langit!'],
+      ['umbrella', 'payung', 'Bring an umbrella because it is going to rain.', 'Bawalah payung karena akan hujan.'],
+      ['dry season', 'musim kemarau', 'There is little rain in the dry season.', 'Hanya sedikit hujan pada musim kemarau.'],
+      ['rainy season', 'musim hujan', 'It rains almost every day in the rainy season.', 'Hampir setiap hari hujan pada musim hujan.']
+    ],
+    contohLain: {
+      'sunny': [['We play outside on sunny days.', 'Kami bermain di luar saat hari cerah.'], ['The sky is sunny and blue.', 'Langitnya cerah dan biru.']],
+      'rainy': [['I stay at home on rainy days.', 'Saya tinggal di rumah saat hari hujan.'], ['Bandung is often rainy.', 'Bandung sering hujan.']],
+      'cloudy': [['It is cloudy, but it is not raining.', 'Cuacanya berawan, tetapi tidak hujan.'], ['A cloudy morning feels cool.', 'Pagi yang berawan terasa sejuk.']],
+      'windy': [['We fly kites on windy days.', 'Kami bermain layang-layang saat hari berangin.'], ['It is too windy to play badminton.', 'Terlalu berangin untuk bermain bulu tangkis.']],
+      'cool': [['It is cool in the morning.', 'Pagi hari terasa sejuk.'], ['Soreang is cool at night.', 'Soreang sejuk pada malam hari.']],
+      'storm': [['Stay inside during the storm.', 'Tetaplah di dalam saat badai.'], ['The storm broke a tree.', 'Badai itu mematahkan sebuah pohon.']],
+      'rainbow': [['A rainbow has seven colors.', 'Pelangi punya tujuh warna.'], ['We see a rainbow after the rain.', 'Kami melihat pelangi setelah hujan.']],
+      'umbrella': [['My umbrella is blue.', 'Payungku biru.'], ['Can I borrow your umbrella?', 'Bolehkah saya meminjam payungmu?']],
+      'dry season': [['Rivers are low in the dry season.', 'Sungai surut pada musim kemarau.'], ['It is hot in the dry season.', 'Cuaca panas pada musim kemarau.']],
+      'rainy season': [['Farmers plant rice in the rainy season.', 'Petani menanam padi pada musim hujan.'], ['Some roads flood in the rainy season.', 'Beberapa jalan banjir pada musim hujan.']]
+    },
+    situasi: [
+      { s: 'Matahari bersinar terang dan langit biru. Cuacanya …', j: 'sunny' },
+      { s: 'Air turun dari langit sejak pagi. Cuacanya …', j: 'rainy' },
+      { s: 'Langit tertutup awan abu-abu, tetapi tidak hujan. Cuacanya …', j: 'cloudy' },
+      { s: 'Layang-layang terbang tinggi karena cuacanya …', j: 'windy' },
+      { s: 'Udara pagi di Soreang terasa …', j: 'cool' },
+      { s: 'Hujan sangat deras, angin kencang, dan ada petir. Itu …', j: 'storm' },
+      { s: 'Lengkungan tujuh warna di langit setelah hujan …', j: 'rainbow' },
+      { s: 'Benda yang kamu bawa agar tidak basah kehujanan …', j: 'umbrella' },
+      { s: 'Di Indonesia, kira-kira April sampai Oktober adalah …', j: 'dry season' },
+      { s: 'Di Indonesia, kira-kira Oktober sampai Maret adalah …', j: 'rainy season' },
+      { s: 'Petani menanam padi saat …', j: 'rainy season' },
+      { s: 'Banyak sumur kering saat …', j: 'dry season' }
+    ]
+  },
   {
     id: 'food-drinks', tahap: 0, judul: 'Food and Drinks', kelompok: 'Makanan dan minuman',
     kosakata: [
@@ -756,8 +1057,50 @@ window.BACAAN = [
       { s: 'Bahan utama nasi goreng.', j: 'rice' }
     ]
   },
+  // Tambahan 10 Okt 2026: uang dan belanja (toko dengan struk).
   {
-    id: 'places', tahap: 0, judul: 'Places and Directions', kelompok: 'Tempat dan arah',
+    id: 'money-shopping', tahap: 0, judul: 'Money and Shopping', kelompok: 'Uang dan belanja', ilustrasi: 'belanja',
+    kosakata: [
+      ['how much', 'berapa (harganya)', 'How much is this pen?', 'Berapa harga pulpen ini?'],
+      ['price', 'harga', 'The price of rice is going up.', 'Harga beras sedang naik.'],
+      ['cheap', 'murah', 'This pencil is very cheap.', 'Pensil ini sangat murah.'],
+      ['expensive', 'mahal', 'This phone is too expensive.', 'Ponsel ini terlalu mahal.'],
+      ['buy', 'membeli', 'I want to buy some bread.', 'Saya ingin membeli roti.'],
+      ['sell', 'menjual', 'My aunt wants to sell her old bicycle.', 'Bibiku ingin menjual sepeda lamanya.'],
+      ['pay', 'membayar', 'I pay at the cashier.', 'Saya membayar di kasir.'],
+      ['change', 'uang kembalian', 'Here is your change.', 'Ini uang kembalianmu.'],
+      ['cashier', 'kasir', 'The cashier is very friendly.', 'Kasirnya sangat ramah.'],
+      ['discount', 'diskon, potongan harga', 'There is a discount on shoes today.', 'Ada diskon sepatu hari ini.']
+    ],
+    contohLain: {
+      'how much': [['How much are these apples?', 'Berapa harga apel-apel ini?'], ['Excuse me, how much is the bag?', 'Permisi, berapa harga tas itu?']],
+      'price': [['What is the price of this book?', 'Berapa harga buku ini?'], ['The price is on the label.', 'Harganya ada di label.']],
+      'cheap': [['Vegetables are cheap at the market.', 'Sayuran murah di pasar.'], ['I want a cheap bag.', 'Saya ingin tas yang murah.']],
+      'expensive': [['Shoes in the mall are expensive.', 'Sepatu di mal mahal.'], ['Is it expensive?', 'Apakah itu mahal?']],
+      'buy': [['Mom wants to buy vegetables.', 'Ibu ingin membeli sayuran.'], ['Where can I buy a ticket?', 'Di mana saya bisa membeli tiket?']],
+      'sell': [['Do you sell notebooks?', 'Apakah Anda menjual buku tulis?'], ['The farmer will sell his rice at the market.', 'Petani itu akan menjual berasnya di pasar.']],
+      'pay': [['Can I pay by card?', 'Bisakah saya membayar dengan kartu?'], ['Please pay here.', 'Silakan bayar di sini.']],
+      'change': [['Do not forget your change.', 'Jangan lupa uang kembalianmu.'], ['The seller gives me my change.', 'Penjual memberikan uang kembalianku.']],
+      'cashier': [['Please go to the cashier.', 'Silakan ke kasir.'], ['My sister works as a cashier.', 'Kakakku bekerja sebagai kasir.']],
+      'discount': [['Can I get a discount?', 'Bisakah saya mendapat diskon?'], ['The shop gives a big discount.', 'Toko itu memberi diskon besar.']]
+    },
+    situasi: [
+      { s: 'Kamu ingin tahu harga sebuah buku. Kamu bertanya, "… is this book?"', j: 'how much' },
+      { s: 'Kamu bertanya harga beberapa apel: "… are these apples?"', j: 'how much' },
+      { s: 'Angka rupiah yang tertulis di label barang adalah …', j: 'price' },
+      { s: 'Harga pensil hanya Rp1.000. Pensil itu …', j: 'cheap' },
+      { s: 'Harga sepatu itu Rp1.000.000. Sepatu itu …', j: 'expensive' },
+      { s: 'Kamu memberikan uang dan mendapat barang. Kamu …', j: 'buy' },
+      { s: 'Pedagang memberikan barang dan menerima uang. Pedagang …', j: 'sell' },
+      { s: 'Setelah memilih barang, kamu ke kasir untuk …', j: 'pay' },
+      { s: 'Harganya Rp8.000 dan kamu memberi Rp10.000. Rp2.000 yang kamu terima adalah …', j: 'change' },
+      { s: 'Orang yang menerima pembayaran di toko disebut …', j: 'cashier' },
+      { s: 'Harga turun 20% karena ada …', j: 'discount' },
+      { s: 'Penjual memberikan uang sisa sambil berkata, "Here is your …"', j: 'change' }
+    ]
+  },
+  {
+    id: 'places', tahap: 0, judul: 'Places and Directions', kelompok: 'Tempat dan arah', ilustrasi: 'peta',
     kosakata: [
       ['home', 'rumah', 'I go home in the afternoon.', 'Saya pulang pada sore hari.'],
       ['school', 'sekolah', 'My school is near my house.', 'Sekolahku dekat rumahku.'],
@@ -797,8 +1140,51 @@ window.BACAAN = [
       { s: 'Perjalanan ke kota itu butuh sepuluh jam. Kota itu …', j: 'far' }
     ]
   },
+  // Tambahan 10 Okt 2026: kendaraan.
   {
-    id: 'prepositions', tahap: 0, judul: 'Prepositions', kelompok: 'Preposisi dan posisi',
+    id: 'transport', tahap: 0, judul: 'Transportation', kelompok: 'Kendaraan', ilustrasi: 'kisi',
+    ikon: { 'bus': '🚌', 'train': '🚆', 'car': '🚗', 'motorcycle': '🏍️', 'bicycle': '🚲', 'taxi': '🚕', 'plane': '✈️', 'ship': '🚢', 'on foot': '🚶', 'bus stop': '🚏' },
+    kosakata: [
+      ['bus', 'bus', 'I go to school by bus.', 'Saya pergi ke sekolah naik bus.'],
+      ['train', 'kereta', 'We go to Jakarta by train.', 'Kami pergi ke Jakarta naik kereta.'],
+      ['car', 'mobil', 'My uncle has a red car.', 'Pamanku punya mobil merah.'],
+      ['motorcycle', 'sepeda motor', 'My father rides a motorcycle to work.', 'Ayahku naik sepeda motor ke tempat kerja.'],
+      ['bicycle', 'sepeda', 'I ride my bicycle to school.', 'Saya naik sepeda ke sekolah.'],
+      ['taxi', 'taksi', 'We take a taxi to the airport.', 'Kami naik taksi ke bandara.'],
+      ['plane', 'pesawat', 'We fly to Bali by plane.', 'Kami terbang ke Bali naik pesawat.'],
+      ['ship', 'kapal', 'The ship sails to Lombok.', 'Kapal itu berlayar ke Lombok.'],
+      ['on foot', 'berjalan kaki', 'I go to the mosque on foot.', 'Saya pergi ke masjid berjalan kaki.'],
+      ['bus stop', 'halte bus', 'Wait at the bus stop.', 'Tunggu di halte bus.']
+    ],
+    contohLain: {
+      'bus': [['The bus is full of students.', 'Bus itu penuh siswa.'], ['Wait for the bus here.', 'Tunggu bus di sini.']],
+      'train': [['The train is very fast.', 'Kereta itu sangat cepat.'], ["The train leaves at eight o'clock.", 'Kereta berangkat pukul delapan tepat.']],
+      'car': [['We go to Bandung by car.', 'Kami pergi ke Bandung naik mobil.'], ['The car is in the garage.', 'Mobil itu di garasi.']],
+      'motorcycle': [['Wear a helmet on a motorcycle.', 'Pakailah helm saat naik sepeda motor.'], ['His motorcycle is new.', 'Sepeda motornya baru.']],
+      'bicycle': [['My bicycle is blue.', 'Sepedaku biru.'], ['She learns to ride a bicycle.', 'Dia belajar naik sepeda.']],
+      'taxi': [['The taxi is waiting outside.', 'Taksinya menunggu di luar.'], ['Call a taxi, please.', 'Tolong panggilkan taksi.']],
+      'plane': [['The plane is in the sky.', 'Pesawat itu di langit.'], ['I see a plane at the airport.', 'Saya melihat pesawat di bandara.']],
+      'ship': [['We go to Sumatra by ship.', 'Kami pergi ke Sumatra naik kapal.'], ['The ship is very big.', 'Kapal itu sangat besar.']],
+      'on foot': [['My house is near, so I come on foot.', 'Rumahku dekat, jadi saya datang berjalan kaki.'], ['We go to the market on foot.', 'Kami pergi ke pasar berjalan kaki.']],
+      'bus stop': [['The bus stop is near my school.', 'Halte bus dekat sekolahku.'], ['Many people are at the bus stop.', 'Banyak orang di halte bus.']]
+    },
+    situasi: [
+      { s: 'Kendaraan besar yang mengangkut banyak penumpang di jalan raya …', j: 'bus' },
+      { s: 'Kendaraan panjang yang berjalan di atas rel …', j: 'train' },
+      { s: 'Kendaraan beroda empat milik keluarga …', j: 'car', juga: ['taxi'] },
+      { s: 'Kendaraan beroda dua bermesin; pengendaranya wajib memakai helm …', j: 'motorcycle' },
+      { s: 'Kendaraan beroda dua tanpa mesin yang dikayuh …', j: 'bicycle' },
+      { s: 'Mobil yang bisa disewa dan dibayar sesuai argo …', j: 'taxi' },
+      { s: 'Kendaraan yang terbang dari bandara …', j: 'plane' },
+      { s: 'Kendaraan besar yang berlayar di laut …', j: 'ship' },
+      { s: 'Kamu pergi tanpa kendaraan, hanya dengan kakimu …', j: 'on foot' },
+      { s: 'Tempat menunggu bus …', j: 'bus stop' },
+      { s: 'Dari Jakarta ke Bali, yang paling cepat naik …', j: 'plane' },
+      { s: 'Rumah temanmu hanya seratus meter dari rumahmu. Kamu ke sana …', j: 'on foot', juga: ['bicycle'] }
+    ]
+  },
+  {
+    id: 'prepositions', tahap: 0, judul: 'Prepositions', kelompok: 'Preposisi dan posisi', ilustrasi: 'preposisi',
     kosakata: [
       ['in', 'di dalam', 'The pen is in the bag.', 'Pulpen itu ada di dalam tas.'],
       ['on', 'di atas', 'The cup is on the table.', 'Cangkir itu ada di atas meja.'],
@@ -877,6 +1263,177 @@ window.BACAAN = [
       { s: 'Duduk di depan televisi melihat film.', j: 'watch' },
       { s: 'Pukul sembilan malam kamu mematikan lampu kamar dan berbaring.', j: 'go to bed' },
       { s: 'Piket kelas setiap Jumat: menyapu dan mengepel.', j: 'clean' }
+    ]
+  },
+  // Tambahan 10 Okt 2026: hobi, hewan, pekerjaan, ungkapan di kelas.
+  {
+    id: 'hobbies', tahap: 0, judul: 'Hobbies and Sports', kelompok: 'Hobi dan olahraga', ilustrasi: 'kisi',
+    ikon: { 'football': '⚽', 'badminton': '🏸', 'volleyball': '🏐', 'basketball': '🏀', 'swimming': '🏊', 'drawing': '🎨', 'singing': '🎤', 'dancing': '💃', 'cooking': '🍳', 'playing the guitar': '🎸' },
+    kosakata: [
+      ['football', 'sepak bola', 'I play football with my friends.', 'Saya bermain sepak bola dengan teman-temanku.'],
+      ['badminton', 'bulu tangkis', 'We play badminton after school.', 'Kami bermain bulu tangkis sepulang sekolah.'],
+      ['volleyball', 'bola voli', 'The girls play volleyball on the beach.', 'Anak-anak perempuan bermain bola voli di pantai.'],
+      ['basketball', 'bola basket', 'He plays basketball every Friday.', 'Dia bermain bola basket setiap Jumat.'],
+      ['swimming', 'berenang', 'I go swimming on Sunday.', 'Saya pergi berenang pada hari Minggu.'],
+      ['drawing', 'menggambar', 'My hobby is drawing.', 'Hobiku menggambar.'],
+      ['singing', 'bernyanyi', 'She likes singing.', 'Dia suka bernyanyi.'],
+      ['dancing', 'menari', 'My sister is good at dancing.', 'Kakakku pandai menari.'],
+      ['cooking', 'memasak', 'My brother likes cooking fried rice.', 'Kakakku suka memasak nasi goreng.'],
+      ['playing the guitar', 'bermain gitar', 'I like playing the guitar.', 'Saya suka bermain gitar.']
+    ],
+    contohLain: {
+      'football': [['Football is my favorite sport.', 'Sepak bola adalah olahraga favoritku.'], ['We watch football on TV.', 'Kami menonton sepak bola di TV.']],
+      'badminton': [['Indonesia is good at badminton.', 'Indonesia jago bulu tangkis.'], ['I need a new badminton racket.', 'Saya perlu raket bulu tangkis baru.']],
+      'volleyball': [['Our volleyball team won the game.', 'Tim bola voli kami memenangkan pertandingan.'], ['I like volleyball.', 'Saya suka bola voli.']],
+      'basketball': [['The basketball is orange.', 'Bola basketnya oranye.'], ['Tall students are good at basketball.', 'Siswa yang tinggi pandai bermain bola basket.']],
+      'swimming': [['Swimming is good for your body.', 'Berenang baik untuk tubuhmu.'], ['She is good at swimming.', 'Dia pandai berenang.']],
+      'drawing': [['I like drawing animals.', 'Saya suka menggambar hewan.'], ['He is drawing a cat.', 'Dia sedang menggambar kucing.']],
+      'singing': [['We are singing a song.', 'Kami sedang menyanyikan lagu.'], ['Singing makes me happy.', 'Bernyanyi membuatku senang.']],
+      'dancing': [['I learn traditional dancing at school.', 'Saya belajar tari tradisional di sekolah.'], ['Dancing is fun.', 'Menari itu menyenangkan.']],
+      'cooking': [['Cooking is my hobby.', 'Memasak adalah hobiku.'], ['Mom is cooking in the kitchen.', 'Ibu sedang memasak di dapur.']],
+      'playing the guitar': [['He is playing the guitar in his room.', 'Dia sedang bermain gitar di kamarnya.'], ['Playing the guitar is not easy.', 'Bermain gitar tidak mudah.']]
+    },
+    situasi: [
+      { s: 'Olahraga dengan bola yang ditendang, sebelas pemain satu tim …', j: 'football' },
+      { s: 'Olahraga dengan raket dan kok …', j: 'badminton' },
+      { s: 'Olahraga bola yang dipukul dengan tangan melewati net tinggi …', j: 'volleyball' },
+      { s: 'Olahraga bola yang dimasukkan ke dalam ring …', j: 'basketball' },
+      { s: 'Olahraga di kolam renang …', j: 'swimming' },
+      { s: 'Hobi membuat gambar dengan pensil dan krayon …', j: 'drawing' },
+      { s: 'Hobi membawakan lagu dengan suara merdu …', j: 'singing' },
+      { s: 'Hobi menggerakkan tubuh mengikuti musik …', j: 'dancing' },
+      { s: 'Hobi membuat makanan di dapur …', j: 'cooking' },
+      { s: 'Hobi memetik senar alat musik …', j: 'playing the guitar' },
+      { s: 'Kamu ikut paduan suara karena suka …', j: 'singing' },
+      { s: 'Kamu suka melukis pemandangan dengan cat air. Hobimu …', j: 'drawing' }
+    ]
+  },
+  {
+    id: 'animals', tahap: 0, judul: 'Animals', kelompok: 'Hewan', ilustrasi: 'kisi',
+    ikon: { 'cat': '🐱', 'dog': '🐶', 'bird': '🐦', 'cow': '🐄', 'goat': '🐐', 'chicken': '🐔', 'fish': '🐟', 'elephant': '🐘', 'monkey': '🐒', 'snake': '🐍' },
+    kosakata: [
+      ['cat', 'kucing', 'My cat sleeps on the sofa.', 'Kucingku tidur di sofa.'],
+      ['dog', 'anjing', 'The dog runs very fast.', 'Anjing itu berlari sangat cepat.'],
+      ['bird', 'burung', 'A bird can fly.', 'Burung bisa terbang.'],
+      ['cow', 'sapi', 'A cow gives us milk.', 'Sapi memberi kita susu.'],
+      ['goat', 'kambing', 'My uncle has a goat.', 'Pamanku punya seekor kambing.'],
+      ['chicken', 'ayam', 'The chicken lays an egg every day.', 'Ayam itu bertelur setiap hari.'],
+      ['fish', 'ikan', 'A fish lives in water.', 'Ikan hidup di air.'],
+      ['elephant', 'gajah', 'An elephant is very big.', 'Gajah sangat besar.'],
+      ['monkey', 'monyet', 'The monkey likes bananas.', 'Monyet itu suka pisang.'],
+      ['snake', 'ular', 'A snake has no legs.', 'Ular tidak punya kaki.']
+    ],
+    contohLain: {
+      'cat': [['A cat says meow.', 'Kucing berbunyi meong.'], ['The cat drinks milk.', 'Kucing itu minum susu.']],
+      'dog': [['A dog says woof.', 'Anjing berbunyi guk-guk.'], ['My neighbor has a big dog.', 'Tetanggaku punya anjing besar.']],
+      'bird': [['The bird sings in the morning.', 'Burung itu berkicau di pagi hari.'], ['There is a bird in the tree.', 'Ada burung di pohon.']],
+      'cow': [['The cow eats grass.', 'Sapi itu makan rumput.'], ['A cow says moo.', 'Sapi berbunyi moo.']],
+      'goat': [['The goat eats leaves.', 'Kambing itu makan daun.'], ['A goat has two horns.', 'Kambing punya dua tanduk.']],
+      'chicken': [['The chicken wakes us up in the morning.', 'Ayam membangunkan kami di pagi hari.'], ['A chicken has two legs.', 'Ayam punya dua kaki.']],
+      'fish': [['I have a small fish.', 'Saya punya seekor ikan kecil.'], ['The fish swims fast.', 'Ikan itu berenang cepat.']],
+      'elephant': [['An elephant has a long nose.', 'Gajah punya hidung yang panjang.'], ['We see an elephant at the zoo.', 'Kami melihat gajah di kebun binatang.']],
+      'monkey': [['A monkey can climb trees.', 'Monyet bisa memanjat pohon.'], ['The monkey takes my hat.', 'Monyet itu mengambil topiku.']],
+      'snake': [['Be careful, there is a snake!', 'Hati-hati, ada ular!'], ['The snake is long.', 'Ular itu panjang.']]
+    },
+    situasi: [
+      { s: 'Hewan yang berbunyi "meong" …', j: 'cat' },
+      { s: 'Hewan yang berbunyi "guk-guk" dan menjaga rumah …', j: 'dog' },
+      { s: 'Hewan bersayap yang bisa terbang dan berkicau …', j: 'bird' },
+      { s: 'Hewan besar yang memberi kita susu …', j: 'cow' },
+      { s: 'Hewan bertanduk yang suka makan daun dan berbunyi "mbek" …', j: 'goat' },
+      { s: 'Hewan yang bertelur dan berkokok di pagi hari …', j: 'chicken' },
+      { s: 'Hewan yang hidup di air dan bernapas dengan insang …', j: 'fish' },
+      { s: 'Hewan darat terbesar dengan belalai panjang …', j: 'elephant' },
+      { s: 'Hewan yang suka pisang dan pandai memanjat pohon …', j: 'monkey' },
+      { s: 'Hewan panjang yang tidak punya kaki …', j: 'snake' },
+      { s: 'Hewan peliharaan yang suka tidur dan mengeong …', j: 'cat' },
+      { s: 'Telur yang kita makan biasanya berasal dari …', j: 'chicken' }
+    ]
+  },
+  {
+    id: 'jobs', tahap: 0, judul: 'Jobs', kelompok: 'Pekerjaan', ilustrasi: 'kisi',
+    ikon: { 'teacher': '🧑‍🏫', 'doctor': '🧑‍⚕️', 'farmer': '🧑‍🌾', 'driver': '🚕', 'police officer': '👮', 'cook': '🧑‍🍳', 'nurse': '💉', 'seller': '🧺', 'mechanic': '🧑‍🔧', 'fisherman': '🎣' },
+    kosakata: [
+      ['teacher', 'guru', 'My mother is a teacher.', 'Ibuku seorang guru.'],
+      ['doctor', 'dokter', 'The doctor checks my heart.', 'Dokter memeriksa jantungku.'],
+      ['farmer', 'petani', 'The farmer grows rice.', 'Petani itu menanam padi.'],
+      ['driver', 'sopir', 'The bus driver drives carefully.', 'Sopir bus itu menyetir dengan hati-hati.'],
+      ['police officer', 'polisi', 'A police officer helps people cross the road.', 'Polisi membantu orang menyeberang jalan.'],
+      ['cook', 'juru masak', 'The cook makes delicious fried rice.', 'Juru masak itu membuat nasi goreng yang lezat.'],
+      ['nurse', 'perawat', 'The nurse gives me medicine.', 'Perawat memberiku obat.'],
+      ['seller', 'pedagang, penjual', 'The seller sells vegetables at the market.', 'Pedagang itu menjual sayuran di pasar.'],
+      ['mechanic', 'montir', 'The mechanic fixes my motorcycle.', 'Montir memperbaiki sepeda motorku.'],
+      ['fisherman', 'nelayan', 'The fisherman catches fish in the sea.', 'Nelayan menangkap ikan di laut.']
+    ],
+    contohLain: {
+      'teacher': [['The teacher explains the lesson.', 'Guru menjelaskan pelajaran.'], ['I want to be a teacher.', 'Saya ingin menjadi guru.']],
+      'doctor': [['A doctor works in a hospital.', 'Dokter bekerja di rumah sakit.'], ['Go to the doctor if you are sick.', 'Pergilah ke dokter jika kamu sakit.']],
+      'farmer': [['My grandfather is a farmer.', 'Kakekku seorang petani.'], ['A farmer works in the field.', 'Petani bekerja di sawah.']],
+      'driver': [['My uncle is a taxi driver.', 'Pamanku sopir taksi.'], ['The driver stops the car.', 'Sopir menghentikan mobil.']],
+      'police officer': [['The police officer stops the motorcycle.', 'Polisi menghentikan sepeda motor itu.'], ['Ask a police officer for help.', 'Mintalah bantuan kepada polisi.']],
+      'cook': [['My father is a cook in a hotel.', 'Ayahku juru masak di hotel.'], ['The cook works in the kitchen.', 'Juru masak bekerja di dapur.']],
+      'nurse': [['My aunt is a nurse.', 'Bibiku seorang perawat.'], ['A nurse helps the doctor.', 'Perawat membantu dokter.']],
+      'seller': [['The seller is very friendly.', 'Penjual itu sangat ramah.'], ['My neighbor is a fruit seller.', 'Tetanggaku penjual buah.']],
+      'mechanic': [['My brother wants to be a mechanic.', 'Kakakku ingin menjadi montir.'], ['The mechanic works in a garage.', 'Montir bekerja di bengkel.']],
+      'fisherman': [['The fisherman has a small boat.', 'Nelayan itu punya perahu kecil.'], ['My uncle is a fisherman.', 'Pamanku seorang nelayan.']]
+    },
+    situasi: [
+      { s: 'Orang yang mengajar di sekolah …', j: 'teacher' },
+      { s: 'Orang yang memeriksa dan mengobati orang sakit …', j: 'doctor' },
+      { s: 'Orang yang menanam padi di sawah …', j: 'farmer' },
+      { s: 'Orang yang mengemudikan bus atau angkot …', j: 'driver' },
+      { s: 'Orang yang mengatur lalu lintas dan menjaga keamanan …', j: 'police officer' },
+      { s: 'Orang yang memasak di restoran …', j: 'cook' },
+      { s: 'Orang yang merawat pasien dan membantu dokter di rumah sakit …', j: 'nurse' },
+      { s: 'Orang yang berjualan di pasar …', j: 'seller' },
+      { s: 'Orang yang memperbaiki sepeda motor di bengkel …', j: 'mechanic' },
+      { s: 'Orang yang menangkap ikan di laut …', j: 'fisherman' },
+      { s: 'Kamu sakit gigi dan pergi ke …', j: 'doctor' },
+      { s: 'Di rumah sakit, orang yang memberimu obat dan mengukur suhu badanmu …', j: 'nurse', juga: ['doctor'] }
+    ]
+  },
+  {
+    id: 'classroom-expressions', tahap: 0, judul: 'Classroom Expressions', kelompok: 'Ungkapan di kelas', ilustrasi: 'kisi',
+    catatanIlus: '🧑‍🏫 = biasa diucapkan guru · 🙋 = biasa diucapkan siswa.',
+    ikon: { 'open your book': '🧑‍🏫', 'repeat after me': '🧑‍🏫', 'listen carefully': '🧑‍🏫', 'work in pairs': '🧑‍🏫', 'be quiet': '🧑‍🏫',
+      'may I go to the toilet': '🙋', "I don't understand": '🙋', 'can you repeat that': '🙋', 'how do you say': '🙋', 'sorry I am late': '🙋' },
+    kosakata: [
+      ['open your book', 'buka bukumu', 'Please open your book.', 'Tolong buka bukumu.'],
+      ['repeat after me', 'ulangi setelah saya', 'Listen and repeat after me.', 'Dengarkan dan ulangi setelah saya.'],
+      ['listen carefully', 'dengarkan baik-baik', 'Listen carefully to the story.', 'Dengarkan ceritanya baik-baik.'],
+      ['work in pairs', 'bekerjalah berpasangan', 'Now, work in pairs.', 'Sekarang, bekerjalah berpasangan.'],
+      ['be quiet', 'tolong tenang', 'Please be quiet, everyone.', 'Semuanya, tolong tenang.'],
+      ['may I go to the toilet', 'bolehkah saya ke toilet', 'Excuse me, may I go to the toilet?', 'Permisi, bolehkah saya ke toilet?'],
+      ["I don't understand", 'saya tidak mengerti', "Sorry, I don't understand.", 'Maaf, saya tidak mengerti.'],
+      ['can you repeat that', 'bisakah Anda mengulanginya', 'Can you repeat that, please?', 'Bisakah Anda mengulanginya?'],
+      ['how do you say', 'bagaimana mengatakan', 'How do you say this word in English?', 'Apa bahasa Inggrisnya kata ini?'],
+      ['sorry I am late', 'maaf saya terlambat', 'Sorry I am late, sir.', 'Maaf saya terlambat, Pak.']
+    ],
+    contohLain: {
+      'open your book': [['Open your book and read the story.', 'Buka bukumu dan bacalah ceritanya.'], ['Everyone, open your book now.', 'Semuanya, buka buku kalian sekarang.']],
+      'repeat after me': [['Class, repeat after me.', 'Anak-anak, ulangi setelah saya.'], ['Please repeat after me slowly.', 'Tolong ulangi setelah saya pelan-pelan.']],
+      'listen carefully': [['Please listen carefully.', 'Tolong dengarkan baik-baik.'], ['Listen carefully and answer the question.', 'Dengarkan baik-baik dan jawab pertanyaannya.']],
+      'work in pairs': [['Please work in pairs with your friend.', 'Silakan bekerja berpasangan dengan temanmu.'], ['We work in pairs today.', 'Kami bekerja berpasangan hari ini.']],
+      'be quiet': [['Be quiet in the library.', 'Tenanglah di perpustakaan.'], ['Can you be quiet, please?', 'Bisakah kamu tenang?']],
+      'may I go to the toilet': [['Sir, may I go to the toilet?', 'Pak, bolehkah saya ke toilet?'], ["Ma'am, may I go to the toilet, please?", 'Bu, bolehkah saya ke toilet?']],
+      "I don't understand": [["I don't understand this question.", 'Saya tidak mengerti soal ini.'], ["I don't understand the word.", 'Saya tidak mengerti kata itu.']],
+      'can you repeat that': [['Sorry, can you repeat that?', 'Maaf, bisakah Anda mengulanginya?'], ['Teacher, can you repeat that slowly?', 'Bu Guru, bisakah Anda mengulanginya pelan-pelan?']],
+      'how do you say': [['How do you say it in English?', 'Apa bahasa Inggrisnya?'], ['Teacher, how do you say this?', 'Bu Guru, bagaimana mengucapkan ini?']],
+      'sorry I am late': [['Good morning, sorry I am late.', 'Selamat pagi, maaf saya terlambat.'], ['Sorry I am late, the bus was slow.', 'Maaf saya terlambat, busnya lambat.']]
+    },
+    situasi: [
+      { s: 'Guru ingin semua siswa membuka buku. Guru berkata …', j: 'open your book' },
+      { s: 'Guru ingin siswa menirukan ucapannya. Guru berkata …', j: 'repeat after me' },
+      { s: 'Guru akan memutar rekaman dan ingin siswa memperhatikan. Guru berkata …', j: 'listen carefully' },
+      { s: 'Guru ingin siswa bekerja berdua dengan teman sebangku. Guru berkata …', j: 'work in pairs' },
+      { s: 'Kelas sangat ribut. Guru berkata …', j: 'be quiet' },
+      { s: 'Kamu ingin ke kamar kecil saat pelajaran. Kamu berkata …', j: 'may I go to the toilet' },
+      { s: 'Kamu belum paham penjelasan guru. Kamu berkata …', j: "I don't understand", juga: ['can you repeat that'] },
+      { s: 'Guru berbicara terlalu cepat dan kamu ingin mendengar sekali lagi. Kamu berkata …', j: 'can you repeat that', juga: ["I don't understand"] },
+      { s: 'Kamu ingin tahu bahasa Inggris sebuah kata. Kamu bertanya …', j: 'how do you say' },
+      { s: 'Kamu datang setelah pelajaran dimulai. Kamu berkata …', j: 'sorry I am late' },
+      { s: 'Sebelum membaca cerita, guru meminta siswa …', j: 'open your book' },
+      { s: 'Di perpustakaan, petugas meminta semua orang …', j: 'be quiet' }
     ]
   },
   {

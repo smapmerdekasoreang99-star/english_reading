@@ -352,3 +352,102 @@ a.sub-kartu:hover { border-color: var(--biru); }
 .jam-baris b { min-width: 3em; color: var(--gelap); }
 .jam-baris:hover { border-color: var(--emas-tua); }
 .jam-baris.aktif { background: var(--emas); border-color: var(--emas-tua); }
+
+/* ---------- Ilustrasi lain (10 Okt 2026) ---------- */
+.ilus-ucap { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; min-height: 2.6em; margin-top: 10px; padding: 8px 12px; border-radius: var(--r1);
+  background: var(--biru-muda); color: var(--biru-tua); font-weight: 800; font-size: 17px; }
+.ilus-ucap::before { content: "🔊"; font-size: 15px; }
+.ilus-ucap small { font-weight: 600; font-size: 14px; color: var(--tinta-2); }
+.ilus-ucap.kosong { color: var(--tinta-2); font-weight: 600; font-size: 15px; }
+.il-svg { display: block; width: 100%; max-width: 540px; height: auto; margin: 4px auto; }
+.il-svg text { font-family: var(--huruf); }
+.il-ketuk { cursor: pointer; outline: none; }
+.il-ketuk:focus-visible rect, .il-ketuk:focus-visible circle { stroke: var(--emas-tua); stroke-width: 3; }
+.il-label { font-size: 15px; font-weight: 800; fill: var(--gelap); }
+.il-label.kecil { font-size: 12px; }
+.il-ketuk:hover .il-label { fill: var(--biru-tua); }
+.il-ketuk.aktif .il-label { fill: #7A5A12; }
+.il-em-svg { font-size: 22px; }
+.il-em { font-size: 32px; line-height: 1.1; }
+/* Pekan */
+.il-pekan { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.il-hari { display: grid; justify-items: center; gap: 1px; padding: 8px 2px 6px; border-radius: var(--r1); border: 1.5px solid var(--garis); background: var(--kertas); cursor: pointer; font: inherit; min-width: 0; }
+.il-hari b { font: 800 15px var(--huruf-judul); color: var(--gelap); }
+.il-hari small { font-size: 11px; color: var(--tinta-2); }
+.il-hari.libur { background: var(--hijau-muda); }
+.il-hari.ini { border-color: var(--emas-tua); background: var(--emas-muda); }
+.il-hari.aktif { box-shadow: inset 0 0 0 2px var(--biru); }
+.il-tanda { font-size: 10px; font-weight: 800; color: var(--biru-tua); min-height: 1.3em; }
+/* Kalender */
+.il-pita { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.il-pita button, .il-pilih button { padding: 4px 10px; border-radius: 99px; border: 1.5px solid var(--garis-2); background: var(--kertas); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.il-pita button.aktif, .il-pilih button.aktif { background: var(--gelap); color: #fff; border-color: var(--gelap); }
+.il-kal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; max-width: 540px; margin: 0 auto; font-variant-numeric: tabular-nums; }
+.il-nama { text-align: center; font-size: 12px; font-weight: 800; color: var(--tinta-2); padding: 2px 0; }
+.il-kal button { aspect-ratio: 1.3; border: 1px solid var(--garis); border-radius: 8px; background: var(--kertas); font: inherit; font-weight: 700; cursor: pointer; }
+.il-kal button.minggu { color: var(--merah-tua); }
+.il-kal button.besar { background: var(--merah-muda); }
+.il-kal button.hariini { box-shadow: inset 0 0 0 2px var(--emas-tua); }
+.il-kal button.aktif { background: var(--emas); border-color: var(--emas-tua); color: #3A2A06; }
+/* Toko */
+.il-toko { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 10px; align-items: start; }
+.il-rak { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; }
+.il-barang { display: grid; justify-items: center; gap: 2px; padding: 6px 4px; border-radius: var(--r1); border: 1.5px dashed var(--garis-2); background: var(--kertas); font: inherit; cursor: pointer; }
+.il-barang .il-em { font-size: 28px; }
+.il-barang b { font-size: 12px; }
+.il-harga { font-size: 12px; font-weight: 800; padding: 0 6px; border-radius: 6px; background: var(--emas); color: #3A2A06; font-variant-numeric: tabular-nums; }
+.il-struk { font: 13px ui-monospace, Consolas, monospace; background: var(--kertas); border: 1px solid var(--garis-2); border-radius: 4px; padding: 8px 10px; }
+.il-struk h4 { margin: 0 0 4px; text-align: center; font-size: 13px; letter-spacing: .08em; }
+.il-struk hr { border: 0; border-top: 1px dashed var(--tinta-3); margin: 5px 0; }
+.il-baris { display: flex; justify-content: space-between; gap: 8px; font-variant-numeric: tabular-nums; }
+.il-aksi { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.il-aksi button { font: 700 12px var(--huruf); padding: 3px 7px; border-radius: 8px; border: 1.5px solid var(--garis-2); background: var(--hijau-muda); cursor: pointer; }
+@media (max-width: 560px) { .il-toko { grid-template-columns: 1fr; } }
+/* Tubuh */
+.il-kulit { fill: #F6D2B5; stroke: #B9876A; stroke-width: 2; }
+.il-baju { fill: var(--biru); }
+.il-celana { fill: var(--gelap-2); }
+.il-tinta { fill: var(--gelap); }
+.il-garis { fill: none; stroke: var(--gelap); stroke-width: 2.5; stroke-linecap: round; }
+.il-garis-label { stroke: var(--tinta-3); stroke-width: 1.2; stroke-dasharray: 3 3; }
+.il-titik { fill: var(--biru); }
+.il-ketuk.aktif .il-titik { fill: var(--emas); }
+/* Kisi ikon */
+.il-kisi { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 6px; }
+.il-ikon { display: grid; justify-items: center; gap: 2px; padding: 8px 4px; border: 1.5px solid var(--garis); border-radius: var(--r1); background: var(--kertas); font: inherit; cursor: pointer; text-align: center; }
+.il-ikon b { font-size: 13px; line-height: 1.25; }
+.il-ikon:hover, .il-barang:hover, .il-warna:hover, .il-hari:hover { border-color: var(--biru); }
+.il-ikon.aktif, .il-warna.aktif { border-color: var(--emas-tua); background: var(--emas-muda); }
+/* Denah */
+.il-ruang rect { fill: var(--kertas); stroke: var(--gelap); stroke-width: 3; }
+.il-ruang:hover rect { fill: var(--biru-muda); }
+.il-ruang.aktif rect { fill: var(--emas-muda); }
+/* Preposisi */
+.il-pilih { display: flex; flex-wrap: wrap; gap: 5px; }
+.il-kotak { fill: #C98A4B; stroke: #7A4E22; stroke-width: 2; }
+.il-kotak-atas { fill: #E2A868; stroke: #7A4E22; stroke-width: 2; }
+.il-kotak-dalam { fill: #8F5C2C; }
+.il-bola { fill: var(--merah); stroke: var(--merah-tua); stroke-width: 2; transition: transform .45s ease; }
+.il-lantai { stroke: var(--garis-2); stroke-width: 3; }
+/* Warna */
+.il-palet { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
+.il-warna { display: grid; justify-items: center; gap: 4px; padding: 8px 4px; border-radius: var(--r1); border: 1.5px solid var(--garis); background: var(--kertas); font: inherit; cursor: pointer; }
+.il-warna i { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--garis-2); }
+.il-warna b { font-size: 13px; }
+/* Keluarga */
+.il-garis-kel { fill: none; stroke: var(--tinta-2); stroke-width: 2; }
+.il-orang rect { fill: var(--kertas); stroke: var(--garis-2); stroke-width: 2; }
+.il-orang.aku rect { stroke: var(--emas-tua); stroke-width: 3; }
+.il-orang.aktif rect { fill: var(--emas-muda); stroke: var(--emas-tua); }
+/* Peta */
+.il-jalan { fill: none; stroke: var(--garis); stroke-width: 22; stroke-linecap: round; }
+.il-jalan-garis { fill: none; stroke: var(--kertas); stroke-width: 2; stroke-dasharray: 8 8; }
+.il-tempat circle { fill: var(--kertas); stroke: var(--tinta-2); stroke-width: 2; }
+.il-tempat.aktif circle { fill: var(--emas); }
+.il-rute { fill: none; stroke: var(--emas); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 10 8; }
+@media (prefers-reduced-motion: reduce) { .il-bola, .jam-jarum-jam, .jam-jarum-menit { transition: none; } }
+
+/* ---------- Bila jawaban salah (10 Okt 2026) ---------- */
+.pengaturan .atur-sub { margin: 16px 0 0; font-size: 16px; color: var(--gelap); }
+.lt-salah { color: var(--merah-tua); }
+.lt-batas { font-weight: 800; }
