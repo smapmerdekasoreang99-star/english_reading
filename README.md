@@ -52,8 +52,8 @@ Mikrofon tidak diizinkan dari `file://`. Jalankan server lokal, misalnya
 
 ## Jenis level dan pengulangan
 
-- **Kosakata** (Tahap 0): 21 kelompok × 10 kata (sejak 10 Okt 2026 termasuk *Numbers 11 to 100*,
-  *Big Numbers* sampai puluhan juta, *Ordinal Numbers*, dan *Telling the Time*). Tiap kata punya arti dan satu
+- **Kosakata** (Tahap 0): 22 kelompok × 10 kata (sejak 10 Okt 2026 termasuk *Numbers 11 to 100*,
+  *Big Numbers* sampai puluhan juta, *Ordinal Numbers* 1st–10th dan 11th–50th, dan *Telling the Time*). Tiap kata punya arti dan satu
   contoh kalimat. Ditulis di `bacaan.js` sebagai `kosakata: [kata, arti, contoh, arti contoh]`;
   teksnya dibentuk otomatis menjadi "kata. contoh kalimat." agar bisa didengar dan dikoreksi.
 - **Pola kalimat** (Tahap 1–3): `pola` (rumus), `catatan` (penjelasan), lalu contoh kalimat.

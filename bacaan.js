@@ -14,7 +14,7 @@
    Hindari angka (tulis "twenty", bukan "20"), jam ("seven o'clock"), dan singkatan
    bertitik ("Mr.") agar pemecahan kalimat dan koreksi bacaan tetap tepat. */
 window.TAHAP = [
-  { no: 0, nama: 'Fondasi', setara: 'Pre-A1 · setara SD', fokus: 'Kosakata dasar berkelompok (21 kelompok, 210 kata), termasuk angka sampai jutaan, bilangan bertingkat, dan menyatakan jam. Tiap kata dengan arti dan contoh kalimat.' },
+  { no: 0, nama: 'Fondasi', setara: 'Pre-A1 · setara SD', fokus: 'Kosakata dasar berkelompok (22 kelompok, 220 kata), termasuk angka sampai jutaan, bilangan bertingkat, dan menyatakan jam. Tiap kata dengan arti dan contoh kalimat.' },
   { no: 1, nama: 'Kalimat Sederhana', setara: 'A1 · SD akhir–SMP 7', fokus: 'Pola kalimat dasar (I am, there is, simple present, want to, kata tanya) dan bacaan pendek.' },
   { no: 2, nama: 'Teks Fungsional Pendek', setara: 'A2 · SMP', fokus: 'Pola masa lalu, masa depan, dan modal; teks deskripsi, recount, prosedur, pengumuman.' },
   { no: 3, nama: 'Genre Teks', setara: 'A2+–B1 · SMP 9–SMA 10', fokus: 'Pola menyampaikan pendapat; narrative, report, exposition singkat; kata sambung.' },
@@ -252,18 +252,18 @@ window.BACAAN = [
     ]
   },
   {
-    id: 'ordinal-numbers', tahap: 0, judul: 'Ordinal Numbers', kelompok: 'Bilangan bertingkat',
+    id: 'ordinal-numbers', tahap: 0, judul: 'Ordinal Numbers 1st to 10th', kelompok: 'Bilangan bertingkat 1–10',
     kosakata: [
       ['first', 'pertama', 'January is the first month of the year.', 'Januari adalah bulan pertama dalam setahun.'],
       ['second', 'kedua', 'I sit in the second row.', 'Saya duduk di baris kedua.'],
       ['third', 'ketiga', 'My class is on the third floor.', 'Kelasku ada di lantai tiga.'],
       ['fourth', 'keempat', 'April is the fourth month of the year.', 'April adalah bulan keempat dalam setahun.'],
       ['fifth', 'kelima', 'May is the fifth month of the year.', 'Mei adalah bulan kelima dalam setahun.'],
+      ['sixth', 'keenam', 'June is the sixth month of the year.', 'Juni adalah bulan keenam dalam setahun.'],
+      ['seventh', 'ketujuh', 'July is the seventh month of the year.', 'Juli adalah bulan ketujuh dalam setahun.'],
       ['eighth', 'kedelapan', 'August is the eighth month of the year.', 'Agustus adalah bulan kedelapan dalam setahun.'],
       ['ninth', 'kesembilan', 'My brother is in the ninth grade.', 'Kakakku duduk di kelas sembilan.'],
-      ['twelfth', 'kedua belas', 'December is the twelfth month of the year.', 'Desember adalah bulan kedua belas dalam setahun.'],
-      ['twentieth', 'kedua puluh', 'Today is my twentieth day at the new school.', 'Hari ini adalah hari kedua puluhku di sekolah baru.'],
-      ['twenty-first', 'kedua puluh satu', 'Kartini Day is on the twenty-first of April.', 'Hari Kartini jatuh pada tanggal dua puluh satu April.']
+      ['tenth', 'kesepuluh', 'October is the tenth month of the year.', 'Oktober adalah bulan kesepuluh dalam setahun.']
     ],
     contohLain: {
       'first': [['She won first place in the race.', 'Dia meraih juara pertama dalam lomba lari.'], ['This is my first visit to Bali.', 'Ini kunjungan pertamaku ke Bali.']],
@@ -271,11 +271,11 @@ window.BACAAN = [
       'third': [['My team got third place.', 'Timku mendapat juara ketiga.'], ['March is the third month of the year.', 'Maret adalah bulan ketiga dalam setahun.']],
       'fourth': [['This is the fourth time I read this book.', 'Ini keempat kalinya saya membaca buku ini.'], ['He lives on the fourth floor.', 'Dia tinggal di lantai empat.']],
       'fifth': [['Our team finished in fifth place.', 'Tim kami finis di urutan kelima.'], ['Turn left at the fifth house.', 'Belok kiri di rumah kelima.']],
+      'sixth': [['My sister is in the sixth grade.', 'Adik perempuanku duduk di kelas enam.'], ['This is my sixth English lesson.', 'Ini pelajaran bahasa Inggrisku yang keenam.']],
+      'seventh': [['Sunday is the seventh day of the week.', 'Minggu adalah hari ketujuh dalam sepekan.'], ['I am in the seventh grade.', 'Saya duduk di kelas tujuh.']],
       'eighth': [['My sister is in the eighth grade.', 'Kakak perempuanku duduk di kelas delapan.'], ['This is the eighth question.', 'Ini soal kedelapan.']],
       'ninth': [['September is the ninth month of the year.', 'September adalah bulan kesembilan dalam setahun.'], ['I live on the ninth floor.', 'Saya tinggal di lantai sembilan.']],
-      'twelfth': [['Students in the twelfth grade will finish school soon.', 'Siswa kelas dua belas akan segera lulus sekolah.'], ['This is the twelfth page.', 'Ini halaman kedua belas.']],
-      'twentieth': [['Grandma celebrated her twentieth wedding anniversary.', 'Nenek merayakan ulang tahun pernikahannya yang kedua puluh.'], ['Tomorrow is the twentieth of May.', 'Besok tanggal dua puluh Mei.']],
-      'twenty-first': [['My birthday is on the twenty-first of June.', 'Ulang tahunku tanggal dua puluh satu Juni.'], ['We live in the twenty-first century.', 'Kita hidup di abad kedua puluh satu.']]
+      'tenth': [['Today is the tenth of October.', 'Hari ini tanggal sepuluh Oktober.'], ['She is in the tenth grade.', 'Dia duduk di kelas sepuluh.']]
     },
     situasi: [
       { s: 'Kamu juara satu lomba lari. Kamu berada di urutan …', j: 'first' },
@@ -286,13 +286,57 @@ window.BACAAN = [
       { s: 'Maret adalah bulan ke-…', j: 'third' },
       { s: 'April adalah bulan ke-…', j: 'fourth' },
       { s: 'Mei adalah bulan ke-…', j: 'fifth' },
+      { s: 'Juni adalah bulan ke-…', j: 'sixth' },
+      { s: 'Siswa kelas 6 SD duduk di the … grade.', j: 'sixth' },
+      { s: 'Juli adalah bulan ke-…', j: 'seventh' },
+      { s: 'Bila sepekan dimulai hari Senin, hari Minggu adalah hari ke-…', j: 'seventh' },
       { s: 'Hari Kemerdekaan Indonesia jatuh pada bulan ke-…', j: 'eighth' },
-      { s: 'Agustus adalah bulan ke-…', j: 'eighth' },
-      { s: 'Siswa kelas 9 SMP duduk di kelas ke-… (the … grade)', j: 'ninth' },
+      { s: 'September adalah bulan ke-…', j: 'ninth' },
+      { s: 'Oktober adalah bulan ke-…', j: 'tenth' },
+      { s: 'Siswa kelas 10 SMA duduk di the … grade.', j: 'tenth' }
+    ]
+  },
+  {
+    id: 'ordinal-numbers-2', tahap: 0, judul: 'Ordinal Numbers 11th to 50th', kelompok: 'Bilangan bertingkat 11–50',
+    kosakata: [
+      ['eleventh', 'kesebelas', 'November is the eleventh month of the year.', 'November adalah bulan kesebelas dalam setahun.'],
+      ['twelfth', 'kedua belas', 'December is the twelfth month of the year.', 'Desember adalah bulan kedua belas dalam setahun.'],
+      ['thirteenth', 'ketiga belas', "Today is my brother's thirteenth birthday.", 'Hari ini ulang tahun ketiga belas kakakku.'],
+      ['fifteenth', 'kelima belas', 'The test is on the fifteenth of May.', 'Ujiannya tanggal lima belas Mei.'],
+      ['twentieth', 'kedua puluh', 'Today is my twentieth day at the new school.', 'Hari ini adalah hari kedua puluhku di sekolah baru.'],
+      ['twenty-first', 'kedua puluh satu', 'Kartini Day is on the twenty-first of April.', 'Hari Kartini jatuh pada tanggal dua puluh satu April.'],
+      ['twenty-second', 'kedua puluh dua', 'My birthday is on the twenty-second of July.', 'Ulang tahunku tanggal dua puluh dua Juli.'],
+      ['thirtieth', 'ketiga puluh', 'The last day of April is the thirtieth.', 'Hari terakhir bulan April adalah tanggal tiga puluh.'],
+      ['thirty-first', 'ketiga puluh satu', 'The year ends on the thirty-first of December.', 'Tahun berakhir pada tanggal tiga puluh satu Desember.'],
+      ['fiftieth', 'kelima puluh', 'My grandparents celebrate their fiftieth wedding anniversary.', 'Kakek dan nenekku merayakan ulang tahun pernikahan mereka yang kelima puluh.']
+    ],
+    contohLain: {
+      'eleventh': [['He finished in eleventh place.', 'Dia finis di urutan kesebelas.'], ['I live on the eleventh floor.', 'Saya tinggal di lantai sebelas.']],
+      'twelfth': [['Students in the twelfth grade will finish school soon.', 'Siswa kelas dua belas akan segera lulus sekolah.'], ['This is the twelfth page.', 'Ini halaman kedua belas.']],
+      'thirteenth': [['The meeting is on the thirteenth of June.', 'Rapatnya tanggal tiga belas Juni.'], ['She came thirteenth in the race.', 'Dia datang di urutan ketiga belas dalam lomba itu.']],
+      'fifteenth': [['My father gets his salary on the fifteenth.', 'Ayahku menerima gaji pada tanggal lima belas.'], ['This is the fifteenth question.', 'Ini soal kelima belas.']],
+      'twentieth': [['Tomorrow is the twentieth of May.', 'Besok tanggal dua puluh Mei.'], ['My aunt celebrates her twentieth year as a teacher.', 'Bibiku merayakan tahun kedua puluhnya sebagai guru.']],
+      'twenty-first': [['My birthday is on the twenty-first of June.', 'Ulang tahunku tanggal dua puluh satu Juni.'], ['We live in the twenty-first century.', 'Kita hidup di abad kedua puluh satu.']],
+      'twenty-second': [['The school trip is on the twenty-second of August.', 'Darmawisata sekolah tanggal dua puluh dua Agustus.'], ['He sits in the twenty-second seat.', 'Dia duduk di kursi kedua puluh dua.']],
+      'thirtieth': [['My aunt celebrated her thirtieth birthday.', 'Bibiku merayakan ulang tahunnya yang ketiga puluh.'], ['The exam ends on the thirtieth of June.', 'Ujian berakhir tanggal tiga puluh Juni.']],
+      'thirty-first': [['The last day of August is the thirty-first.', 'Hari terakhir bulan Agustus adalah tanggal tiga puluh satu.'], ['My report is due on the thirty-first of May.', 'Laporanku harus dikumpulkan tanggal tiga puluh satu Mei.']],
+      'fiftieth': [['Our school celebrates its fiftieth anniversary this year.', 'Sekolah kami merayakan ulang tahun kelima puluh tahun ini.'], ['He was the fiftieth visitor today.', 'Dia pengunjung kelima puluh hari ini.']]
+    },
+    situasi: [
+      { s: 'November adalah bulan ke-…', j: 'eleventh' },
+      { s: 'Lantai 11 sebuah gedung disebut the … floor.', j: 'eleventh' },
       { s: 'Desember adalah bulan ke-…', j: 'twelfth' },
-      { s: 'Ulang tahun yang ke-20 disebut the … birthday.', j: 'twentieth' },
-      { s: 'Hari Kartini jatuh pada tanggal … April.', j: 'twenty-first' },
-      { s: 'Abad sekarang, abad ke-21, disebut the … century.', j: 'twenty-first' }
+      { s: 'Siswa kelas 12 SMA duduk di the … grade.', j: 'twelfth' },
+      { s: 'Ulang tahun ke-13 disebut the … birthday.', j: 'thirteenth' },
+      { s: 'Tanggal 15 Mei dibaca the … of May.', j: 'fifteenth' },
+      { s: 'Ulang tahun ke-20 disebut the … birthday.', j: 'twentieth' },
+      { s: 'Hari Kartini jatuh pada tanggal 21 April: the … of April.', j: 'twenty-first' },
+      { s: 'Abad sekarang (abad ke-21) disebut the … century.', j: 'twenty-first' },
+      { s: 'Tanggal 22 Juli dibaca the … of July.', j: 'twenty-second' },
+      { s: 'Hari terakhir bulan April (tanggal 30) adalah the …', j: 'thirtieth' },
+      { s: 'Hari terakhir bulan Desember (tanggal 31) adalah the …', j: 'thirty-first' },
+      { s: 'Ulang tahun pernikahan ke-50 disebut the … anniversary.', j: 'fiftieth' },
+      { s: 'Sekolah yang berdiri 50 tahun lalu merayakan ulang tahun the …', j: 'fiftieth' }
     ]
   },
   {
