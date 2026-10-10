@@ -9,13 +9,14 @@ guru masuk dengan PIN, dan kemajuan tersimpan di database Tryout (lihat
 |---|---|
 | `index.html` | Halaman siswa |
 | `masuk.js` | Layar masuk siswa (NISN + kode akses), sinkron kemajuan ke server, kunci layar; memuat `app.js` sesudah masuk |
-| `guru.html`, `guru.js`, `guru.css` | Halaman guru / pengawas (PIN): Sesi Kegiatan, Perkembangan, Analisis Siswa, Pengaturan & Tahapan, Admin |
+| `guru.html`, `guru.js` | Halaman guru (PIN), tampilan dan menu sama dengan Matdas: Sesi Kegiatan, Perkembangan Siswa, Analisis Siswa, Pengaturan & Tahapan Khusus, Pengaturan Umum, Tahapan Level, Admin |
+| `assets/dasar.css`, `assets/matdas.css`, `assets/umum.js`, `assets/excel.js`, `assets/kepala-excel.js`, `assets/simpan.js` | Salinan berkas bersama dari Matematika_Dasar/assets (token tampilan, komponen guru, unduhan Excel berkop) |
 | `config.js` | Alamat dan kunci publik project Supabase Tryout (sama dengan Matdas) |
 | `bacaan.js` | Peta 6 tahap (TAHAP, sampai Level TKA dan Level UTBK/SNBT) dan daftar bacaan per tahap; urutan di daftar = urutan level. Tambah bacaan di sini |
 | `soal.js` | Soal pemahaman per bacaan (pertanyaan, pilihan, kunci, pembahasan), pernyataan benar/salah (`SOAL_BS`), dan kata penting tiap bacaan (`KATA_BACAAN`) |
 | `pola.js` | Perakit kalimat acak untuk Latihan bertahap level Pola kalimat |
 | `app.js` | Pemutar suara, koreksi bacaan, soal pemahaman, ulang kosakata |
-| `gaya.css` | Tampilan (palet sama dengan Matdas / Petualangan) |
+| `gaya.css` | Tampilan halaman siswa; token warna dan huruf dari `assets/dasar.css` (sama dengan Matdas) |
 
 ## Cara kerja
 
@@ -197,6 +198,33 @@ Meniru Matematika Dasar. Halaman **⚙️ Pengaturan & Tahapan** (`#pengaturan`,
 - **Sejak login siswa:** Pengaturan Umum dan tahapan khusus diatur guru di `guru.html` dan dikirim server saat siswa masuk.
   Di halaman siswa, menu ini hanya-baca: tab Khusus menampilkan tahapan yang dipasang untuknya, sedangkan editor dan
   tautan `#khusus=` dialihkan. Tautan `#khusus=` hanya berlaku pada mode luring tanpa server.
+
+## Meniru tampilan dan fasilitas Matematika Dasar (10 Okt 2026)
+
+Halaman guru dibangun ulang dari `Matematika_Dasar/guru.html` (CSS disalin apa adanya). Yang berbeda hanya editor
+**Tahapan Khusus**, yang tetap memakai checklist tahap → level → sub level English Reading beserta aturannya.
+
+- **Sesi Kegiatan:** saringan rombel/tingkat/status/cari, kotak sesi per rombel (buka 30–120 menit, **+ Tambah n menit**,
+  **Tutup sekarang**, **QR & kode masuk** layar penuh, **Tampilkan teratas**), kotak aturan dan tahapan yang berlaku,
+  ubin ringkasan, centang siswa → **Atur tahapan** / **Hapus data latihan**, **Unduh daftar** (.xlsx berkop).
+- **Papan 10 teratas** (`er_teratas`): sejak sesi dibuka, urut sub level lulus → rata-rata nilai → banyak kegiatan;
+  `guru.html?simulasi=teratas` untuk melihat tampilannya tanpa PIN.
+- **Perkembangan Siswa:** Per Siswa (posisi, kemajuan, lulus 7 hari, rata-rata, waktu latihan, catatan Macet/Tidak aktif/
+  Nilai rendah) dan Per Rombel (ubin, sebaran per tahap, perbandingan rombel), **Unduh rekap** (.xlsx).
+- **Analisis Siswa:** catatan otomatis, grafik sub level lulus, kegiatan per jenis, per tahap, hasil di bawah 80%,
+  riwayat sub level lulus, tahapan khusus siswa, hapus data latihan.
+- **Pengaturan & Tahapan Khusus:** cara sistem memilih (siswa → rombel → umum), **Cek aturan siswa** beserta asalnya,
+  tahapan khusus (contoh siap pakai + editor checklist), pemasangan per rombel.
+- **Pengaturan Umum** (admin): Halaman Latihan, Pengawasan keluar halaman, Aturan naik sub level, Sesi mandiri.
+- **Tahapan Level:** 6 tahap → level → sub level. **Contoh** (kosakata/pola/bacaan + soal, Tampilkan Jawaban,
+  Mode Layar Penuh), **Coba** (uji coba guru: `index.html#coba=<id level>`, data hanya di tab itu), dan admin bisa
+  **menutup tahap/level/sub level** untuk tahapan umum (`er_pengaturan` umum.mati; tahapan khusus tidak terpengaruh).
+- **Admin:** Guru dan PIN (tarik dari Data Induk, buat/ubah PIN berlapis dengan alasan dan riwayat, kartu PIN PNG,
+  Unduh XLSX), PIN admin English Reading (`tka_privat.pin_admin_er`), Kosongkan data latihan (PIN kepala sekolah).
+
+Halaman siswa memakai bilah atas, layar masuk (sambutan + 3 langkah + kartu masuk + **Masuk guru**), jam sisa sesi kelas,
+tombol Keluar, dan pengawasan keluar halaman seperti Matdas: alarm bunyi + getar, layar peringatan, klik kanan dan salin
+dicegah saat sesi kelas, layar kunci dengan kode buka. NISN tidak diingat di perangkat (satu HP bisa dipakai bergantian).
 
 ## Login siswa, sesi kelas, dan halaman guru (10 Okt 2026)
 

@@ -22,11 +22,13 @@
   const LAJU = [[0.6, 'Sangat pelan'], [0.75, 'Pelan'], [0.9, 'Sedang'], [1, 'Normal']];
   const RE_KALIMAT = /[^.!?]+[.!?]+["'”’]?|[^.!?]+$/g;
 
+  // Uji coba guru (index.html#coba=…): semua data di sessionStorage tab itu, tidak menyentuh kemajuan siswa di perangkat.
+  const simpanan = () => (window.ER_AKUN && window.ER_AKUN.coba ? sessionStorage : localStorage);
   function baca(kunci, awal) {
-    try { const v = localStorage.getItem(kunci); return v === null ? awal : JSON.parse(v); } catch (e) { return awal; }
+    try { const v = simpanan().getItem(kunci); return v === null ? awal : JSON.parse(v); } catch (e) { return awal; }
   }
   function tulis(kunci, nilai) {
-    try { localStorage.setItem(kunci, JSON.stringify(nilai)); } catch (e) { /* abaikan */ }
+    try { simpanan().setItem(kunci, JSON.stringify(nilai)); } catch (e) { /* abaikan */ }
     if (window.ER_SINKRON && window.ER_SINKRON.kunci[kunci]) window.ER_SINKRON.jadwal();
   }
   // Catat hasil untuk perkembangan siswa di halaman guru (masuk.js mengirimnya ke er_hasil).
@@ -995,7 +997,9 @@
   const subOn = (m, b, n) => levelOnDasar(m, b) && !(m && ((m.sub || {})[b.id] || []).includes(n));
   const subDipakaiM = (m, b) => daftarSub(b).map((_, i) => i + 1).filter(n => subOn(m, b, n));
   const levelOn = (m, b) => levelOnDasar(m, b) && (!punyaSub(b) || subDipakaiM(m, b).length > 0);
-  const matiAktif = () => { const p = profilAktif(); return p ? p.mati : null; };
+  // Tanpa tahapan khusus: tahapan umum, tanpa tahap/level/sub level yang ditutup admin (Tahapan Level di halaman guru).
+  const matiUmum = (AKUN && !AKUN.luring && AKUN.atur && AKUN.atur.umum && AKUN.atur.umum.mati) || null;
+  const matiAktif = () => { const p = profilAktif(); return p ? p.mati : matiUmum; };
   const levelAktif = b => levelOn(matiAktif(), b);
   const subDipakai = b => subDipakaiM(matiAktif(), b);
   // Sub level terbuka bila sub level dipakai sebelumnya lulus; yang pertama setelah syarat dengar/baca.
@@ -1846,9 +1850,8 @@
     const p = profilAktif();
     layar.innerHTML = (AKUN ? `<div class="er-akun"><span class="er-akun-ikon" aria-hidden="true">👤</span>
         <span class="er-akun-isi"><b>${esc(AKUN.siswa.nama || AKUN.siswa.nisn)}</b>
-          <small>${esc(AKUN.siswa.kelas || '')}${AKUN.siswa.kelas ? ' · ' : ''}${AKUN.mode === 'kelas' ? '🏫 Sesi kelas' : '🏠 Latihan mandiri'}</small></span>
-        <span class="er-sinkron" id="er-sinkron" role="status"></span>
-        <button class="tombol kecil" id="er-keluar">Keluar</button></div>` : '') + `<header class="judul-app"><h1>📖 English Reading</h1>
+          <small>${esc(AKUN.siswa.kelas || '')}${AKUN.siswa.kelas ? ' · ' : ''}${AKUN.coba ? '🧪 Uji coba guru' : AKUN.mode === 'kelas' ? '🏫 Sesi kelas' : '🏠 Latihan mandiri'}</small></span>
+        <span class="er-sinkron" id="er-sinkron" role="status"></span></div>` : '') + `<header class="judul-app"><h1>📖 English Reading</h1>
         <p>Dengarkan bacaan, lalu baca sendiri dan lihat koreksinya. Mulai dari tahap yang sesuai, tuntaskan tiap level
           (skor terbaik ≥ ${TUNTAS}%), lalu naik ke tahap berikutnya.</p></header>` +
       (p ? `<a class="at-banner" href="#pengaturan/khusus"><span class="at-banner-ikon" aria-hidden="true">🎯</span>
@@ -1882,8 +1885,6 @@
       `<a class="at-pintu" href="#pengaturan"><span class="at-ikon" aria-hidden="true">⚙️</span>
         <span class="at-pintu-isi"><b>${AKUN ? 'Aturan &amp; Tahapan latihanmu' : 'Pengaturan &amp; Tahapan'}</b><small>${AKUN ? 'Diatur guru: jumlah soal, syarat dengar/baca, bila jawaban salah, dan tahapan' : `Jumlah soal, syarat dengar/baca, bila jawaban salah, dan tahapan khusus${khusus.daftar.length ? ` · ${khusus.daftar.length} tersimpan` : ''}`}</small></span>
         <span class="at-panah-kanan" aria-hidden="true">›</span></a>`;
-    const k = $('#er-keluar');
-    if (k) k.onclick = () => { k.disabled = true; k.textContent = 'Keluar…'; window.ER_SINKRON.keluar(); };
   }
 
   const jenisLevel = b => (b.kosakata ? { kunci: 'kosakata', nama: 'Kosakata' }
