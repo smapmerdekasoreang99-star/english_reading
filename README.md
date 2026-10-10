@@ -175,10 +175,38 @@ datang dari teks itu sendiri (kalimat dan terjemahannya) dan bank soal.
 - Menambah bacaan baru dengan latihan bertahap: isi `SOAL` (≥ 8 soal), `SOAL_BS` (≥ 6), dan
   `KATA_BACAAN` (kata harus tertulis persis di teks). Terjemahan (`arti`) harus sejajar per kalimat.
 
-## Sepuluh sub level untuk Teks Fungsional Pendek, Level TKA, dan Level UTBK/SNBT (10 Okt 2026)
+## Pengaturan & Tahapan: Umum dan Khusus (10 Okt 2026)
 
-**Tahap 2 (Teks Fungsional Pendek)** juga punya 10 sub level di keempat bacaannya (pola kalimat tetap 5), sebagai bekal ke
-Tahap 3. Bedanya: teksnya satu paragraf, jadi sub level 6 menjadi **Ide pokok & struktur teks**. Kalimat teks ditanyakan
+Meniru Matematika Dasar. Halaman **⚙️ Pengaturan & Tahapan** (`#pengaturan`, pintu di bawah daftar bacaan) punya dua tab:
+
+- **Umum** (`#pengaturan`): aturan bawaan perangkat (jumlah soal, syarat dengar/baca, bila jawaban salah) dan
+  tahapan umum, yaitu semua tahap, level, dan sub level dipakai berurutan. Tersimpan di `er_setelan`.
+- **Khusus** (`#pengaturan/khusus`): profil bernama yang menimpa Umum.
+  - **Aturan:** isian yang dibiarkan "Ikut umum" memakai nilai Umum, satu per satu (`atur.x` di `app.js`).
+  - **Tahapan:** checklist bertingkat. Tahap yang dimatikan mematikan levelnya, level yang dimatikan mematikan sub levelnya,
+    dan ada tombol sub level massal per tahap (mis. hanya 6–10). Disimpan sebagai daftar yang *dimatikan*
+    (`mati: { tahap, level, sub }`), jadi bacaan baru otomatis ikut dipakai.
+  - Mulai dari awal atau dari contoh: Persiapan TKA, Persiapan UTBK/SNBT (sub level 6–10, 20 soal), Fondasi (Tahap 0–1), dan Teks Fungsional & Genre (Tahap 2–3).
+  - Satu profil bisa dipakai pada satu waktu (`er_khusus`). Halaman depan lalu menampilkan spanduk dan hanya materi yang dipakai.
+    Sub level yang tidak dipakai disembunyikan dan dilewati, dan level tuntas bila semua sub level yang dipakai lulus.
+- **Membagikan ke siswa:** belum ada database, jadi profil dibagikan sebagai tautan `#khusus=<kode>` (JSON → base64url).
+  Siswa membuka tautan → halaman "Pasang dan pakai" → profil tersimpan dan dipakai di perangkatnya. Kemajuan siswa tidak berubah.
+
+## Sepuluh sub level untuk bacaan Tahap 2–5 (10 Okt 2026)
+
+**Setiap tahap 2–5 berisi 10 level** (18 bacaan baru, ditulis 10 Okt 2026, data lengkap untuk 10 sub level):
+- Tahap 2: `holiday-pangandaran` (recount), `birthday-invitation` (invitation), `message-from-mom` (short message).
+- Tahap 3: `borobudur` (descriptive), `mouse-deer` (narrative), `eat-breakfast` (analytical exposition), `honey-bees` (report),
+  `how-rain-forms` (explanation).
+- Tahap 4: `public-transport` (hortatory exposition), `robotics-news` (news item), `laskar-pelangi-review` (review),
+  `how-tsunamis-happen` (explanation).
+- Tahap 5: `mangrove-forests`, `food-waste`, `regional-languages`, `geothermal-energy`, `bilingual-brain`, `teens-social-media`.
+
+Datanya ada di bagian akhir `soal.js` ("Bacaan tambahan Tahap 2–5"). Pengenal suara menuliskan tahun sebagai angka; `bilanganKeKata`
+membacanya berpasangan (1983 nineteen eighty-three, 2022 twenty twenty-two; 2000–2009 two thousand …), jadi tulis tahun di teks dengan cara itu.
+
+**Tahap 2 (Teks Fungsional Pendek) dan Tahap 3 (Genre Teks)** juga punya 10 sub level di semua bacaannya (pola kalimat tetap 5), sebagai bekal ke
+tahap berikutnya. Bedanya: teksnya satu paragraf, jadi sub level 6 menjadi **Ide pokok & struktur teks**. Kalimat teks ditanyakan
 termasuk bagian apa (identification/description/closing, orientation/events/reorientation, goal/steps/closing,
 opening/content/closing) dari `BAGIAN` di `soal.js`. Pengecohnya nama bagian jenis teks lain (`BAGIAN_SEMUA`).
 Sub level 10 bernama **Uji siap naik tahap**. Semua soal 4 opsi, setingkat A2 (`SOAL_TAHAP2`, `RUJUKAN`, `SINONIM`).
@@ -202,7 +230,7 @@ menurut kisi-kisi ujian. Pilihan ganda 4 opsi di TKA dan 5 opsi di UTBK/SNBT. Le
 
 ## Bila jawaban salah (10 Okt 2026)
 
-Di **⚙️ Pengaturan → Bila jawaban salah** (per perangkat, seperti di Matdas):
+Di **⚙️ Pengaturan & Tahapan → Umum → Bila jawaban salah** (atau per tahapan khusus):
 
 | Pengaturan | Pilihan | Artinya |
 |---|---|---|
@@ -243,7 +271,8 @@ Kalimat Pola selalu dirakit baru oleh `pola.js`, jadi jumlah soal berapa pun tet
 
 ## Level TKA dan Level UTBK/SNBT (10 Okt 2026)
 
-- **Tahap 4 · Level TKA** (B1–B1+): 6 bacaan dengan genre berbeda: discussion, analytical exposition,
+- (Sejak 10 Okt 2026 Tahap 4 dan 5 masing-masing 10 bacaan; lihat bagian "Sepuluh sub level" di atas.)
+- **Tahap 4 · Level TKA** (B1–B1+): 6 bacaan pertama dengan genre berbeda: discussion, analytical exposition,
   news item (`river-cleanup`), email resmi (`email-science-fair`), report (`komodo`), dan narrative
   (`lake-toba`). 12–14 soal + 6 benar/salah per bacaan.
 - **Tahap 5 · Level UTBK/SNBT** (B2): 4 bacaan lebih panjang: ilmiah populer (`sleep-memory`), isu

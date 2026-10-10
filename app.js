@@ -37,6 +37,16 @@
   // Kecepatan suara bawaan Pelan untuk yang sedang belajar (10 Okt 2026); pilihan siswa sendiri tetap dipakai.
   if (!setelan.lajuDipilih) setelan.laju = 0.75;
   const simpanSetelan = () => tulis('er_setelan', setelan);
+
+  // Pengaturan & Tahapan Khusus (10 Okt 2026): profil yang sedang dipakai menimpa Pengaturan Umum (setelan).
+  const khusus = Object.assign({ aktif: null, daftar: [] }, baca('er_khusus', {}));
+  const simpanKhusus = () => tulis('er_khusus', khusus);
+  const profilAktif = () => khusus.daftar.find(p => p.id === khusus.aktif) || null;
+  // atur.x = aturan yang berlaku: dari tahapan khusus yang dipakai bila diisi, selain itu Umum.
+  const atur = {};
+  ['jumlahSoal', 'tampilJawaban', 'bilaSalah', 'batasSalah', 'harusDengar', 'harusBaca', 'syaratBaca'].forEach(k => Object.defineProperty(atur, k, {
+    get() { const p = profilAktif(); return p && p.setelan && p.setelan[k] != null ? p.setelan[k] : setelan[k]; }
+  }));
   const skorTerbaik = baca('er_skor', {});   // pelafalan terbaik per level
   const skorPaham = baca('er_paham', {});     // soal pemahaman terbaik per level
   const dengarSelesai = baca('er_dengar', {}); // level yang teksnya sudah didengar sampai selesai
@@ -137,6 +147,8 @@
     .replace(/(rp\.?|\$)\s?(?=\d)/gi, '')
     .replace(/(\d)[,.](?=\d{3}(\D|$))/g, '$1')
     .replace(/\b(\d+)(st|nd|rd|th)\b/gi, (x, d) => (+d < 1e9 ? ordinalKata(+d) : x))
+    // Tahun dibaca berpasangan: 1983 nineteen eighty-three, 2022 twenty twenty-two (2000–2009 tetap two thousand …).
+    .replace(/\b(19\d\d|20[1-9]\d)\b/g, d => ` ${angkaKata(+d.slice(0, 2))} ${+d.slice(2) ? (+d.slice(2) < 10 ? 'oh ' : '') + angkaKata(+d.slice(2)) : 'hundred'} `)
     .replace(/\d+/g, d => (+d < 1e12 ? ' ' + angkaKata(+d) + ' ' : d));
   // segmen: [{ teks, yakin }] → [{ w, yakin }]; yakin 0 = tidak diketahui.
   function kataUcapan(segmen) {
@@ -548,7 +560,7 @@
   }
   function tuntas(b) {
     const s = syaratLevel(b);
-    if (s.sub) return jumlahLulusSub(b) === daftarSub(b).length;
+    if (s.sub) return jumlahLulusSub(b) === subDipakai(b).length;
     return (!s.ucap || skorTerbaik[b.id] >= TUNTAS) && (!s.paham || skorPaham[b.id] >= TUNTAS);
   }
 
@@ -566,7 +578,7 @@
     const kurang = [];
     if (s.sub && !sudahDengar(b)) kurang.push('🎧 dengarkan teksnya dengan ▶ Dengarkan sampai selesai');
     if (s.sub && !sudahBaca(b)) kurang.push(`🎤 baca teksnya dengan Baca & Koreksi sampai selesai, akurasi ≥ ${syaratBaca()}%`);
-    if (s.sub) kurang.push(`🧩 lulus ${daftarSub(b).length} sub level Latihan bertahap (sudah ${jumlahLulusSub(b)})`);
+    if (s.sub) kurang.push(`🧩 lulus ${subDipakai(b).length} sub level Latihan bertahap (sudah ${jumlahLulusSub(b)})`);
     if (s.ucap && !(skorTerbaik[b.id] >= TUNTAS)) {
       kurang.push(`🎤 pelafalan ≥ ${TUNTAS}%${skorTerbaik[b.id] != null ? ` (terbaikmu ${skorTerbaik[b.id]}%)` : ''}`);
     }
@@ -928,9 +940,9 @@
   const punyaPola = b => !!(b && b.pola && window.POLA_GEN && window.POLA_GEN[b.id]);
   const punyaBacaan = b => !!(b && !b.kosakata && !b.pola && window.KATA_BACAAN && window.KATA_BACAAN[b.id] && soalDari(b));
   const punyaSub = b => !!(b && ((b.kosakata && b.situasi) || punyaPola(b) || punyaBacaan(b)));
-  // Bacaan Tahap 2 (Teks Fungsional Pendek), 4 (TKA), dan 5 (UTBK/SNBT): lima sub level tambahan menurut
-  // kisi-kisi ujian (10 Okt 2026). Tahap 2 (teks satu paragraf): sub level 6 = struktur teks, bukan ide pokok paragraf.
-  const punyaUjian = b => !b.kosakata && !b.pola && (b.tahap === 2 || b.tahap >= 4);
+  // Bacaan Tahap 2–5 (Teks Fungsional Pendek, Genre Teks, TKA, UTBK/SNBT): lima sub level tambahan menurut
+  // kisi-kisi ujian (10 Okt 2026). Tahap 2–3 (teks satu paragraf): sub level 6 = struktur teks, bukan ide pokok paragraf.
+  const punyaUjian = b => !b.kosakata && !b.pola && b.tahap >= 2;
   const SUB_UJIAN = [
     { nama: 'Ide pokok & organisasi', ikon: '💡', ket: 'Ide pokok paragraf, judul, susunan teks' },
     { nama: 'Rincian & rujukan', ikon: '🔎', ket: 'Informasi tersurat dan kata rujukan' },
@@ -940,15 +952,15 @@
   const SUB6_STRUKTUR = { nama: 'Ide pokok & struktur teks', ikon: '💡', ket: 'Topik, tujuan, jenis teks, dan bagian-bagiannya' };
   const subSimulasi = b => (b.tahap >= 5 ? { nama: 'Simulasi UTBK/SNBT', ikon: '⏱️', ket: 'Campuran semua jenis soal ujian' }
     : b.tahap === 4 ? { nama: 'Simulasi TKA', ikon: '⏱️', ket: 'Campuran semua jenis soal ujian' }
-    : { nama: 'Uji siap naik tahap', ikon: '🚀', ket: 'Campuran semua jenis soal, bekal ke Tahap 3' });
+    : { nama: 'Uji siap naik tahap', ikon: '🚀', ket: `Campuran semua jenis soal, bekal ke Tahap ${b.tahap + 1}` });
   const daftarSub = b => (b.pola ? SUB_POLA : b.kosakata ? SUB
     : [...SUB_BACAAN, bacaSuara(b) ? SUB5_BACA : SUB5_RUMPANG,
-      ...(punyaUjian(b) ? [b.tahap === 2 ? SUB6_STRUKTUR : SUB_UJIAN[0], ...SUB_UJIAN.slice(1), subSimulasi(b)] : [])]);
+      ...(punyaUjian(b) ? [b.tahap <= 3 ? SUB6_STRUKTUR : SUB_UJIAN[0], ...SUB_UJIAN.slice(1), subSimulasi(b)] : [])]);
   const skorSub = baca('er_sub', {});          // id → { s: [skor terbaik sub 1–5], lama }
   const simpanSub = () => tulis('er_sub', skorSub);
   const dataSub = b => skorSub[b.id] || (skorSub[b.id] = { s: [] });
   const lulusSub = (b, n) => { const d = skorSub[b.id]; return !!d && (!!d.lama || d.s[n - 1] >= TUNTAS); };
-  const jumlahLulusSub = b => daftarSub(b).filter((_, i) => lulusSub(b, i + 1)).length;
+  const jumlahLulusSub = b => subDipakai(b).filter(n => lulusSub(b, n)).length;
   // Sebelum sub level 1 (diatur di Pengaturan halaman utama, tersimpan per perangkat):
   // - Harus Dengar (10 Okt 2026): seluruh teks level didengarkan dengan ▶ Dengarkan sampai selesai.
   // - Harus Baca (9 Okt 2026): teks dibaca dengan Baca & Koreksi sampai selesai, akurasi ≥ syaratBaca()
@@ -956,12 +968,23 @@
   // Dikecualikan: browser tanpa suara/pengenal suara (tidak bisa dicatat/dinilai), level yang tuntas
   // sebelumnya, dan siswa yang sudah mulai mengerjakan sub level sebelum aturan ini.
   const PILIHAN_SYARAT_BACA = [50, 60, 70, 75, 80, 85, 90];
-  const syaratBaca = () => (PILIHAN_SYARAT_BACA.includes(setelan.syaratBaca) ? setelan.syaratBaca : 75);
+  const syaratBaca = () => (PILIHAN_SYARAT_BACA.includes(atur.syaratBaca) ? atur.syaratBaca : 75);
   const sudahMulaiSub = b => !!(skorSub[b.id] && (skorSub[b.id].lama || skorSub[b.id].s.some(x => x != null)));
-  const sudahBaca = b => !SR || !setelan.harusBaca || skorTerbaik[b.id] >= syaratBaca() || sudahMulaiSub(b);
-  const sudahDengar = b => !bisaSuara || !setelan.harusDengar || !!dengarSelesai[b.id] || sudahMulaiSub(b);
+  const sudahBaca = b => !SR || !atur.harusBaca || skorTerbaik[b.id] >= syaratBaca() || sudahMulaiSub(b);
+  const sudahDengar = b => !bisaSuara || !atur.harusDengar || !!dengarSelesai[b.id] || sudahMulaiSub(b);
   const siapSub = b => sudahDengar(b) && sudahBaca(b);
-  const terbukaSub = (b, n) => (n === 1 ? siapSub(b) : lulusSub(b, n - 1));
+  // Tahapan khusus: m = { tahap: [nomor dimatikan], level: [id dimatikan], sub: { id: [nomor dimatikan] } }; null = Umum.
+  // Tahap mati → levelnya mati; level mati → sub levelnya mati; level tanpa sub level yang dipakai dianggap tidak dipakai.
+  const tahapOn = (m, t) => !m || !(m.tahap || []).includes(t);
+  const levelOnDasar = (m, b) => tahapOn(m, b.tahap) && !(m && (m.level || []).includes(b.id));
+  const subOn = (m, b, n) => levelOnDasar(m, b) && !(m && ((m.sub || {})[b.id] || []).includes(n));
+  const subDipakaiM = (m, b) => daftarSub(b).map((_, i) => i + 1).filter(n => subOn(m, b, n));
+  const levelOn = (m, b) => levelOnDasar(m, b) && (!punyaSub(b) || subDipakaiM(m, b).length > 0);
+  const matiAktif = () => { const p = profilAktif(); return p ? p.mati : null; };
+  const levelAktif = b => levelOn(matiAktif(), b);
+  const subDipakai = b => subDipakaiM(matiAktif(), b);
+  // Sub level terbuka bila sub level dipakai sebelumnya lulus; yang pertama setelah syarat dengar/baca.
+  const terbukaSub = (b, n) => { const d = subDipakai(b), i = d.indexOf(n); return i === 0 ? siapSub(b) : i > 0 && lulusSub(b, d[i - 1]); };
   // Level yang sudah tuntas lewat Baca & Koreksi sebelum sub level dipasang dianggap lulus semua.
   (function () {
     const cek = baca('er_sub_cek', []);
@@ -1053,8 +1076,8 @@
   // yang muncul lagi (putaran berikut atau ulangan jawaban keliru) tampil dengan bentuk lain.
   const PILIHAN_JUMLAH = [10, 15, 20, 25, 30, 40];
   const PILIHAN_BATAS_SALAH = [0, 3, 5, 8, 10];
-  const batasSalah = () => (PILIHAN_BATAS_SALAH.includes(setelan.batasSalah) ? setelan.batasSalah : 0);
-  const jumlahSoal = () => (PILIHAN_JUMLAH.includes(setelan.jumlahSoal) ? setelan.jumlahSoal : 10);
+  const batasSalah = () => (PILIHAN_BATAS_SALAH.includes(atur.batasSalah) ? atur.batasSalah : 0);
+  const jumlahSoal = () => (PILIHAN_JUMLAH.includes(atur.jumlahSoal) ? atur.jumlahSoal : 10);
   function isiSampai(kolam, N) {
     const hasil = [];
     while (hasil.length < N && kolam.length) {
@@ -1511,9 +1534,9 @@
       const ok = pilih.length === q.jj.length && pilih.every(i => q.jj.includes(i));
       opsi.forEach((x, i) => {
         x.disabled = true;
-        x.classList.toggle('kunci', (ok || setelan.tampilJawaban) && q.jj.includes(i));
-        x.classList.toggle('keliru', setelan.tampilJawaban && pilih.includes(i) && !q.jj.includes(i));
-        x.classList.toggle('dipilih', !setelan.tampilJawaban && !ok && pilih.includes(i));
+        x.classList.toggle('kunci', (ok || atur.tampilJawaban) && q.jj.includes(i));
+        x.classList.toggle('keliru', atur.tampilJawaban && pilih.includes(i) && !q.jj.includes(i));
+        x.classList.toggle('dipilih', !atur.tampilJawaban && !ok && pilih.includes(i));
       });
       $('#lt-cek-m').disabled = true;
       nilaiSoal(ok, ok ? '' : `Jawaban yang tepat: ${q.jj.map(i => `<b>${'ABCDE'[i]}</b>`).join(', ')}.`);
@@ -1532,7 +1555,7 @@
       const salah = q.baris.map(([, v], r) => (q.isi[r] === v ? -1 : r)).filter(r => r >= 0);
       kotak.querySelectorAll('.lt-bs-tombol').forEach(x => { x.disabled = true; });
       kotak.querySelectorAll('.lt-baris').forEach((el, r) => {
-        if (!setelan.tampilJawaban && salah.length) return;
+        if (!atur.tampilJawaban && salah.length) return;
         el.classList.add(salah.includes(r) ? 'keliru' : 'benar');
         if (salah.includes(r)) el.insertAdjacentHTML('beforeend', `<span class="lt-bs-kunci">Seharusnya: ${q.baris[r][1] ? 'Benar' : 'Salah'}</span>`);
       });
@@ -1545,7 +1568,7 @@
       const pilih = +o.dataset.i;
       $('#lt-kotak').querySelectorAll('.lt-opsi').forEach((x, i) => {
         x.disabled = true;
-        x.classList.toggle('kunci', i === q.j && (pilih === q.j || setelan.tampilJawaban));
+        x.classList.toggle('kunci', i === q.j && (pilih === q.j || atur.tampilJawaban));
         x.classList.toggle('keliru', i === pilih && pilih !== q.j);
       });
       nilaiSoal(pilih === q.j, pilih === q.j ? '' : `Jawaban yang tepat: <b>${esc(q.p[q.j])}</b>`);
@@ -1642,17 +1665,17 @@
     if (!ok) {
       L.salah++;
       const baru = { ...buatSoal(L.b, L.n, q.w), no: q.no, ulang: true };
-      if (setelan.bilaSalah === 'ulang') L.antre.splice(L.i + 1, 0, baru);
-      else if (setelan.bilaSalah !== 'lanjut') L.antre.push(baru);
+      if (atur.bilaSalah === 'ulang') L.antre.splice(L.i + 1, 0, baru);
+      else if (atur.bilaSalah !== 'lanjut') L.antre.push(baru);
       if (L.b.kosakata && L.n === SUB.length) tambahDek(L.b.kosakata[q.w][0], L.b.kosakata[q.w][2], true);
     }
     // Jawaban benar dan penjelasannya hanya ditampilkan (dan diperdengarkan) bila Pengaturan mengizinkan.
-    const buka = ok || setelan.tampilJawaban;
+    const buka = ok || atur.tampilJawaban;
     L.dengar = buka ? q.suaraKunci || q.target || q.tulisSesudah || q.putar || '' : '';
     L.dariAwal = !ok && batasSalah() > 0 && L.salah > batasSalah();
     const lanjutan = ok ? '' : L.dariAwal ? `<p class="lt-batas">Sudah ${L.salah} kali salah (batas ${batasSalah()}). Sub level ini dimulai lagi dari nomor 1 dengan soal yang berbeda.</p>`
-      : setelan.bilaSalah === 'ulang' ? '<p class="lt-kecil">Nomor ini diulang dengan soal lain.</p>'
-      : setelan.bilaSalah === 'lanjut' ? '' : '<p class="lt-kecil">Soal ini diulang di akhir sesi dengan soal lain.</p>';
+      : atur.bilaSalah === 'ulang' ? '<p class="lt-kecil">Nomor ini diulang dengan soal lain.</p>'
+      : atur.bilaSalah === 'lanjut' ? '' : '<p class="lt-kecil">Soal ini diulang di akhir sesi dengan soal lain.</p>';
     $('#lt-umpan').innerHTML = `<div class="lt-umpan ${ok ? 'benar' : 'keliru'}">
         <p><b>${ok ? ambil(['✓ Benar!', '✓ Tepat!', '✓ Bagus!']) : '✗ Belum tepat.'}</b> ${buka ? keterangan || '' : ''}</p>
         ${q.tulisSesudah && buka ? `<p class="lt-kecil">Kalimatnya: “${esc(q.tulisSesudah)}”</p>` : ''}
@@ -1680,14 +1703,14 @@
       simpanDek();
     }
     const kelas = persen >= 85 ? 'baik' : persen >= 60 ? 'sedang' : 'kurang';
-    const berikut = n < SB.length && lulusSub(b, n) ? n + 1 : 0;
+    const dipakai = subDipakai(b), berikut = lulusSub(b, n) ? (dipakai[dipakai.indexOf(n) + 1] || 0) : 0;
     $('#lt-isi').style.width = '100%';
     $('#lt-kotak').onclick = null;
     $('#lt-kotak').innerHTML = `<div class="hasil">
       <h2>Hasil sub level ${n}</h2>
       <div class="skor ${kelas}"><b>${persen}%</b><span>${L.benar} dari ${L.awal} benar pada percobaan pertama${rekor ? ' · 🏅 skor terbaik' : ''}</span></div>
-      <p>${lulus ? (n < SB.length ? `🎉 Lulus! Sub level ${n + 1} sudah terbuka.` : b.kosakata ? '🎉 Lulus! Semua kata level ini masuk Ulang kosakata.' : '🎉 Lulus!') : `Perlu ${TUNTAS}% untuk lulus. Soalnya akan berbeda saat diulang.`}</p>
-      ${n === SB.length && tuntas(b) ? statusLevelHTML(b) : ''}
+      <p>${lulus ? (berikut ? `🎉 Lulus! Sub level ${berikut} sudah terbuka.` : b.kosakata && n === SB.length ? '🎉 Lulus! Semua kata level ini masuk Ulang kosakata.' : '🎉 Lulus!') : `Perlu ${TUNTAS}% untuk lulus. Soalnya akan berbeda saat diulang.`}</p>
+      ${!berikut && tuntas(b) ? statusLevelHTML(b) : ''}
       <div class="kendali">
         ${berikut ? `<a class="tombol utama" href="#latih/${encodeURIComponent(b.id)}/${berikut}">Lanjut: ${SB[berikut - 1].ikon} ${esc(SB[berikut - 1].nama)} →</a>` : ''}
         <button class="tombol${lulus ? '' : ' utama'}" id="lt-ulangi">↻ Ulangi sub level ini</button>
@@ -1700,19 +1723,25 @@
   function subHTML(b) {
     if (!punyaSub(b)) return '';
     const d = skorSub[b.id] || { s: [] };
+    const SB = daftarSub(b), dipakai = subDipakai(b), p = profilAktif();
+    if (!dipakai.length) {
+      return `<section class="sub-level"><h2>🧩 Latihan bertahap</h2>
+        <p class="at-info-sub">🎯 Level ini tidak termasuk tahapan khusus <b>${esc(p ? p.nama : '')}</b>. <a href="#pengaturan/khusus">Atur tahapan</a></p></section>`;
+    }
     return `<section class="sub-level">
       <h2>🧩 Latihan bertahap</h2>
-      <p class="petunjuk">Pelajari ${b.pola ? 'polanya dan contoh kalimatnya' : b.kosakata ? 'kata-katanya' : 'teksnya (dengarkan dan baca)'} di atas, lalu kerjakan ${daftarSub(b).length} sub level secara berurutan (${jumlahSoal()} soal per sub level). Tiap sub level lulus bila
+      <p class="petunjuk">Pelajari ${b.pola ? 'polanya dan contoh kalimatnya' : b.kosakata ? 'kata-katanya' : 'teksnya (dengarkan dan baca)'} di atas, lalu kerjakan ${dipakai.length} sub level secara berurutan (${jumlahSoal()} soal per sub level). Tiap sub level lulus bila
         ≥ ${TUNTAS}% benar; soalnya diacak sehingga berbeda tiap kali dikerjakan.${d.lama ? ' Level ini sudah kamu tuntaskan sebelumnya, jadi semua sub level terbuka untuk mengulang.' : ''}</p>
+      ${dipakai.length < SB.length ? `<p class="at-info-sub">🎯 Tahapan khusus <b>${esc(p.nama)}</b> memakai ${dipakai.length} dari ${SB.length} sub level di level ini.</p>` : ''}
       ${siapSub(b) ? '' : syaratSubHTML(b)}
-      <div class="sub-daftar">${daftarSub(b).map((s, i) => {
-        const n = i + 1, buka = terbukaSub(b, n), sk = d.s[i], ok = sk >= TUNTAS;
+      <div class="sub-daftar">${dipakai.map((n, idx) => {
+        const sub = SB[n - 1], buka = terbukaSub(b, n), sk = d.s[n - 1], ok = sk >= TUNTAS;
         const isi = `<span class="sub-no">${ok ? '✓' : buka ? n : '🔒'}</span>
-          <span class="kartu-isi"><span class="sub-nama">${s.ikon} ${esc(s.nama)}</span>
-          <span class="kartu-info">${esc(s.ket)}${sk != null ? ` · terbaik <b>${sk}%</b>` : ''}</span></span>`;
+          <span class="kartu-isi"><span class="sub-nama">${sub.ikon} ${esc(sub.nama)}</span>
+          <span class="kartu-info">${esc(sub.ket)}${sk != null ? ` · terbaik <b>${sk}%</b>` : ''}</span></span>`;
         return buka
           ? `<a class="sub-kartu${ok ? ' lulus' : ''}" href="#latih/${encodeURIComponent(b.id)}/${n}">${isi}</a>`
-          : `<span class="sub-kartu kunci" title="${n === 1 ? 'Penuhi syarat di atas dulu' : `Luluskan sub level ${n - 1} dulu`}">${isi}</span>`;
+          : `<span class="sub-kartu kunci" title="${idx === 0 ? 'Penuhi syarat di atas dulu' : `Luluskan sub level ${dipakai[idx - 1]} dulu`}">${isi}</span>`;
       }).join('')}</div>
     </section>`;
   }
@@ -1720,10 +1749,10 @@
   function syaratSubHTML(b) {
     const isi = b.kosakata ? 'semua kata dan contohnya' : b.pola ? 'contoh kalimatnya' : 'teksnya';
     const daftar = [];
-    if (bisaSuara && setelan.harusDengar) {
+    if (bisaSuara && atur.harusDengar) {
       daftar.push(`<li class="${sudahDengar(b) ? 'ok' : ''}">${sudahDengar(b) ? '✓' : '🎧'} Dengarkan ${isi} dengan <b>▶ Dengarkan</b> sampai selesai.</li>`);
     }
-    if (SR && setelan.harusBaca) {
+    if (SR && atur.harusBaca) {
       daftar.push(`<li class="${sudahBaca(b) ? 'ok' : ''}">${sudahBaca(b) ? '✓' : '🎤'} Baca ${isi} dengan <b>🎤 Baca &amp; Koreksi</b> sampai selesai, akurasi minimal
         <b>${syaratBaca()}%</b>.${skorTerbaik[b.id] != null && !sudahBaca(b) ? ` Akurasi terbaikmu sekarang ${skorTerbaik[b.id]}%.` : ''}</li>`);
     }
@@ -1790,7 +1819,7 @@
   function posisiLevel(b) {
     const isi = window.BACAAN.filter(x => x.tahap === b.tahap);
     const i = isi.indexOf(b);
-    const semua = window.BACAAN;
+    const semua = window.BACAAN.filter(x => x === b || levelAktif(x));
     const j = semua.indexOf(b);
     return { level: i + 1, jumlah: isi.length, sebelum: semua[j - 1] || null, sesudah: semua[j + 1] || null };
   }
@@ -1798,11 +1827,17 @@
 
   function tampilDaftar() {
     kini = null;
+    const p = profilAktif();
     layar.innerHTML = `<header class="judul-app"><h1>📖 English Reading</h1>
         <p>Dengarkan bacaan, lalu baca sendiri dan lihat koreksinya. Mulai dari tahap yang sesuai, tuntaskan tiap level
-          (skor terbaik ≥ ${TUNTAS}%), lalu naik ke tahap berikutnya.</p></header>` + kartuUlang() +
+          (skor terbaik ≥ ${TUNTAS}%), lalu naik ke tahap berikutnya.</p></header>` +
+      (p ? `<a class="at-banner" href="#pengaturan/khusus"><span class="at-banner-ikon" aria-hidden="true">🎯</span>
+        <span class="at-banner-isi"><small>Sedang memakai tahapan khusus</small><b>${esc(p.nama)}</b>
+          <span>${teksRingkas(ringkasTahapan(p.mati))}${p.catatan ? ' · ' + esc(p.catatan) : ''}</span></span>
+        <span class="at-banner-aksi">Atur ›</span></a>` : '') + kartuUlang() +
       window.TAHAP.map(t => {
-        const isi = window.BACAAN.filter(b => b.tahap === t.no);
+        const semua = window.BACAAN.filter(b => b.tahap === t.no);
+        const isi = semua.filter(levelAktif);
         if (!isi.length) return '';
         const jumlahTuntas = isi.filter(tuntas).length;
         return `<section class="tahap${jumlahTuntas === isi.length ? ' selesai' : ''}">
@@ -1810,7 +1845,8 @@
             <div><h2>${esc(t.nama)}</h2><span class="tahap-setara">${esc(t.setara)}</span></div>
             <span class="tahap-progres">${jumlahTuntas}/${isi.length} tuntas</span></div>
           <p class="tahap-fokus">${esc(t.fokus)}</p>
-          <div class="daftar">${isi.map((b, i) => {
+          <div class="daftar">${isi.map(b => {
+            const i = semua.indexOf(b);
             const s = skorTerbaik[b.id];
             const jenis = jenisLevel(b);
             const ukuran = b.kosakata ? `${b.kosakata.length} kata · ${esc(b.kelompok)}` : `${(b.teks.match(/\S+/g) || []).length} kata`;
@@ -1819,48 +1855,13 @@
             return `<a class="kartu${ok ? ' tuntas' : ''}" href="#baca/${encodeURIComponent(b.id)}">
               <span class="kartu-level">${ok ? '✓' : i + 1}</span>
               <span class="kartu-isi"><span class="kartu-judul">${esc(b.judul)}</span>
-              <span class="kartu-info"><span class="jenis jenis-${jenis.kunci}">${jenis.nama}</span> Level ${i + 1} · ${ukuran}${punyaSub(b) ? ` · 🧩 <b>${jumlahLulusSub(b)}/${daftarSub(b).length}</b> sub level` : ''}${s != null ? ` · 🎤 <b>${s}%</b>` : ''}${sp != null ? ` · 📝 <b>${sp}%</b>` : ''}${soalDari(b) && sp == null && !punyaSub(b) ? ` · ${soalDari(b).length} soal` : ''}</span></span></a>`;
+              <span class="kartu-info"><span class="jenis jenis-${jenis.kunci}">${jenis.nama}</span> Level ${i + 1} · ${ukuran}${punyaSub(b) ? ` · 🧩 <b>${jumlahLulusSub(b)}/${subDipakai(b).length}</b> sub level` : ''}${s != null ? ` · 🎤 <b>${s}%</b>` : ''}${sp != null ? ` · 📝 <b>${sp}%</b>` : ''}${soalDari(b) && sp == null && !punyaSub(b) ? ` · ${soalDari(b).length} soal` : ''}</span></span></a>`;
           }).join('')}</div></section>`;
       }).join('') +
       (bisaSuara ? '' : '<div class="pesan">Browser ini tidak bisa membacakan teks. Gunakan Google Chrome versi terbaru.</div>') +
-      `<details class="pengaturan"><summary>⚙️ Pengaturan</summary>
-        <label>Jumlah soal per sub level
-          <select id="pilih-jumlah-soal">${PILIHAN_JUMLAH.map(v => `<option value="${v}"${v === jumlahSoal() ? ' selected' : ''}>${v} soal</option>`).join('')}</select></label>
-        <p>Makin banyak soal, makin yakin penguasaannya. Kata, kalimat, dan soal bacaan diulang dalam bentuk soal yang berbeda; lulus tetap ≥ ${TUNTAS}% benar pada percobaan pertama. Bawaan 10.</p>
-        <h3 class="atur-sub">Bila jawaban salah</h3>
-        <label>Jawaban benar dan penjelasannya
-          <select id="pilih-tampil-jawaban"><option value="1"${setelan.tampilJawaban ? ' selected' : ''}>Ditampilkan</option>
-            <option value="0"${setelan.tampilJawaban ? '' : ' selected'}>Tidak ditampilkan</option></select></label>
-        <label>Soal yang dijawab salah
-          <select id="pilih-bila-salah">${[['akhir', 'Diulang di akhir sesi (soal lain)'], ['ulang', 'Diulang di nomor itu sampai benar (soal lain)'], ['lanjut', 'Maju terus, tidak diulang']]
-            .map(([v, t]) => `<option value="${v}"${v === (setelan.bilaSalah || 'akhir') ? ' selected' : ''}>${t}</option>`).join('')}</select></label>
-        <label>Batas salah dalam satu sub level
-          <select id="pilih-batas-salah">${PILIHAN_BATAS_SALAH.map(v => `<option value="${v}"${v === batasSalah() ? ' selected' : ''}>${v ? 'lebih dari ' + v + ' kali' : 'Tanpa batas'}</option>`).join('')}</select></label>
-        <p>Bila salah melebihi batas, sub level dimulai lagi dari nomor 1 dengan soal yang berbeda. Soal pengulangan selalu soal baru
-          untuk kata atau kalimat yang sama. Nilai lulus dihitung dari percobaan pertama tiap nomor.</p>
-        <label>Mendengar sebelum Latihan bertahap
-          <select id="pilih-harus-dengar"><option value="1"${setelan.harusDengar ? ' selected' : ''}>Harus Dengar</option>
-            <option value="0"${setelan.harusDengar ? '' : ' selected'}>Tanpa Dengar</option></select></label>
-        <p>Harus Dengar: teks level didengarkan dulu dengan ▶ Dengarkan sampai kalimat terakhir (boleh berhenti lalu dilanjutkan).</p>
-        <label>Membaca sebelum Latihan bertahap
-          <select id="pilih-harus-baca"><option value="1"${setelan.harusBaca ? ' selected' : ''}>Harus Baca</option>
-            <option value="0"${setelan.harusBaca ? '' : ' selected'}>Tanpa Baca</option></select></label>
-        <label id="label-syarat-baca"${setelan.harusBaca ? '' : ' hidden'}>Akurasi membaca minimal
-          <select id="pilih-syarat-baca">${PILIHAN_SYARAT_BACA.map(v => `<option value="${v}"${v === syaratBaca() ? ' selected' : ''}>${v}%</option>`).join('')}</select></label>
-        <p>Harus Baca: teks level dibaca dulu dengan 🎤 Baca &amp; Koreksi sampai selesai dengan akurasi minimal ini (bawaan 75%).</p>
-        <p>Keduanya berlaku sebelum sub level 1 di semua level yang punya Latihan bertahap. Level yang sub levelnya sudah
-          mulai dikerjakan tidak terkunci lagi. Pengaturan tersimpan di perangkat ini saja.</p></details>`;
-    $('#pilih-jumlah-soal').onchange = e => { setelan.jumlahSoal = +e.target.value; simpanSetelan(); };
-    $('#pilih-tampil-jawaban').onchange = e => { setelan.tampilJawaban = e.target.value === '1'; simpanSetelan(); };
-    $('#pilih-bila-salah').onchange = e => { setelan.bilaSalah = e.target.value; simpanSetelan(); };
-    $('#pilih-batas-salah').onchange = e => { setelan.batasSalah = +e.target.value; simpanSetelan(); };
-    $('#pilih-harus-dengar').onchange =e => { setelan.harusDengar = e.target.value === '1'; simpanSetelan(); };
-    $('#pilih-harus-baca').onchange = e => {
-      setelan.harusBaca = e.target.value === '1';
-      $('#label-syarat-baca').hidden = !setelan.harusBaca;
-      simpanSetelan();
-    };
-    $('#pilih-syarat-baca').onchange = e => { setelan.syaratBaca = +e.target.value; simpanSetelan(); };
+      `<a class="at-pintu" href="#pengaturan"><span class="at-ikon" aria-hidden="true">⚙️</span>
+        <span class="at-pintu-isi"><b>Pengaturan &amp; Tahapan</b><small>Jumlah soal, syarat dengar/baca, bila jawaban salah, dan tahapan khusus${khusus.daftar.length ? ` · ${khusus.daftar.length} tersimpan` : ''}</small></span>
+        <span class="at-panah-kanan" aria-hidden="true">›</span></a>`;
   }
 
   const jenisLevel = b => (b.kosakata ? { kunci: 'kosakata', nama: 'Kosakata' }
@@ -2347,11 +2348,380 @@
     pasangIlustrasi(b);
   }
 
+  // ---------- Pengaturan & Tahapan (10 Okt 2026) ----------
+  // Meniru Matdas. Umum: aturan bawaan perangkat, semua tahap/level/sub level dipakai. Khusus: profil bernama;
+  // aturan yang diisi menimpa Umum satu per satu, dan centang tahap → level → sub level menentukan materi yang dipakai.
+  // Tanpa database: profil disimpan di perangkat (er_khusus) dan dibagikan guru sebagai tautan #khusus=<kode>.
+  const DEF_ATUR = { jumlahSoal: 10, harusDengar: true, harusBaca: true, syaratBaca: 75, tampilJawaban: true, bilaSalah: 'akhir', batasSalah: 0 };
+  const umum = k => (setelan[k] == null ? DEF_ATUR[k] : setelan[k]);
+  const PILIHAN_ATUR = {
+    jumlahSoal: { label: 'Jumlah soal per sub level', pendek: 'Soal', opsi: () => PILIHAN_JUMLAH.map(v => [v, `${v} soal`]) },
+    harusDengar: { label: 'Mendengar teks sebelum sub level 1', pendek: 'Dengar', opsi: () => [[true, 'Harus Dengar'], [false, 'Tanpa Dengar']] },
+    harusBaca: { label: 'Membaca teks sebelum sub level 1', pendek: 'Baca', opsi: () => [[true, 'Harus Baca'], [false, 'Tanpa Baca']] },
+    syaratBaca: { label: 'Akurasi membaca minimal', pendek: 'Akurasi', opsi: () => PILIHAN_SYARAT_BACA.map(v => [v, `${v}%`]) },
+    tampilJawaban: { label: 'Jawaban benar dan penjelasannya', pendek: 'Jawaban', opsi: () => [[true, 'Ditampilkan'], [false, 'Tidak ditampilkan']] },
+    bilaSalah: { label: 'Soal yang dijawab salah', pendek: 'Bila salah', opsi: () => [['akhir', 'Diulang di akhir sesi'], ['ulang', 'Diulang di nomor itu sampai benar'], ['lanjut', 'Maju terus, tidak diulang']] },
+    batasSalah: { label: 'Batas salah dalam satu sub level', pendek: 'Batas salah', opsi: () => PILIHAN_BATAS_SALAH.map(v => [v, v ? `lebih dari ${v} kali, mulai lagi` : 'Tanpa batas']) }
+  };
+  const KELOMPOK_ATUR = [
+    { ikon: '🧩', judul: 'Latihan bertahap', ket: 'Makin banyak soal, makin yakin penguasaannya. Kata dan kalimat yang sama muncul lagi dalam bentuk soal lain.', kunci: ['jumlahSoal'] },
+    { ikon: '🔐', judul: 'Syarat sebelum sub level 1', ket: 'Teks level didengarkan dan/atau dibaca dulu. Level yang sub levelnya sudah mulai dikerjakan tidak terkunci lagi.', kunci: ['harusDengar', 'harusBaca', 'syaratBaca'] },
+    { ikon: '🔁', judul: 'Bila jawaban salah', ket: 'Pengulangan selalu memakai soal baru. Nilai lulus dihitung dari percobaan pertama tiap nomor.', kunci: ['tampilJawaban', 'bilaSalah', 'batasSalah'] }
+  ];
+  const teksNilai = (k, v) => ((PILIHAN_ATUR[k].opsi().find(([x]) => x === v) || [null, String(v)])[1]);
+  const nilaiKetik = (k, s) => (s === '' ? null : typeof DEF_ATUR[k] === 'boolean' ? s === 'true' : typeof DEF_ATUR[k] === 'number' ? +s : s);
+  const tog = (arr, v, nyala) => { const i = arr.indexOf(v); if (nyala && i >= 0) arr.splice(i, 1); else if (!nyala && i < 0) arr.push(v); };
+
+  // Ringkasan materi yang dipakai oleh sekumpulan "mati" (null = Umum).
+  function ringkasTahapan(m) {
+    let tahap = 0, level = 0, sub = 0;
+    window.TAHAP.forEach(t => {
+      let ada = false;
+      window.BACAAN.filter(b => b.tahap === t.no).forEach(b => {
+        if (!levelOn(m, b)) return;
+        level++; ada = true;
+        if (punyaSub(b)) sub += subDipakaiM(m, b).length;
+      });
+      if (ada) tahap++;
+    });
+    return { tahap, level, sub };
+  }
+  const teksRingkas = r => `${r.tahap} tahap · ${r.level} level · ${r.sub} sub level`;
+  const chipAturan = p => {
+    const isi = Object.entries(p.setelan || {}).filter(([k, v]) => v != null && PILIHAN_ATUR[k]);
+    return isi.length ? isi.map(([k, v]) => `<span class="at-chip at-chip-atur">${PILIHAN_ATUR[k].pendek}: ${esc(teksNilai(k, v))}</span>`).join('')
+      : '<span class="at-chip at-chip-redup">Aturan ikut Umum</span>';
+  };
+
+  // Kode tautan: JSON ringkas → base64url (aman untuk huruf non-ASCII).
+  function kodeProfil(p) {
+    const m = p.mati || {};
+    const o = { v: 1, id: p.id, n: p.nama, c: p.catatan || '', s: p.setelan || {},
+      m: { t: m.tahap || [], l: m.level || [], s: Object.fromEntries(Object.entries(m.sub || {}).filter(([, x]) => x.length)) } };
+    return btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function bukaKode(kode) {
+    const o = JSON.parse(decodeURIComponent(escape(atob(kode.replace(/-/g, '+').replace(/_/g, '/')))));
+    if (!o || o.v !== 1 || !o.id || !o.n) return null;
+    const s = {};
+    Object.keys(PILIHAN_ATUR).forEach(k => { if (o.s && o.s[k] != null) s[k] = o.s[k]; });
+    return { id: String(o.id), nama: String(o.n).slice(0, 60), catatan: String(o.c || '').slice(0, 200), setelan: s,
+      mati: { tahap: (o.m && o.m.t) || [], level: (o.m && o.m.l) || [], sub: (o.m && o.m.s) || {} } };
+  }
+  const tautanProfil = p => `${location.origin}${location.pathname}#khusus=${kodeProfil(p)}`;
+
+  // Contoh siap pakai sebagai titik awal.
+  function matiKecuali(tahapDipakai, subMati) {
+    const m = { tahap: window.TAHAP.map(t => t.no).filter(n => !tahapDipakai.includes(n)), level: [], sub: {} };
+    if (subMati) window.BACAAN.filter(b => tahapDipakai.includes(b.tahap) && punyaSub(b) && daftarSub(b).length >= 10).forEach(b => { m.sub[b.id] = subMati.slice(); });
+    return m;
+  }
+  const CONTOH = [
+    { kode: 'tka', ikon: '🎓', nama: 'Persiapan TKA', ket: 'Level TKA saja, sub level 6–10 sesuai kisi-kisi ujian, 20 soal per sub level.',
+      buat: () => ({ setelan: { jumlahSoal: 20 }, mati: matiKecuali([4], [1, 2, 3, 4, 5]) }) },
+    { kode: 'utbk', ikon: '🏛️', nama: 'Persiapan UTBK/SNBT', ket: 'Level UTBK/SNBT saja, sub level 6–10, 20 soal per sub level.',
+      buat: () => ({ setelan: { jumlahSoal: 20 }, mati: matiKecuali([5], [1, 2, 3, 4, 5]) }) },
+    { kode: 'fondasi', ikon: '🌱', nama: 'Fondasi', ket: 'Kosakata dasar dan kalimat sederhana (Tahap 0–1) untuk siswa yang baru mulai.',
+      buat: () => ({ setelan: {}, mati: matiKecuali([0, 1]) }) },
+    { kode: 'genre', ikon: '📚', nama: 'Teks Fungsional & Genre', ket: 'Tahap 2–3: teks pendek dan genre teks, bekal ke Level TKA.',
+      buat: () => ({ setelan: {}, mati: matiKecuali([2, 3]) }) }
+  ];
+
+  function kepalaAtur(tab) {
+    const p = profilAktif(), r = ringkasTahapan(p ? p.mati : null);
+    return `<div class="bar-atas"><a href="#" class="kembali">← Daftar bacaan</a><span class="label-tingkat">Pengaturan</span></div>
+      <header class="at-kepala"><span class="at-alis">Berlaku di perangkat ini</span><h1>Pengaturan &amp; Tahapan</h1>
+        <p>Atur cara latihan dan materi yang dipakai. <b>Umum</b> berlaku selama tidak ada tahapan khusus yang dipakai.</p></header>
+      <section class="at-berlaku${p ? ' khusus' : ''}" aria-live="polite">
+        <span class="at-berlaku-ikon" aria-hidden="true">${p ? '🎯' : '🌐'}</span>
+        <div class="at-berlaku-isi"><small>Yang berlaku sekarang</small><b>${p ? esc(p.nama) : 'Pengaturan &amp; Tahapan Umum'}</b>
+          <span>${teksRingkas(r)}</span></div>
+        ${p ? '<button class="tombol kecil" data-aksi="pakai-umum">Kembali ke Umum</button>'
+          : khusus.daftar.length && tab !== 'khusus' ? '<a class="tombol kecil" href="#pengaturan/khusus">Pakai tahapan khusus</a>' : ''}
+      </section>
+      <nav class="at-tab" role="tablist" aria-label="Jenis pengaturan">
+        <a role="tab" href="#pengaturan" class="${tab === 'umum' ? 'aktif' : ''}" aria-selected="${tab === 'umum'}"><span aria-hidden="true">🌐</span> Umum</a>
+        <a role="tab" href="#pengaturan/khusus" class="${tab === 'khusus' ? 'aktif' : ''}" aria-selected="${tab === 'khusus'}"><span aria-hidden="true">🎯</span> Khusus <span class="at-hit">${khusus.daftar.length}</span></a>
+      </nav>`;
+  }
+  function pasangKepalaAtur() {
+    const t = layar.querySelector('[data-aksi="pakai-umum"]');
+    if (t) t.onclick = () => { khusus.aktif = null; simpanKhusus(); rute(); };
+  }
+  function barisAtur(k, nilai, profil) {
+    const d = PILIHAN_ATUR[k];
+    const opsi = (profil ? [['', `Ikut umum (${teksNilai(k, umum(k))})`]] : []).concat(d.opsi().map(([v, t]) => [String(v), t]));
+    const pilih = nilai == null ? '' : String(nilai);
+    return `<label class="at-baris" data-baris="${k}"><span class="at-baris-label">${d.label}</span>
+      <select data-atur="${k}">${opsi.map(([v, t]) => `<option value="${v}"${v === pilih ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label>`;
+  }
+  function kartuAtur(g, isi) {
+    return `<section class="at-kartu"><div class="at-kartu-kepala"><span class="at-ikon" aria-hidden="true">${g.ikon}</span>
+      <div><h2>${g.judul}</h2><p>${g.ket}</p></div></div><div class="at-baris-daftar">${isi}</div></section>`;
+  }
+
+  function tampilAturUmum() {
+    kini = null;
+    const lapis = `<section class="at-kartu at-lapis"><div class="at-kartu-kepala"><span class="at-ikon" aria-hidden="true">🧭</span>
+        <div><h2>Cara aturan dipilih</h2><p>Dua lapis. Yang lebih atas menang.</p></div></div>
+      <ol class="at-lapis-daftar">
+        <li><span class="at-no">1</span><div><b>Tahapan khusus yang sedang dipakai</b><small>Aturan yang diisi, dan tahap/level/sub level yang dicentang</small></div></li>
+        <li><span class="at-no">2</span><div><b>Pengaturan &amp; Tahapan Umum</b><small>Halaman ini · semua materi dipakai berurutan</small></div></li></ol>
+      <p class="at-catatan">Aturan yang tidak diisi tahapan khusus ikut Umum, satu per satu. Contoh: tahapan khusus yang hanya mengubah jumlah soal tetap memakai syarat dengar/baca dari Umum.</p></section>`;
+    const tahapan = `<section class="at-kartu"><div class="at-kartu-kepala"><span class="at-ikon" aria-hidden="true">🗺️</span>
+        <div><h2>Tahapan umum</h2><p>Semua tahap, level, dan sub level dipakai berurutan. Untuk memakai sebagian saja, buat <a href="#pengaturan/khusus">tahapan khusus</a>.</p></div></div>
+      <div class="at-ringkas-tahap">${window.TAHAP.map(t => {
+        const L = window.BACAAN.filter(b => b.tahap === t.no);
+        const ns = L.reduce((a, b) => a + (punyaSub(b) ? daftarSub(b).length : 0), 0);
+        return `<div class="at-rt"><span class="tahap-no">${t.no}</span><div><b>${esc(t.nama)}</b><small>${L.length} level · ${ns} sub level</small></div></div>`;
+      }).join('')}</div></section>`;
+    layar.innerHTML = kepalaAtur('umum') + lapis +
+      KELOMPOK_ATUR.map(g => kartuAtur(g, g.kunci.map(k => barisAtur(k, umum(k), false)).join(''))).join('') + tahapan +
+      '<p class="at-tersimpan" id="at-tersimpan" role="status"></p>';
+    pasangKepalaAtur();
+    const atur1 = () => { const r = layar.querySelector('[data-baris="syaratBaca"]'); if (r) r.hidden = !umum('harusBaca'); };
+    atur1();
+    layar.querySelectorAll('select[data-atur]').forEach(s => {
+      s.onchange = () => {
+        setelan[s.dataset.atur] = nilaiKetik(s.dataset.atur, s.value);
+        simpanSetelan();
+        atur1();
+        const t = $('#at-tersimpan');
+        t.textContent = '✓ Tersimpan'; t.classList.add('tampil');
+        clearTimeout(t._w); t._w = setTimeout(() => t.classList.remove('tampil'), 1600);
+      };
+    });
+  }
+
+  function kartuProfil(p, aktif, bagikan) {
+    const url = bagikan ? tautanProfil(p) : '';
+    return `<article class="at-profil${aktif ? ' aktif' : ''}" data-id="${esc(p.id)}">
+      <div class="at-profil-kepala"><div><h3>${esc(p.nama)}</h3>${p.catatan ? `<p>${esc(p.catatan)}</p>` : ''}</div>
+        ${aktif ? '<span class="at-pil">Sedang dipakai</span>' : ''}</div>
+      <div class="at-chip-baris"><span class="at-chip">🗺️ ${teksRingkas(ringkasTahapan(p.mati))}</span>${chipAturan(p)}</div>
+      <div class="at-profil-aksi">
+        ${aktif ? '<button class="tombol kecil" data-aksi="berhenti">Berhenti memakai</button>' : '<button class="tombol utama kecil" data-aksi="pakai">Pakai</button>'}
+        <a class="tombol kecil" href="#pengaturan/ubah/${encodeURIComponent(p.id)}">✏️ Ubah</a>
+        <button class="tombol kecil" data-aksi="bagikan" aria-expanded="${bagikan}">🔗 Bagikan</button>
+        <button class="tombol kecil at-hapus" data-aksi="hapus">Hapus</button></div>
+      <div class="at-konfirmasi" hidden>Hapus <b>${esc(p.nama)}</b> dari perangkat ini?
+        <button class="tombol kecil at-hapus-ya" data-aksi="hapus-ya">Ya, hapus</button><button class="tombol kecil" data-aksi="hapus-batal">Batal</button></div>
+      ${bagikan ? `<div class="at-bagikan"><p>Kirim tautan ini ke siswa. Saat dibuka, tahapan khusus <b>${esc(p.nama)}</b> terpasang dan langsung dipakai di perangkat mereka.
+          Kemajuan belajar siswa tidak berubah.</p>
+        <div class="at-tautan"><input readonly value="${esc(url)}" aria-label="Tautan tahapan khusus"><button class="tombol kecil utama" data-aksi="salin">📋 Salin</button></div>
+        <a class="tombol kecil at-wa" href="https://wa.me/?text=${encodeURIComponent(`Tahapan khusus English Reading: ${p.nama}\n${url}`)}" target="_blank" rel="noopener">Kirim lewat WhatsApp</a></div>` : ''}
+    </article>`;
+  }
+  let bagikanId = null;
+  function tampilAturKhusus() {
+    kini = null;
+    layar.innerHTML = kepalaAtur('khusus') + `
+      <section class="at-kartu at-buat"><div class="at-kartu-kepala"><span class="at-ikon" aria-hidden="true">✨</span>
+        <div><h2>Buat tahapan khusus</h2><p>Pilih tahap, level, sampai sub level yang dipakai, dan aturan yang berbeda dari Umum.
+          Cocok untuk remedial, pengayaan, atau persiapan ujian.</p></div></div>
+        <div class="at-contoh">
+          <a class="at-contoh-kartu at-contoh-baru" href="#pengaturan/ubah/baru"><span aria-hidden="true">＋</span><b>Buat dari awal</b><small>Semua materi dicentang, lalu pilih sendiri.</small></a>
+          ${CONTOH.map(c => `<a class="at-contoh-kartu" href="#pengaturan/ubah/contoh-${c.kode}"><span aria-hidden="true">${c.ikon}</span><b>${c.nama}</b><small>${c.ket}</small></a>`).join('')}
+        </div></section>
+      ${khusus.daftar.length
+        ? `<h2 class="at-judul-daftar">Tahapan khusus di perangkat ini</h2><div class="at-profil-daftar" id="at-profil">${khusus.daftar.map(p => kartuProfil(p, p.id === khusus.aktif, p.id === bagikanId)).join('')}</div>`
+        : '<div class="at-kosong"><span aria-hidden="true">🗂️</span><b>Belum ada tahapan khusus</b><p>Buat dari awal, mulai dari contoh di atas, atau buka tautan tahapan khusus dari guru.</p></div>'}`;
+    pasangKepalaAtur();
+    const w = $('#at-profil');
+    if (!w) return;
+    w.onclick = e => {
+      const t = e.target.closest('[data-aksi]'); if (!t) return;
+      const kartu = t.closest('.at-profil'), id = kartu.dataset.id, p = khusus.daftar.find(x => x.id === id);
+      const aksi = t.dataset.aksi;
+      if (aksi === 'pakai') { khusus.aktif = id; simpanKhusus(); tampilAturKhusus(); }
+      else if (aksi === 'berhenti') { khusus.aktif = null; simpanKhusus(); tampilAturKhusus(); }
+      else if (aksi === 'bagikan') { bagikanId = bagikanId === id ? null : id; tampilAturKhusus(); }
+      else if (aksi === 'salin') salinTeks(tautanProfil(p)).then(ok => { t.textContent = ok ? '✓ Tersalin' : 'Salin manual'; });
+      else if (aksi === 'hapus') kartu.querySelector('.at-konfirmasi').hidden = false;
+      else if (aksi === 'hapus-batal') kartu.querySelector('.at-konfirmasi').hidden = true;
+      else if (aksi === 'hapus-ya') {
+        khusus.daftar = khusus.daftar.filter(x => x.id !== id);
+        if (khusus.aktif === id) khusus.aktif = null;
+        simpanKhusus(); tampilAturKhusus();
+      }
+    };
+  }
+
+  // ---------- Editor tahapan khusus ----------
+  let draf = null;
+  function tampilEditor(kunci) {
+    kini = null;
+    const lama = khusus.daftar.find(p => p.id === kunci);
+    const contoh = CONTOH.find(c => 'contoh-' + c.kode === kunci);
+    if (!lama && !contoh && kunci !== 'baru') { location.replace('#pengaturan/khusus'); return; }
+    const dasar = lama ? JSON.parse(JSON.stringify(lama)) : { nama: contoh ? contoh.nama : '', catatan: contoh ? contoh.ket : '',
+      ...(contoh ? contoh.buat() : { setelan: {}, mati: {} }) };
+    draf = { id: lama ? lama.id : 'k' + Date.now().toString(36), baru: !lama, nama: dasar.nama, catatan: dasar.catatan || '',
+      setelan: dasar.setelan || {}, mati: Object.assign({ tahap: [], level: [], sub: {} }, dasar.mati),
+      buka: new Set(contoh ? window.TAHAP.map(t => t.no).filter(n => tahapOn(dasar.mati, n)) : []), bukaLevel: new Set() };
+    layar.innerHTML = `
+      <div class="bar-atas"><a href="#pengaturan/khusus" class="kembali">← Tahapan khusus</a><span class="label-tingkat">${lama ? 'Ubah' : 'Baru'}</span></div>
+      <header class="at-kepala"><span class="at-alis">Pengaturan &amp; Tahapan Khusus</span><h1>${lama ? 'Ubah tahapan khusus' : 'Tahapan khusus baru'}</h1>
+        <p>Isi nama, pilih aturan yang berbeda dari Umum, lalu centang materi yang dipakai.</p></header>
+      <section class="at-kartu"><div class="at-kartu-kepala"><span class="at-ikon" aria-hidden="true">🏷️</span>
+        <div><h2>Nama</h2><p>Nama ini dilihat siswa di halaman depan, mis. "Remedial X-2" atau "Persiapan TKA".</p></div></div>
+        <div class="at-isian-daftar">
+          <label class="at-isian"><span>Nama tahapan</span><input id="ed-nama" maxlength="60" value="${esc(draf.nama)}" placeholder="mis. Persiapan TKA kelas 12" autocomplete="off"></label>
+          <label class="at-isian"><span>Catatan <small>(opsional)</small></span><textarea id="ed-catatan" rows="2" maxlength="200" placeholder="Tujuan atau petunjuk singkat untuk siswa">${esc(draf.catatan)}</textarea></label>
+          <p class="at-galat" id="ed-galat" role="alert" hidden></p></div></section>
+      ${kartuAtur({ ikon: '⚙️', judul: 'Aturan', ket: 'Biarkan <b>Ikut umum</b> untuk memakai Pengaturan Umum di perangkat siswa.' },
+        Object.keys(PILIHAN_ATUR).map(k => barisAtur(k, draf.setelan[k], true)).join(''))}
+      <section class="at-kartu"><div class="at-kartu-kepala"><span class="at-ikon" aria-hidden="true">🗺️</span>
+        <div><h2>Tahapan</h2><p>Centang materi yang dipakai. Mematikan <b>tahap</b> ikut mematikan levelnya; mematikan <b>level</b> ikut mematikan sub levelnya.</p></div></div>
+        <div class="at-alat"><button class="tombol kecil" data-aksi="semua-on">✓ Pakai semua</button><button class="tombol kecil" data-aksi="semua-off">Matikan semua</button>
+          <button class="tombol kecil" data-aksi="buka-semua">Buka semua tahap</button><button class="tombol kecil" data-aksi="tutup-semua">Tutup semua</button></div>
+        <div class="at-legenda"><span><i class="lg-on"></i>dipakai</span><span><i class="lg-sebagian"></i>sebagian</span><span><i class="lg-off"></i>tidak dipakai</span></div>
+        <div class="at-pohon" id="ed-pohon"></div></section>
+      <div class="at-simpan"><span class="at-simpan-ringkas" id="ed-ringkas"></span>
+        <div class="at-simpan-aksi"><a class="tombol kecil" href="#pengaturan/khusus">Batal</a><button class="tombol kecil" id="ed-simpan">Simpan</button>
+          <button class="tombol utama kecil" id="ed-pakai">Simpan &amp; pakai</button></div></div>`;
+    gambarPohon();
+    const pohon = $('#ed-pohon'), m = draf.mati;
+    const sec = layar.querySelector('.at-alat');
+    sec.onclick = e => {
+      const a = e.target.closest('[data-aksi]'); if (!a) return;
+      if (a.dataset.aksi === 'semua-on') draf.mati = { tahap: [], level: [], sub: {} };
+      if (a.dataset.aksi === 'semua-off') draf.mati = { tahap: window.TAHAP.map(t => t.no), level: [], sub: {} };
+      if (a.dataset.aksi === 'buka-semua') window.TAHAP.forEach(t => draf.buka.add(t.no));
+      if (a.dataset.aksi === 'tutup-semua') { draf.buka.clear(); draf.bukaLevel.clear(); }
+      gambarPohon();
+    };
+    pohon.onchange = e => {
+      const x = e.target, mt = draf.mati;
+      if (x.dataset.tahap != null) { const t = +x.dataset.tahap; tog(mt.tahap, t, x.checked); if (x.checked) draf.buka.add(t); }
+      else if (x.dataset.level) tog(mt.level, x.dataset.level, x.checked);
+      else if (x.dataset.sub) { const arr = mt.sub[x.dataset.sub] || (mt.sub[x.dataset.sub] = []); tog(arr, +x.dataset.n, x.checked); if (!arr.length) delete mt.sub[x.dataset.sub]; }
+      gambarPohon();
+    };
+    pohon.onclick = e => {
+      const a = e.target.closest('[data-aksi]'); if (!a) return;
+      const mt = draf.mati;
+      if (a.dataset.aksi === 'buka-tahap') { const t = +a.dataset.t; draf.buka.has(t) ? draf.buka.delete(t) : draf.buka.add(t); }
+      else if (a.dataset.aksi === 'buka-level') { const l = a.dataset.l; draf.bukaLevel.has(l) ? draf.bukaLevel.delete(l) : draf.bukaLevel.add(l); }
+      else if (a.dataset.aksi === 'massal') {
+        const t = +a.dataset.t, n = +a.dataset.n;
+        const L = window.BACAAN.filter(b => b.tahap === t && punyaSub(b) && daftarSub(b).length >= n && levelOnDasar(mt, b));
+        const nyalakan = statusMassal(mt, L, n) !== 'on';
+        L.forEach(b => { const arr = mt.sub[b.id] || (mt.sub[b.id] = []); tog(arr, n, nyalakan); if (!arr.length) delete mt.sub[b.id]; });
+      } else return;
+      gambarPohon();
+    };
+    $('#ed-simpan').onclick = () => simpanDraf(false);
+    $('#ed-pakai').onclick = () => simpanDraf(true);
+    $('#ed-nama').oninput = () => { $('#ed-galat').hidden = true; };
+    if (!draf.nama) $('#ed-nama').focus();
+    void m;
+  }
+  function statusMassal(m, L, n) {
+    const ada = L.filter(b => punyaSub(b) && daftarSub(b).length >= n && levelOnDasar(m, b));
+    if (!ada.length) return 'kosong';
+    const on = ada.filter(b => subOn(m, b, n)).length;
+    return on === ada.length ? 'on' : on ? 'sebagian' : 'off';
+  }
+  function barisLevel(m, b, nomor, tahapNyala) {
+    const centang = !(m.level || []).includes(b.id), on = tahapNyala && centang;
+    const subs = punyaSub(b) ? daftarSub(b) : [];
+    const nSub = subs.length && on ? subDipakaiM(m, b).length : 0;
+    const buka = on && draf.bukaLevel.has(b.id);
+    const jenis = jenisLevel(b);
+    const sebagian = on && subs.length && nSub < subs.length;
+    return `<div class="at-level${on ? (sebagian ? ' sebagian' : '') : ' mati'}">
+      <div class="at-level-kepala">
+        <label class="at-cek kecil" title="${centang ? 'Matikan level ini' : 'Pakai level ini'}"><input type="checkbox" data-level="${esc(b.id)}" aria-label="${esc(b.judul)}"${centang ? ' checked' : ''}${tahapNyala ? '' : ' disabled'}${sebagian ? ' data-sebagian="1"' : ''}><span></span></label>
+        <span class="at-level-judul"><b>${nomor}. ${esc(b.judul)}</b><small><span class="jenis jenis-${jenis.kunci}">${jenis.nama}</span>${subs.length ? ` ${nSub}/${subs.length} sub level` : ''}</small></span>
+        ${subs.length ? `<button class="at-level-buka" data-aksi="buka-level" data-l="${esc(b.id)}" aria-expanded="${buka}"${on ? '' : ' disabled'}>Sub level <span class="at-panah" aria-hidden="true">▾</span></button>` : ''}
+      </div>
+      ${buka ? `<div class="at-subs">${subs.map((s, k) => {
+        const n = k + 1, nyala = !(((m.sub || {})[b.id]) || []).includes(n);
+        return `<label class="at-sub${nyala ? ' on' : ''}"><input type="checkbox" data-sub="${esc(b.id)}" data-n="${n}"${nyala ? ' checked' : ''}><span class="at-sub-no">${n}</span><span class="at-sub-nama">${s.ikon} ${esc(s.nama)}</span></label>`;
+      }).join('')}</div>` : ''}
+    </div>`;
+  }
+  function gambarPohon() {
+    const m = draf.mati;
+    $('#ed-pohon').innerHTML = window.TAHAP.map(t => {
+      const L = window.BACAAN.filter(b => b.tahap === t.no);
+      const on = tahapOn(m, t.no), buka = draf.buka.has(t.no);
+      const nOn = on ? L.filter(b => levelOn(m, b)).length : 0;
+      const sebagian = on && (nOn < L.length || L.some(b => levelOn(m, b) && punyaSub(b) && subDipakaiM(m, b).length < daftarSub(b).length));
+      const maxSub = Math.max(0, ...L.filter(punyaSub).map(b => daftarSub(b).length));
+      return `<div class="at-tahap${on ? (sebagian ? ' sebagian' : '') : ' mati'}${buka ? ' buka' : ''}">
+        <div class="at-tahap-kepala">
+          <label class="at-cek" title="${on ? 'Matikan tahap ini' : 'Pakai tahap ini'}"><input type="checkbox" data-tahap="${t.no}" aria-label="Tahap ${t.no} ${esc(t.nama)}"${on ? ' checked' : ''}${sebagian ? ' data-sebagian="1"' : ''}><span></span></label>
+          <button class="at-tahap-judul" data-aksi="buka-tahap" data-t="${t.no}" aria-expanded="${buka}">
+            <span class="tahap-no">${t.no}</span><span class="at-tahap-teks"><b>${esc(t.nama)}</b><small>${on ? `${nOn}/${L.length} level dipakai` : 'Tidak dipakai'} · ${esc(t.setara)}</small></span>
+            <span class="at-panah" aria-hidden="true">▾</span></button>
+        </div>
+        ${buka ? `<div class="at-tahap-isi">
+          ${maxSub && on ? `<div class="at-massal"><span>Sub level di semua level tahap ini</span><div>${Array.from({ length: maxSub }, (_, i) => i + 1).map(n =>
+            `<button class="at-massal-sub ${statusMassal(m, L, n)}" data-aksi="massal" data-t="${t.no}" data-n="${n}" aria-label="Sub level ${n} untuk semua level">${n}</button>`).join('')}</div></div>` : ''}
+          ${L.map((b, i) => barisLevel(m, b, i + 1, on)).join('')}</div>` : ''}
+      </div>`;
+    }).join('');
+    $('#ed-pohon').querySelectorAll('input[data-sebagian]').forEach(x => { x.indeterminate = true; });
+    const r = ringkasTahapan(m);
+    $('#ed-ringkas').innerHTML = `Dipakai <b>${r.tahap}</b> tahap · <b>${r.level}</b> level · <b>${r.sub}</b> sub level`;
+  }
+  function simpanDraf(pakai) {
+    const nama = $('#ed-nama').value.trim(), galat = $('#ed-galat');
+    const tampilGalat = t => { galat.textContent = t; galat.hidden = false; galat.scrollIntoView({ block: 'center', behavior: 'smooth' }); };
+    if (!nama) { tampilGalat('Isi nama tahapan dulu.'); $('#ed-nama').focus(); return; }
+    if (!ringkasTahapan(draf.mati).level) { tampilGalat('Pilih minimal satu level di bagian Tahapan.'); return; }
+    const setel = {};
+    layar.querySelectorAll('select[data-atur]').forEach(s => { const v = nilaiKetik(s.dataset.atur, s.value); if (v != null) setel[s.dataset.atur] = v; });
+    const p = { id: draf.id, nama, catatan: $('#ed-catatan').value.trim(), setelan: setel, mati: draf.mati };
+    const i = khusus.daftar.findIndex(x => x.id === p.id);
+    if (i >= 0) khusus.daftar[i] = p; else khusus.daftar.push(p);
+    if (pakai) khusus.aktif = p.id;
+    simpanKhusus();
+    location.hash = '#pengaturan/khusus';
+  }
+
+  // ---------- Memasang tahapan khusus dari tautan guru ----------
+  function tampilImpor(kode) {
+    kini = null;
+    let p = null;
+    try { p = bukaKode(kode); } catch (e) { p = null; }
+    const bar = '<div class="bar-atas"><a href="#" class="kembali">← Daftar bacaan</a></div>';
+    if (!p) {
+      layar.innerHTML = bar + '<div class="at-kosong"><span aria-hidden="true">⚠️</span><b>Tautan tidak bisa dibaca</b><p>Tautan tahapan khusus ini rusak atau terpotong. Minta tautan baru kepada guru.</p><a class="tombol" href="#">Ke daftar bacaan</a></div>';
+      return;
+    }
+    const ada = khusus.daftar.find(x => x.id === p.id);
+    layar.innerHTML = bar + `<section class="at-impor"><span class="at-impor-ikon" aria-hidden="true">🎯</span><small>Tahapan khusus dari guru</small>
+        <h1>${esc(p.nama)}</h1>${p.catatan ? `<p>${esc(p.catatan)}</p>` : ''}
+        <div class="at-chip-baris"><span class="at-chip">🗺️ ${teksRingkas(ringkasTahapan(p.mati))}</span>${chipAturan(p)}</div>
+        <p class="at-catatan">${ada ? 'Tahapan ini sudah ada di perangkat ini; versi dari tautan akan menggantikannya.' : 'Tahapan ini disimpan di perangkat ini dan langsung dipakai.'}
+          Kemajuan belajarmu tidak berubah, dan kamu bisa kembali ke Umum kapan saja di Pengaturan.</p>
+        <div class="kendali"><button class="tombol utama" id="impor-ya">Pasang dan pakai</button><a class="tombol" href="#">Nanti saja</a></div></section>`;
+    $('#impor-ya').onclick = () => {
+      const i = khusus.daftar.findIndex(x => x.id === p.id);
+      if (i >= 0) khusus.daftar[i] = p; else khusus.daftar.push(p);
+      khusus.aktif = p.id;
+      simpanKhusus();
+      location.hash = '#';
+    };
+  }
+
   function rute() {
     hentikanSuara();
     batalkanRekam();
     batalUlang();
     batalLatih();
+    const h = location.hash;
+    if (h.startsWith('#khusus=')) { tampilImpor(h.slice(8)); window.scrollTo(0, 0); return; }
+    if (h === '#pengaturan' || h === '#pengaturan/khusus' || h.startsWith('#pengaturan/ubah/')) {
+      if (h === '#pengaturan') tampilAturUmum();
+      else if (h === '#pengaturan/khusus') tampilAturKhusus();
+      else tampilEditor(decodeURIComponent(h.slice(17)));
+      window.scrollTo(0, 0);
+      return;
+    }
     const ml = location.hash.match(/^#latih\/([^/]+)\/(\d+)$/);
     if (ml) {
       const bl = window.BACAAN.find(x => x.id === decodeURIComponent(ml[1]));
