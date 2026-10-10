@@ -837,19 +837,20 @@ body.lihat .ubah { display: none !important; }
       <div class="ubin" id="dl-ubin"></div>
       <div class="massal ubah" id="dl-massal" role="region" aria-label="Aksi untuk siswa terpilih">
         <div class="m-kepala"><span class="jml"><b id="dl-n-pilih">0</b> siswa dipilih</span>
-          <button class="kecil" id="dl-atur-buka" aria-expanded="false" aria-controls="dl-panel">Atur tahapan</button>
+          <button class="kecil" id="dl-atur-buka" aria-expanded="false" aria-controls="dl-panel">Atur aturan &amp; tahapan</button>
           <span class="ujung"><button class="kecil bahaya" id="dl-hapus">Hapus data latihan</button><span class="m-jarak" aria-hidden="true"></span><button class="kecil hidden" id="dl-terapkan">Terapkan</button><button class="kecil tutup" id="dl-batal">Batal pilih</button></span></div>
         <div class="m-panel hidden" id="dl-panel">
+        <div class="m-baris"><span class="m-label">Aturan</span>
+          <div class="m-kendali"><select id="dl-aturan" aria-label="Profil aturan untuk siswa terpilih"><option value="">Ikut rombel</option></select></div></div>
         <div class="m-baris"><span class="m-label">Tahapan</span>
-          <div class="m-kendali"><select id="dl-profil" aria-label="Tahapan untuk siswa terpilih"><option value="">Ikut rombel</option></select>
-            <span class="ket">Aturan yang diisi di tahapan khusus ikut berlaku; isian lain dari rombel atau Pengaturan Umum.</span></div></div>
+          <div class="m-kendali"><select id="dl-profil" aria-label="Tahapan untuk siswa terpilih"><option value="">Ikut rombel</option></select></div></div>
         </div>
       </div>
       <div class="kartu">
         <div class="gulir"><table class="tabel" id="t-daftar" data-beku="3"></table></div>
         <p class="redup kecil">Diperbarui otomatis setiap 30 detik selama tab ini terbuka. <b>Sedang berlatih</b> = membuka latihan dalam 5 menit terakhir.
           <b>Terkunci</b> = terlalu sering keluar halaman saat sesi kelas (Pengaturan Umum → Pengawasan keluar halaman); buka dengan tombol <b>Buka kunci</b> atau kode buka di perangkat siswa.
-          <span class="ubah">Centang siswa (atau kotak di kepala tabel untuk semua yang tampil) untuk memilih <b>tahapan</b> mereka atau <b>menghapus data latihannya</b>. Pilihan di sini mengalahkan pilihan rombel.</span>
+          <span class="ubah">Centang siswa (atau kotak di kepala tabel untuk semua yang tampil) untuk memilih <b>aturan</b> dan <b>tahapan</b> mereka, atau <b>menghapus data latihannya</b>. Pilihan di sini mengalahkan pilihan rombel.</span>
           Ketuk nama untuk melihat analisisnya.</p>
       </div>
     </div>
@@ -875,7 +876,7 @@ body.lihat .ubah { display: none !important; }
     <!-- Pengaturan & Tahapan Khusus: pengecualian dari Pengaturan Umum per rombel atau per siswa -->
     <div id="p-jalur" class="hidden">
       <div class="atur-kepala kepala-hal"><div><span class="eyebrow">Pengecualian dari Pengaturan Umum</span><h1>Pengaturan &amp; Tahapan Khusus</h1>
-        <p class="redup kecil">Tahapan khusus buatan Anda, yang terpasang di rombel yang Anda ajar (termasuk buatan rekan), ditambah contoh buatan admin. Satu tahapan khusus berisi <b>materi yang dipakai</b> (tahap, level, sub level) dan <b>aturan</b> yang berbeda dari umum. Pasang untuk seluruh rombel di bagian 2, atau untuk siswa tertentu lewat <b>Sesi Kegiatan</b>. Yang tidak diatur mengikuti <a href="#" id="ke-umum">Pengaturan Umum</a> dari admin.</p></div></div>
+        <p class="redup kecil">Profil aturan dan tahapan buatan Anda, yang terpasang di rombel yang Anda ajar (termasuk buatan rekan), ditambah contoh buatan admin. Pasang untuk seluruh rombel di bagian 3, atau untuk siswa tertentu lewat <b>Sesi Kegiatan</b>. Yang tidak diatur mengikuti <a href="#" id="ke-umum">Pengaturan Umum</a> dari admin.</p></div></div>
 
       <section class="kartu seksi" id="lapis-kartu">
         <div class="seksi-kepala"><span class="seksi-ikon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg></span>
@@ -883,12 +884,12 @@ body.lihat .ubah { display: none !important; }
           <button class="garis kecil seksi-aksi" id="lapis-tutup">Sembunyikan</button></div>
         <div class="seksi-isi">
           <ol class="lapis">
-            <li class="l-siswa"><span class="l-no">1</span><div><b>Siswa tertentu</b><small>Sesi Kegiatan / Analisis Siswa · paling kuat</small></div><span class="l-isi"><span><small>Aturan</small>isian tahapan khusus siswa</span><span><small>Materi</small>tahap, level, dan sub level yang dicentang di tahapan khusus siswa</span></span></li>
-            <li class="l-kel"><span class="l-no">2</span><div><b>Rombel</b><small>halaman ini, bagian 2 · oleh guru</small></div><span class="l-isi"><span><small>Aturan</small>isian tahapan khusus rombel</span><span><small>Materi</small>tahapan khusus rombel</span></span></li>
-            <li class="l-umum"><span class="l-no">3</span><div><b>Pengaturan Umum</b><small>diatur admin</small></div><span class="l-isi"><span><small>Aturan</small>Pengaturan Umum</span><span><small>Materi</small>urutan Tahapan Level (tanpa yang ditutup admin)</span></span></li>
+            <li class="l-siswa"><span class="l-no">1</span><div><b>Siswa tertentu</b><small>Sesi Kegiatan / Analisis Siswa · paling kuat</small></div><span class="l-isi"><span><small>Aturan</small>profil siswa</span><span><small>Tahapan</small>tahapan khusus siswa</span></span></li>
+            <li class="l-kel"><span class="l-no">2</span><div><b>Rombel</b><small>halaman ini, bagian 3 · oleh guru</small></div><span class="l-isi"><span><small>Aturan</small>profil aturan rombel</span><span><small>Tahapan</small>tahapan khusus rombel</span></span></li>
+            <li class="l-umum"><span class="l-no">3</span><div><b>Pengaturan Umum</b><small>diatur admin</small></div><span class="l-isi"><span><small>Aturan</small>Pengaturan Umum</span><span><small>Tahapan</small>urutan Tahapan Level (tanpa yang ditutup admin)</span></span></li>
           </ol>
         </div>
-        <p class="catatan-seksi"><span>Isian aturan yang dibiarkan <b>Ikut umum</b> di tahapan khusus memakai Pengaturan Umum, satu per satu. Contoh: tahapan khusus yang hanya mengubah jumlah soal tetap memakai batas keluar halaman dari Pengaturan Umum.</span></p>
+        <p class="catatan-seksi"><span>Isian aturan yang tidak diisi profil di atas ikut lapisan di bawahnya, satu per satu. Contoh: profil siswa yang hanya mengubah jumlah soal tetap memakai batas keluar halaman dari profil rombelnya.</span></p>
       </section>
       <p id="lapis-buka-p" class="hidden" style="margin:0 0 var(--j4)"><button class="garis kecil" id="lapis-buka">Tampilkan cara sistem memilih aturan dan tahapan</button></p>
 
@@ -903,8 +904,16 @@ body.lihat .ubah { display: none !important; }
       </section>
 
       <section class="kartu seksi">
+        <div class="seksi-kepala"><span class="seksi-ikon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></span>
+          <div><h2>1. Profil aturan</h2><p>Kumpulan aturan bernama yang bisa dipakai ulang, mis. "Santai 20 soal" atau "Ketat keluar halaman".</p></div>
+          <button class="ubah kecil seksi-aksi" id="pr-baru">+ Buat profil</button></div>
+        <div class="pr-editor hidden" id="pr-editor"></div>
+        <div id="pr-daftar"></div>
+      </section>
+
+      <section class="kartu seksi">
         <div class="seksi-kepala"><span class="seksi-ikon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="6" r="2.5"/><path d="M7.5 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h7.5"/></svg></span>
-          <div><h2>1. Tahapan khusus</h2><p>Pilih tahap, level, sampai sub level yang dipakai, dan aturan yang berbeda dari umum. Untuk remedial, pengayaan, atau persiapan ujian.</p></div>
+          <div><h2>2. Tahapan khusus</h2><p>Pilih tahap, level, sampai sub level yang dipakai. Untuk remedial, pengayaan, atau persiapan ujian. Hanya berisi materi.</p></div>
           <button class="ubah kecil seksi-aksi" id="jl-baru">+ Buat tahapan</button></div>
         <div class="seksi-isi jl-contoh" id="jl-contoh"></div>
         <div class="jl-editor hidden" id="jl-editor"></div>
@@ -913,16 +922,16 @@ body.lihat .ubah { display: none !important; }
 
       <section class="kartu seksi">
         <div class="seksi-kepala"><span class="seksi-ikon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 20a6.5 6.5 0 0 0-3-5.5"/></svg></span>
-          <div><h2>2. Untuk seluruh rombel</h2><p>Pilih tahapan khusus untuk rombel Anda. Yang tidak dipilih mengikuti Pengaturan Umum dan urutan Tahapan Level.</p></div></div>
+          <div><h2>3. Untuk seluruh rombel</h2><p>Pilih profil aturan dan tahapan untuk rombel Anda. Yang tidak dipilih mengikuti Pengaturan Umum dan urutan Tahapan Level.</p></div></div>
         <div id="pr-kelompok"></div>
       </section>
 
       <section class="kartu seksi">
         <div class="seksi-kepala"><span class="seksi-ikon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
-          <div><h2>3. Untuk siswa tertentu</h2><p>Diatur lewat menu Sesi Kegiatan atau Analisis Siswa. Pilihan siswa mengalahkan pilihan rombel.</p></div></div>
+          <div><h2>4. Untuk siswa tertentu</h2><p>Diatur lewat menu Sesi Kegiatan atau Analisis Siswa. Pilihan siswa mengalahkan pilihan rombel.</p></div></div>
         <ol class="langkah-siswa">
           <li>Buka <b>Sesi Kegiatan</b>, saring rombel atau cari siswa, lalu centang.</li>
-          <li>Di bilah bawah, tekan <b>Atur tahapan</b>, pilih tahapan khusus, lalu tekan <b>Terapkan</b>.</li>
+          <li>Di bilah bawah, tekan <b>Atur aturan &amp; tahapan</b>, pilih <b>Aturan</b> atau <b>Tahapan</b>, lalu tekan <b>Terapkan</b>.</li>
           <li>Untuk mengembalikan, pilih <b>Ikut rombel</b>. Untuk satu siswa juga bisa lewat <b>Analisis Siswa</b>.</li>
         </ol>
       </section>
@@ -993,6 +1002,6 @@ body.lihat .ubah { display: none !important; }
 <script>window.XL_APLIKASI = "English Reading";</script>
 <script src="assets/kepala-excel.js?v=1"></script>
 <script src="assets/excel.js?v=5"></script>
-<script src="guru.js?v=4"></script>
+<script src="guru.js?v=5"></script>
 </body>
 </html>

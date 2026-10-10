@@ -51,6 +51,9 @@
   if (AKUN && AKUN.atur && !AKUN.luring) {
     const u = AKUN.atur.umum || {};
     ['jumlahSoal', 'tampilJawaban', 'bilaSalah', 'batasSalah', 'harusDengar', 'harusBaca', 'syaratBaca'].forEach(k => { if (u[k] != null) setelan[k] = u[k]; });
+    // Profil aturan dari guru (rombel, lalu siswa) mengalahkan Pengaturan Umum, isian demi isian.
+    const ai = (AKUN.atur.aturan && AKUN.atur.aturan.isi) || {};
+    ['jumlahSoal', 'tampilJawaban', 'bilaSalah', 'batasSalah', 'harusDengar', 'harusBaca', 'syaratBaca'].forEach(k => { if (ai[k] != null) setelan[k] = ai[k]; });
     const p = AKUN.atur.profil;
     khusus.daftar = p ? [{ id: p.id, nama: p.nama, catatan: p.catatan || '', setelan: p.setelan || {}, mati: p.mati || {}, asal: p.asal }] : [];
     khusus.aktif = p ? p.id : null;

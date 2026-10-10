@@ -213,8 +213,13 @@ Halaman guru dibangun ulang dari `Matematika_Dasar/guru.html` (CSS disalin apa a
   Nilai rendah) dan Per Rombel (ubin, sebaran per tahap, perbandingan rombel), **Unduh rekap** (.xlsx).
 - **Analisis Siswa:** catatan otomatis, grafik sub level lulus, kegiatan per jenis, per tahap, hasil di bawah 80%,
   riwayat sub level lulus, tahapan khusus siswa, hapus data latihan.
-- **Pengaturan & Tahapan Khusus:** cara sistem memilih (siswa → rombel → umum), **Cek aturan siswa** beserta asalnya,
-  tahapan khusus (contoh siap pakai + editor checklist), pemasangan per rombel.
+- **Pengaturan & Tahapan Khusus** (seperti Matdas, sejak 10 Okt 2026 aturan dan materi terpisah): cara sistem memilih
+  (siswa → rombel → umum, terpisah untuk aturan dan tahapan), **Cek aturan siswa** beserta asal tiap isian,
+  **1. Profil aturan** (`er_atur_profil`: jumlah soal, bila salah, batas salah, syarat dengar/baca, batas keluar halaman),
+  **2. Tahapan khusus** (`er_profil`: materi saja, editor checklist + contoh siap pakai), **3. Untuk seluruh rombel**
+  (dua pilihan: profil aturan dan tahapan), **4. Untuk siswa tertentu** (Sesi Kegiatan → centang → Atur aturan & tahapan,
+  atau Analisis Siswa). Aturan lama yang dulu diisi di tahapan khusus dipindahkan otomatis menjadi profil aturan
+  bernama sama dan dipasang ke rombel/siswa yang sama.
 - **Pengaturan Umum** (admin): Halaman Latihan, Pengawasan keluar halaman, Aturan naik sub level, Sesi (lama satu sesi mandiri dalam menit, `durasi_menit`).
 - **Tahapan Level:** 6 tahap → level → sub level. **Contoh** (kosakata/pola/bacaan + soal, Tampilkan Jawaban,
   Mode Layar Penuh), **Coba** (uji coba guru: `index.html#coba=<id level>`, data hanya di tab itu), dan admin bisa
@@ -256,9 +261,9 @@ Meniru Matematika Dasar. Data di project Supabase Tryout, tabel dan fungsi beraw
   dan 40 hasil terakhir. Dari sini guru juga bisa memasang tahapan khusus untuk satu siswa dan menghapus data latihan.
 - 🎯 **Pengaturan & Tahapan:** Pengaturan Umum hanya bisa diubah admin, termasuk latihan mandiri, batas keluar
   halaman, dan kode buka. Tahapan khusus memakai editor checklist tahap → level → sub level yang sama dengan `app.js`.
-  Tahapan dipasang ke rombel. Urutan yang berlaku: tahapan siswa → rombel → umum.
-  Seperti Matdas, tahapan khusus juga boleh mengisi **batas keluar halaman saat sesi kelas** dan **keluar halaman yang dihitung**
-  (detik); bila dibiarkan "Ikut umum", nilai Pengaturan Umum yang dipakai.
+  Tahapan dan profil aturan dipasang ke rombel atau siswa. Urutan yang berlaku: siswa → rombel → umum.
+  Seperti Matdas, profil aturan juga boleh mengisi **batas keluar halaman saat sesi kelas** dan **keluar halaman yang dihitung**
+  (detik); isian yang dikosongkan memakai lapis di bawahnya.
 - 🛠️ **Admin:** "Tarik guru dari Data Induk" memanggil `guru_ekspor` (kunci `er_kelas`) lalu `er_sinkron_guru`.
   PIN guru tetap dibuat di admin Matdas/Tryout.
 

@@ -145,7 +145,8 @@ function status(r) {
   const s = [], k = lengkapi(r), ss = r.sesi || {};
   if (!pernahMulai(r)) return [{ t: "Belum mulai", c: "", bobot: 2 }];
   if (ss.terkunci) s.push({ t: "Terkunci", c: "buruk", bobot: 5 });
-  if (r.profil) s.push({ t: "Tahapan: " + r.profil.nama, c: "emas", bobot: 0 });
+  if (r.profil) s.push({ t: "Tahapan: " + r.profil.nama, c: "biru", bobot: 0 });
+  if (r.aturan) s.push({ t: "Aturan: " + r.aturan.nama, c: "emas", bobot: 0 });
   if (k.selesai) s.push({ t: "Tamat", c: "baik", bobot: 0 });
   if (r.macet) s.push({ t: "Macet", c: "buruk", bobot: 4 });
   if (!aktif7(r)) s.push({ t: "Tidak aktif", c: "emas", bobot: 3 });
@@ -260,7 +261,8 @@ const PILIH = new Set();
 const statusDaftar = (r) => { const ss = r.sesi || {}, k = lengkapi(r);
   return ss.terkunci ? '<span class="lencana buruk">Terkunci</span>'
     : ss.online ? `<span class="lencana baik"><span class="titik-on"></span>Sedang berlatih${ss.mode === "kelas" ? " (sesi)" : " (mandiri)"}</span>`
-    : r.profil ? `<span class="lencana ringkas emas" title="Tahapan khusus dipilih untuk siswa ini">Tahapan: ${esc(r.profil.nama)}</span>`
+    : r.profil ? `<span class="lencana ringkas biru" title="Tahapan khusus dipilih untuk siswa ini">Tahapan: ${esc(r.profil.nama)}</span>`
+    : r.aturan ? `<span class="lencana ringkas emas" title="Profil aturan dipilih untuk siswa ini">Aturan: ${esc(r.aturan.nama)}</span>`
     : !r.masuk_terakhir && !pernahMulai(r) ? '<span class="lencana">Belum pernah masuk</span>'
     : k.selesai ? '<span class="lencana baik">Tamat</span>'
     : `<span class="redup kecil">Aktif ${esc(sejakTeks(r.terakhir || r.masuk_terakhir))}</span>`; };
@@ -325,35 +327,52 @@ function perbaruiMassal() {
 function bukaPanelMassal(buka) {
   PANEL_MASSAL = buka;
   $("dl-panel").classList.toggle("hidden", !buka);
-  $("dl-atur-buka").textContent = buka ? "Tutup pengaturan" : "Atur tahapan";
+  $("dl-atur-buka").textContent = buka ? "Tutup pengaturan" : "Atur aturan & tahapan";
   $("dl-atur-buka").setAttribute("aria-expanded", String(buka));
   $("dl-terapkan").classList.toggle("hidden", !buka);
   if (buka) isiDefaultMassal();
 }
 $("dl-atur-buka").onclick = () => bukaPanelMassal(!PANEL_MASSAL);
+// Pilihan Aturan & Tahapan di bilah bawah menunjukkan keadaan siswa terpilih sekarang (seperti Matdas).
+let AWAL_A = "";
 function isiDefaultMassal() {
-  const L = terpilih(), s = $("dl-profil");
+  const L = terpilih();
   if (!L.length) return;
-  const kel = [...new Set(L.map((r) => r.kelas))], p1 = kel.length === 1 ? profilRombel(kel[0]) : null;
-  s.innerHTML = `<option value="">Ikut rombel (${kel.length === 1 ? (p1 ? `"${esc(p1.nama)}"` : "tahapan umum") : "masing-masing rombel"})</option>` +
-    (PROFIL.length ? `<optgroup label="Tahapan khusus">${PROFIL.map((p) => `<option value="${esc(p.id)}">${esc(p.nama)}</option>`).join("")}</optgroup>` : "");
-  const nilai = [...new Set(L.map((r) => (r.profil ? r.profil.id : "")))];
-  if (nilai.length > 1) { s.insertAdjacentHTML("afterbegin", '<option value="~">Beragam, pilih untuk mengubah</option>'); s.value = "~"; }
-  else s.value = [...s.options].some((o) => o.value === nilai[0]) ? nilai[0] : "";
-  AWAL_T = s.value;
+  const kel = [...new Set(L.map((r) => r.kelas))], k1 = kel.length === 1 ? kel[0] : null;
+  const p1 = k1 ? profilRombel(k1) : null, a1 = k1 ? aturanRombel(k1) : null;
+  const isi = (s, label, daftar, nilai) => {
+    s.innerHTML = `<option value="">${label}</option>` + (daftar.length ? `<optgroup label="Khusus">${daftar.map((p) => `<option value="${esc(p.id)}">${esc(p.nama)}</option>`).join("")}</optgroup>` : "");
+    if (nilai.length > 1) { s.insertAdjacentHTML("afterbegin", '<option value="~">Beragam, pilih untuk mengubah</option>'); s.value = "~"; }
+    else s.value = [...s.options].some((o) => o.value === nilai[0]) ? nilai[0] : "";
+    return s.value;
+  };
+  AWAL_A = isi($("dl-aturan"), `Ikut rombel (${k1 ? (a1 ? `profil "${esc(a1.nama)}"` : "Pengaturan Umum") : "masing-masing rombel"})`, ATPROFIL,
+    [...new Set(L.map((r) => (r.aturan ? r.aturan.id : "")))]);
+  AWAL_T = isi($("dl-profil"), `Ikut rombel (${k1 ? (p1 ? `tahapan "${esc(p1.nama)}"` : "Tahapan Level") : "masing-masing rombel"})`, PROFIL,
+    [...new Set(L.map((r) => (r.profil ? r.profil.id : "")))]);
 }
 const terpilih = () => DAFTAR.filter((r) => PILIH.has(r.nisn));
 const namaTerpilih = () => { const nm = terpilih().map((r) => r.nama); return nm.slice(0, 5).join(", ") + (nm.length > 5 ? `, dan ${nm.length - 5} lainnya` : ""); };
 $("dl-batal").onclick = () => { PILIH.clear(); gambarDaftar(); };
+// Satu tombol Terapkan; yang diterapkan hanya pilihan yang diubah guru dari keadaan awal siswa.
 $("dl-terapkan").onclick = async () => {
-  const L = terpilih(), v = $("dl-profil").value;
-  if (v === "~" || v === AWAL_T) return toast("Belum ada tahapan yang diubah.");
-  const p = PROFIL.find((x) => x.id === v);
-  const pesan = p ? `TAHAPAN: pasang "${p.nama}" (${teksRingkas(ringkasTahapan(p.mati))}). Pilihan ini tetap berlaku walau tahapan rombelnya diganti.`
-    : "TAHAPAN: kembali ke tahapan rombelnya masing-masing.";
-  if (!confirm(`Terapkan untuk ${L.length} siswa?\n\n${namaTerpilih()}\n\n${pesan}\n\nKemajuan siswa tidak berubah.`)) return;
-  try { const r = await rpc("er_pasang_siswa", { p_pin: PIN, p_nisn: L.map((x) => x.nisn), p_profil: p ? p.id : null });
-    toast(p ? `Tahapan "${p.nama}" untuk ${r.jumlah} siswa` : `${r.jumlah} siswa ikut tahapan rombel`); }
+  const L = terpilih(), vA = $("dl-aturan").value, vT = $("dl-profil").value;
+  const ubahA = vA !== "~" && vA !== AWAL_A, ubahT = vT !== "~" && vT !== AWAL_T;
+  if (!ubahA && !ubahT) return toast("Belum ada aturan atau tahapan yang diubah.");
+  const a = ATPROFIL.find((x) => x.id === vA), p = PROFIL.find((x) => x.id === vT), bagian = [], kerja = [];
+  if (ubahA) {
+    bagian.push(a ? `ATURAN: pasang "${a.nama}" (${ringkasAturan(a)}). Isian lain tetap dari aturan rombel atau Pengaturan Umum.` : "ATURAN: kembali ke aturan rombelnya.");
+    kerja.push(async () => { const r = await rpc("er_atur_profil_siswa", { p_pin: PIN, p_nisn: L.map((x) => x.nisn), p_profil: a ? a.id : null });
+      return a ? `aturan "${a.nama}" untuk ${r.jumlah} siswa` : `aturan ${r.jumlah} siswa ikut rombel`; });
+  }
+  if (ubahT) {
+    bagian.push(p ? `TAHAPAN: pasang "${p.nama}" (${teksRingkas(ringkasTahapan(p.mati))}). Pilihan ini tetap berlaku walau tahapan rombelnya diganti.` : "TAHAPAN: kembali ke tahapan rombelnya.");
+    kerja.push(async () => { const r = await rpc("er_pasang_siswa", { p_pin: PIN, p_nisn: L.map((x) => x.nisn), p_profil: p ? p.id : null });
+      return p ? `tahapan "${p.nama}" untuk ${r.jumlah} siswa` : `tahapan ${r.jumlah} siswa ikut rombel`; });
+  }
+  if (!confirm(`Terapkan untuk ${L.length} siswa?\n\n${namaTerpilih()}\n\n${bagian.join("\n\n")}\n\nKemajuan siswa tidak berubah.`)) return;
+  const hasil = [];
+  try { for (const f of kerja) hasil.push(await f()); toast("Diterapkan: " + hasil.join("; ")); }
   catch (e) { toast(e.message); }
   PILIH.clear(); muatDaftar(true); muatKelas(); muatProfil(true); muatSemua();
 };
@@ -634,8 +653,8 @@ const BAWAAN = { jumlahSoal: 10, harusDengar: true, harusBaca: true, syaratBaca:
 const umumNilai = (k) => (G.umum && G.umum[k] != null ? G.umum[k] : BAWAAN[k]);
 const nilaiAturTeks = (x, v) => x.t === "ya" ? (v ? x.on : x.off) : x.t === "pilih" ? ((x.opsi.find((o) => o[0] === v) || [])[1] || v)
   : (x.k === "batasSalah" || x.k === "maks_keluar") ? (v ? `${v} ${x.sat}` : "tanpa batas") : x.sat === "%" ? `${v}%` : `${v} ${x.sat}`;
-const aturanProfil = (p) => SEMUA_KHUSUS.filter((x) => p.setelan && p.setelan[x.k] != null);
-const ringkasAturan = (p) => aturanProfil(p).map((x) => `${x.l} ${nilaiAturTeks(x, p.setelan[x.k])}`).join(", ");
+const aturanProfil = (p) => SEMUA_KHUSUS.filter((x) => p && p.aturan && p.aturan[x.k] != null);
+const ringkasAturan = (p) => aturanProfil(p).map((x) => `${x.l} ${nilaiAturTeks(x, p.aturan[x.k])}`).join(", ");
 
 // Ringkasan materi sebuah tahapan (null = tahapan umum tanpa yang ditutup admin).
 function ringkasTahapan(m) {
@@ -648,6 +667,7 @@ function ringkasTahapan(m) {
   return { tahap, level, sub };
 }
 const teksRingkas = (r) => `${r.tahap} tahap · ${r.level} level · ${r.sub} sub level`;
+const aturanRombel = (kelas) => ((G.rombel.find((x) => x.kelas === kelas) || {}).aturan) || null;
 
 /* ---- Kotak "Aturan dan tahapan yang berlaku" di Sesi Kegiatan */
 function gambarInfoKelompok() {
@@ -659,14 +679,17 @@ function gambarInfoKelompok() {
   const isianUmum = ["jumlahSoal", "bilaSalah", "maks_keluar"].map((k) => SEMUA_KHUSUS.find((x) => x.k === k));
   const hitung = (L) => { const m = new Map(); L.forEach((v) => m.set(v, (m.get(v) || 0) + 1)); return [...m].map(([v, c]) => `${esc(v)} (${c})`).join(", "); };
   const baris = kel.map((k) => {
-    const pr = profilRombel(k), p = pr && PROFIL.find((x) => x.id === pr.id), A = DAFTAR.filter((r) => r.kelas === k), n = A.length, sT = A.filter((r) => r.profil);
+    const pr = profilRombel(k), ar = aturanRombel(k), a = ar && ATPROFIL.find((x) => x.id === ar.id), p = pr && PROFIL.find((x) => x.id === pr.id);
+    const A = DAFTAR.filter((r) => r.kelas === k), n = A.length, sA = A.filter((r) => r.aturan), sT = A.filter((r) => r.profil);
     const jml = (c) => c === n && n > 0 ? `Semua siswa (${c})` : `${c} siswa`;
+    const lainA = sA.length ? `<span class="ik-ket"><b>${jml(sA.length)}</b> memakai aturan sendiri: ${hitung(sA.map((r) => r.aturan.nama))}</span>` : "";
     const lainT = sT.length ? `<span class="ik-ket"><b>${jml(sT.length)}</b> memakai tahapan sendiri: ${hitung(sT.map((r) => r.profil.nama))}</span>` : "";
     return `<div class="ik-baris">
       <div class="ik-kel"><b>${esc(k)}</b><small>${n || (G.rombel.find((x) => x.kelas === k) || {}).siswa || 0} siswa</small></div>
-      <div class="ik-sel"><span class="ik-judul">Aturan rombel</span>${p && aturanProfil(p).length
-        ? `<b>Dari tahapan "${esc(p.nama)}"</b><span class="ik-chips">${aturanProfil(p).map((x) => chip(x, p.setelan[x.k], "khusus")).join("")}</span><small>Isian lain mengikuti Pengaturan Umum.</small>`
-        : `<b>Pengaturan Umum</b><span class="ik-chips">${isianUmum.map((x) => chip(x, umumNilai(x.k))).join("")}</span>`}</div>
+      <div class="ik-sel"><span class="ik-judul">Aturan rombel</span>${a
+        ? `<b>Profil "${esc(a.nama)}"</b><span class="ik-chips">${aturanProfil(a).map((x) => chip(x, a.aturan[x.k], "khusus")).join("")}</span><small>Isian lain mengikuti Pengaturan Umum.</small>`
+        : `<b>Pengaturan Umum</b><span class="ik-chips">${isianUmum.map((x) => chip(x, umumNilai(x.k))).join("")}</span>`}
+        ${lainA ? `<div class="ik-lain"><span class="ik-judul">Diatur per siswa</span>${lainA}</div>` : ""}</div>
       <div class="ik-sel"><span class="ik-judul">Tahapan rombel</span>${pr
         ? `<b>Tahapan "${esc(pr.nama)}"</b><small>${p ? esc(teksRingkas(ringkasTahapan(p.mati))) : ""}</small>`
         : `<b>Tahapan Level</b><small>Urutan bawaan, ${esc(teksRingkas(ringkasTahapan(matiUmum())))}.</small>`}
@@ -676,29 +699,84 @@ function gambarInfoKelompok() {
   $("info-kel-isi").innerHTML = kel.length > 3 ? `<details class="ik-lipat"><summary>Tampilkan aturan dan tahapan ${kel.length} rombel</summary>${baris.join("")}</details>` : baris.join("");
 }
 
-/* ----------------------------------------------------------- tahapan khusus (aturan + materi) */
-let PROFIL = [], SEMUA = [];
+/* ----------------------------------------------------------- profil aturan & tahapan khusus (seperti Matdas) */
+let PROFIL = [], ATPROFIL = [], SEMUA = [];
 const dipakaiTeks = (p) => [p.kelas.length ? `rombel ${p.kelas.join(", ")} (${p.kelas.reduce((a, k) => a + ((G.rombel.find((r) => r.kelas === k) || {}).siswa || 0), 0)} siswa)` : "",
   p.siswa ? `${p.siswa} siswa dipilih langsung` : ""].filter(Boolean).join(" · ");
 async function muatProfil(diam) {
-  try { PROFIL = await rpc("er_profil_daftar", { p_pin: PIN }); } catch (e) { if (!diam) toast(e.message); return; }
-  gambarProfil(); gambarKelompokAturan(); gambarInfoKelompok();
+  try { [PROFIL, ATPROFIL] = await Promise.all([rpc("er_profil_daftar", { p_pin: PIN }), rpc("er_atur_profil_daftar", { p_pin: PIN })]); }
+  catch (e) { if (!diam) toast(e.message); return; }
+  gambarAturProfil(); gambarProfil(); gambarKelompokAturan(); gambarInfoKelompok();
 }
 async function muatSemua() {
   try { SEMUA = await rpc("er_siswa_daftar", { p_pin: PIN }); } catch (e) { return; }
   $("ck-daftar").innerHTML = SEMUA.map((r) => `<option value="${esc(r.nama)} · ${esc(r.nisn)}">${esc(r.kelas)}</option>`).join("");
   gambarKelompokAturan();
 }
+
+/* ---- 1. Profil aturan: kumpulan aturan bernama yang bisa dipakai ulang */
+function gambarAturProfil() {
+  $("pr-daftar").innerHTML = ATPROFIL.length ? ATPROFIL.map((p) => {
+    const pakai = dipakaiTeks(p);
+    return `<div class="butir"><div class="jl-kepala"><div><h2>${esc(p.nama)}</h2>${p.catatan ? `<span class="redup kecil">${esc(p.catatan)}</span>` : ""}</div>
+      ${p.milik ? `<span class="jl-aksi"><button class="garis kecil" data-ubah-profil="${esc(p.id)}">Ubah</button><button class="kecil bahaya" data-hapus-profil="${esc(p.id)}">Hapus</button></span>` : `<span class="redup kecil">dibuat ${esc(p.pemilik_nama || "admin")}</span>`}</div>
+      <div class="pr-chip">${aturanProfil(p).map((x) => `<span><small>${x.l}</small><b>${esc(nilaiAturTeks(x, p.aturan[x.k]))}</b></span>`).join("")}</div>
+      <div class="pr-pakai ${pakai ? "" : "redup"}">${pakai ? "<b>Dipakai oleh:</b> " + esc(pakai) : "Belum dipakai rombel atau siswa"}</div></div>`;
+  }).join("") : '<p class="butir kosong-data">Belum ada profil aturan. Semua siswa memakai Pengaturan Umum.</p>';
+  $("pr-daftar").querySelectorAll("[data-ubah-profil]").forEach((b) => b.onclick = () => bukaEditorAturan(ATPROFIL.find((p) => p.id === b.dataset.ubahProfil)));
+  $("pr-daftar").querySelectorAll("[data-hapus-profil]").forEach((b) => b.onclick = async () => {
+    const p = ATPROFIL.find((x) => x.id === b.dataset.hapusProfil), pakai = dipakaiTeks(p);
+    if (!confirm(`Hapus profil "${p.nama}"?\n\n` + (pakai ? `Dipakai oleh: ${pakai}.\nMereka kembali ke aturan di bawahnya (aturan rombel atau Pengaturan Umum).` : "Profil ini belum dipakai."))) return;
+    try { await rpc("er_atur_profil_hapus", { p_pin: PIN, p_id: p.id }); toast("Profil dihapus"); await muatSesi(); muatProfil(); muatKelas(); } catch (e) { toast(e.message); }
+  });
+}
+function bukaEditorAturan(p) {
+  const ed = $("pr-editor"), a = p ? p.aturan : {};
+  const kendali = (x) => {
+    const v = a[x.k], u = umumNilai(x.k);
+    if (x.t === "ya") return `<select data-pk="${x.k}"><option value="">— ikut umum (${u ? x.on : x.off}) —</option><option value="true" ${v === true ? "selected" : ""}>${x.on}</option><option value="false" ${v === false ? "selected" : ""}>${x.off}</option></select>`;
+    if (x.t === "pilih") return `<select data-pk="${x.k}"><option value="">— ikut umum (${esc(nilaiAturTeks(x, u))}) —</option>${x.opsi.map((o) => `<option value="${o[0]}" ${v === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select>`;
+    return `<span class="grup"><input type="number" data-pk="${x.k}" min="${x.min}" max="${x.maks}" inputmode="numeric" placeholder="${u}" value="${v == null ? "" : v}"><span class="satuan">${x.sat}</span></span>`;
+  };
+  ed.innerHTML = `<h2>${p ? "Ubah profil aturan" : "Profil aturan baru"}</h2>
+    <div class="pr-identitas"><label>Nama profil<input type="text" id="pr-nama" maxlength="80" placeholder="mis. Santai 20 soal" value="${esc(p ? p.nama : "")}"></label>
+      <label>Catatan (opsional)<input type="text" id="pr-catatan" maxlength="300" placeholder="mis. Bu Rina — rombel yang perlu waktu lebih" value="${esc(p && p.catatan || "")}"></label></div>
+    <p class="redup kecil">Isi hanya yang ingin dibedakan. Kotak kosong mengikuti aturan di bawahnya; angka samar = Pengaturan Umum.</p>
+    ${ATUR_KHUSUS.map((g) => `<div class="pr-grup"><div class="ds-sub-judul">${g.g}</div><div class="pr-isian">${g.f.map((x) => `<label><span>${x.l}</span>${kendali(x)}</label>`).join("")}</div></div>`).join("")}
+    <p class="redup kecil">Latihan mandiri, lama sesi, dan kode buka diatur di <b>Pengaturan Umum</b>; materi yang dipakai diatur di <b>Tahapan khusus</b>.</p>
+    <div class="baris" style="margin-top:var(--j4)"><button id="pr-simpan">Simpan profil</button><button class="garis" id="pr-batal">Batal</button></div>`;
+  $("pr-batal").onclick = () => ed.classList.add("hidden");
+  $("pr-simpan").onclick = async () => {
+    const nama = $("pr-nama").value.trim(), aturan = {};
+    if (!nama) return toast("Isi nama profil dulu.");
+    for (const x of SEMUA_KHUSUS) {
+      const v = ed.querySelector(`[data-pk="${x.k}"]`).value.trim();
+      if (v === "") continue;
+      if (x.t === "ya") aturan[x.k] = v === "true";
+      else if (x.t === "pilih") aturan[x.k] = v;
+      else { const n = Number(v); if (!Number.isInteger(n) || n < x.min || n > x.maks) return toast(`${x.l}: isi ${x.min}–${x.maks} atau kosongkan.`); aturan[x.k] = n; }
+    }
+    if (!Object.keys(aturan).length) return toast("Isi paling sedikit satu aturan yang ingin dibedakan.");
+    const pakai = p ? dipakaiTeks(p) : "";
+    if (pakai && !confirm(`Simpan perubahan profil "${nama}"?\n\nPerubahan langsung berlaku untuk: ${pakai}.`)) return;
+    try { await rpc("er_atur_profil_simpan", { p_pin: PIN, p_p: { id: p ? p.id : null, nama, catatan: $("pr-catatan").value.trim(), aturan } });
+      toast("Profil disimpan"); ed.classList.add("hidden"); muatProfil(); } catch (e) { toast(e.message); }
+  };
+  ed.classList.remove("hidden"); ed.scrollIntoView({ behavior: "smooth", block: "start" }); $("pr-nama").focus();
+}
+$("pr-baru").onclick = () => bukaEditorAturan(null);
+
+/* ---- 2. Tahapan khusus: materi yang dipakai (checklist tahap → level → sub level) */
 function matiKecuali(tahapDipakai, subMati) {
   const m = { tahap: window.TAHAP.map((t) => t.no).filter((n) => !tahapDipakai.includes(n)), level: [], sub: {} };
   if (subMati) window.BACAAN.filter((b) => tahapDipakai.includes(b.tahap) && punyaSub(b) && daftarSub(b).length >= 10).forEach((b) => { m.sub[b.id] = subMati.slice(); });
   return m;
 }
 const CONTOH = [
-  { kode: "tka", ikon: "🎓", nama: "Persiapan TKA", ket: "Level TKA saja, sub level 6–10 sesuai kisi-kisi ujian, 20 soal per sub level.", buat: () => ({ setelan: { jumlahSoal: 20 }, mati: matiKecuali([4], [1, 2, 3, 4, 5]) }) },
-  { kode: "utbk", ikon: "🏛️", nama: "Persiapan UTBK/SNBT", ket: "Level UTBK/SNBT saja, sub level 6–10, 20 soal per sub level.", buat: () => ({ setelan: { jumlahSoal: 20 }, mati: matiKecuali([5], [1, 2, 3, 4, 5]) }) },
-  { kode: "fondasi", ikon: "🌱", nama: "Fondasi", ket: "Kosakata dasar dan kalimat sederhana (Tahap 0–1).", buat: () => ({ setelan: {}, mati: matiKecuali([0, 1]) }) },
-  { kode: "genre", ikon: "📚", nama: "Teks Fungsional & Genre", ket: "Tahap 2–3: teks pendek dan genre teks.", buat: () => ({ setelan: {}, mati: matiKecuali([2, 3]) }) },
+  { kode: "tka", ikon: "🎓", nama: "Persiapan TKA", ket: "Level TKA saja, sub level 6–10 sesuai kisi-kisi ujian.", buat: () => ({ mati: matiKecuali([4], [1, 2, 3, 4, 5]) }) },
+  { kode: "utbk", ikon: "🏛️", nama: "Persiapan UTBK/SNBT", ket: "Level UTBK/SNBT saja, sub level 6–10.", buat: () => ({ mati: matiKecuali([5], [1, 2, 3, 4, 5]) }) },
+  { kode: "fondasi", ikon: "🌱", nama: "Fondasi", ket: "Kosakata dasar dan kalimat sederhana (Tahap 0–1).", buat: () => ({ mati: matiKecuali([0, 1]) }) },
+  { kode: "genre", ikon: "📚", nama: "Teks Fungsional & Genre", ket: "Tahap 2–3: teks pendek dan genre teks.", buat: () => ({ mati: matiKecuali([2, 3]) }) },
 ];
 function gambarProfil() {
   $("jl-contoh").innerHTML = `<button class="jl-contoh-kartu baru" data-buat="baru"><span aria-hidden="true">＋</span><b>Buat dari awal</b><small>Semua materi dicentang, lalu pilih sendiri.</small></button>` +
@@ -708,61 +786,66 @@ function gambarProfil() {
     const pakai = dipakaiTeks(p), r = ringkasTahapan(p.mati);
     return `<div class="butir"><div class="jl-kepala"><div><h2>${esc(p.nama)}</h2>${p.catatan ? `<span class="redup kecil">${esc(p.catatan)}</span><br>` : ""}<span class="redup kecil">dibuat ${esc(p.pemilik_nama || "admin")} · diubah ${esc(tglTeks(p.diubah, true))}</span></div>
       <span class="jl-aksi">${p.milik !== false ? `<button class="garis kecil" data-ubah="${esc(p.id)}">Ubah</button>` : ""}<button class="garis kecil" data-salin="${esc(p.id)}">Salin</button>${p.milik !== false ? `<button class="kecil bahaya" data-hapus="${esc(p.id)}">Hapus</button>` : ""}</span></div>
-      <div class="pr-chip"><span class="pakai"><small>Materi</small><b>${esc(teksRingkas(r))}</b></span>${aturanProfil(p).map((x) => `<span><small>${x.l}</small><b>${esc(nilaiAturTeks(x, p.setelan[x.k]))}</b></span>`).join("") || '<span><small>Aturan</small><b>ikut Pengaturan Umum</b></span>'}</div>
+      <div class="pr-chip"><span class="pakai"><small>Materi</small><b>${esc(teksRingkas(r))}</b></span>${window.TAHAP.filter((t) => tahapOn(p.mati, t.no) && window.BACAAN.some((b) => b.tahap === t.no && levelOn(p.mati, b))).map((t) => `<span><small>Tahap ${t.no}</small><b>${esc(t.nama)}</b></span>`).join("")}</div>
       <div class="pr-pakai ${pakai ? "" : "redup"}">${pakai ? "<b>Dipakai oleh:</b> " + esc(pakai) : "Belum dipakai rombel atau siswa"}</div></div>`;
-  }).join("") : '<p class="butir kosong-data">Belum ada tahapan khusus. Semua siswa memakai Pengaturan Umum dan urutan Tahapan Level.</p>';
+  }).join("") : '<p class="butir kosong-data">Belum ada tahapan khusus. Semua siswa memakai urutan Tahapan Level.</p>';
   const cari = (id) => PROFIL.find((p) => p.id === id);
   $("jl-daftar").querySelectorAll("[data-ubah]").forEach((b) => b.onclick = () => bukaEditorJalur(cari(b.dataset.ubah)));
   $("jl-daftar").querySelectorAll("[data-salin]").forEach((b) => b.onclick = () => { const p = cari(b.dataset.salin); bukaEditorJalur({ ...p, id: null, nama: p.nama + " (salinan)" }); });
   $("jl-daftar").querySelectorAll("[data-hapus]").forEach((b) => b.onclick = async () => {
     const p = cari(b.dataset.hapus), pakai = dipakaiTeks(p);
-    if (!confirm(`Hapus tahapan "${p.nama}"?\n\n` + (pakai ? `Dipakai oleh: ${pakai}.\nMereka kembali ke tahapan di bawahnya (tahapan rombel atau tahapan umum). Kemajuan siswa tidak berubah.` : "Tahapan ini belum dipakai."))) return;
+    if (!confirm(`Hapus tahapan "${p.nama}"?\n\n` + (pakai ? `Dipakai oleh: ${pakai}.\nMereka kembali ke tahapan di bawahnya (tahapan rombel atau Tahapan Level). Kemajuan siswa tidak berubah.` : "Tahapan ini belum dipakai."))) return;
     try { await rpc("er_profil_hapus", { p_pin: PIN, p_id: p.id }); toast("Tahapan dihapus"); await muatSesi(); muatProfil(); muatKelas(); } catch (e) { toast(e.message); }
   });
 }
+
+/* ---- 3. Untuk seluruh rombel: profil aturan dan tahapan, masing-masing dengan konfirmasi */
 function gambarKelompokAturan() {
   if (!$("pr-kelompok") || !G) return;
   if (!G.rombel.length) { $("pr-kelompok").innerHTML = '<p class="butir redup">Belum ada rombel. Admin perlu menarik guru Bahasa Inggris dari Data Induk.</p>'; return; }
   const anggota = (k) => SEMUA.filter((r) => r.kelas === k);
-  $("pr-kelompok").innerHTML = `<div class="gulir seksi-tabel"><table class="tabel kel-tabel"><thead><tr><th>Rombel</th><th class="angka">Anggota</th><th>Tahapan</th><th>Yang berbeda dari umum</th></tr></thead><tbody>${G.rombel.map((r) => {
-    const p = r.profil && PROFIL.find((x) => x.id === r.profil.id), sendiri = anggota(r.kelas).filter((s) => s.profil).length;
+  $("pr-kelompok").innerHTML = `<div class="gulir seksi-tabel"><table class="tabel kel-tabel"><thead><tr><th>Rombel</th><th class="angka">Anggota</th><th>Profil aturan</th><th>Tahapan</th><th>Yang berbeda dari umum</th></tr></thead><tbody>${G.rombel.map((r) => {
+    const a = r.aturan && ATPROFIL.find((x) => x.id === r.aturan.id), p = r.profil && PROFIL.find((x) => x.id === r.profil.id);
     return `<tr><td><b>${esc(r.kelas)}</b></td><td class="angka">${SEMUA.length ? anggota(r.kelas).length : r.siswa}</td>
-      <td><select data-kel="${esc(r.kelas)}" aria-label="Tahapan ${esc(r.kelas)}"><option value="">— Pengaturan Umum &amp; Tahapan Level —</option>${PROFIL.map((x) => `<option value="${esc(x.id)}" ${r.profil && r.profil.id === x.id ? "selected" : ""}>${esc(x.nama)}</option>`).join("")}</select></td>
-      <td class="kecil redup">${[p ? `Materi: <b>${esc(teksRingkas(ringkasTahapan(p.mati)))}</b>` : "", p ? aturanProfil(p).map((x) => `${x.l}: <b>${esc(nilaiAturTeks(x, p.setelan[x.k]))}</b>`).join(" · ") : "",
-        sendiri ? `${sendiri} siswa bertahapan sendiri` : ""].filter(Boolean).join(" · ") || "—"}</td></tr>`;
+      <td><select data-kel-a="${esc(r.kelas)}" aria-label="Profil aturan ${esc(r.kelas)}"><option value="">— Pengaturan Umum —</option>${ATPROFIL.map((x) => `<option value="${esc(x.id)}" ${r.aturan && r.aturan.id === x.id ? "selected" : ""}>${esc(x.nama)}</option>`).join("")}</select></td>
+      <td><select data-kel-t="${esc(r.kelas)}" aria-label="Tahapan ${esc(r.kelas)}"><option value="">— Tahapan Level —</option>${PROFIL.map((x) => `<option value="${esc(x.id)}" ${r.profil && r.profil.id === x.id ? "selected" : ""}>${esc(x.nama)}</option>`).join("")}</select></td>
+      <td class="kecil redup">${[a ? aturanProfil(a).map((x) => `${x.l}: <b>${esc(nilaiAturTeks(x, a.aturan[x.k]))}</b>`).join(" · ") : "",
+        p ? `Materi: <b>${esc(teksRingkas(ringkasTahapan(p.mati)))}</b>` : ""].filter(Boolean).join(" · ") || "—"}</td></tr>`;
   }).join("")}</tbody></table></div>`;
-  $("pr-kelompok").querySelectorAll("[data-kel]").forEach((sel) => sel.onchange = async () => {
-    const k = sel.dataset.kel, p = PROFIL.find((x) => x.id === sel.value), A = anggota(k), sendiri = A.filter((r) => r.profil).length;
-    const pesan = p ? `Pasang tahapan "${p.nama}" untuk rombel ${k} (${A.length || ""} siswa)?\n\nMateri: ${teksRingkas(ringkasTahapan(p.mati))}.` +
-        (aturanProfil(p).length ? `\nAturan: ${ringkasAturan(p)}. Isian lain dari Pengaturan Umum.` : "\nAturan ikut Pengaturan Umum.") +
+  $("pr-kelompok").querySelectorAll("[data-kel-a]").forEach((sel) => sel.onchange = async () => {
+    const k = sel.dataset.kelA, a = ATPROFIL.find((x) => x.id === sel.value), sendiri = anggota(k).filter((r) => r.aturan).length;
+    const pesan = a ? `Pasang aturan "${a.nama}" untuk rombel ${k}?\n\nYang diatur: ${ringkasAturan(a)}.\nIsian lain dari Pengaturan Umum.` +
+        (sendiri ? `\n\n${sendiri} siswa punya aturan siswa sendiri. Isian yang diatur aturan siswa itu tetap mengikuti aturan siswa.` : "")
+      : `Rombel ${k} kembali ke Pengaturan Umum?`;
+    if (!confirm(pesan)) return gambarKelompokAturan();
+    try { G.rombel = await rpc("er_atur_profil_kelas", { p_pin: PIN, p_kelas: k, p_profil: a ? a.id : null });
+      toast(a ? `Aturan ${k} disimpan` : `${k} kembali ke Pengaturan Umum`); muatProfil(true); muatKelas(); }
+    catch (e) { toast(e.message); gambarKelompokAturan(); }
+  });
+  $("pr-kelompok").querySelectorAll("[data-kel-t]").forEach((sel) => sel.onchange = async () => {
+    const k = sel.dataset.kelT, p = PROFIL.find((x) => x.id === sel.value), sendiri = anggota(k).filter((r) => r.profil).length;
+    const pesan = p ? `Pasang tahapan "${p.nama}" untuk rombel ${k}?\n\nMateri: ${teksRingkas(ringkasTahapan(p.mati))}.` +
         (sendiri ? `\n\n${sendiri} siswa punya tahapan sendiri dan tidak ikut.` : "") + "\n\nKemajuan siswa tidak berubah."
-      : `Rombel ${k} kembali ke Pengaturan Umum dan urutan Tahapan Level?`;
+      : `Rombel ${k} kembali ke urutan Tahapan Level?`;
     if (!confirm(pesan)) return gambarKelompokAturan();
     try { G.rombel = await rpc("er_pasang_kelas", { p_pin: PIN, p_kelas: k, p_profil: p ? p.id : null });
-      toast(p ? `Tahapan ${k}: "${p.nama}"` : `${k} kembali ke tahapan umum`); muatProfil(true); muatKelas(); }
+      toast(p ? `Tahapan ${k}: "${p.nama}"` : `${k} kembali ke Tahapan Level`); muatProfil(true); muatKelas(); }
     catch (e) { toast(e.message); gambarKelompokAturan(); }
   });
 }
 
-/* Editor tahapan khusus: identitas, aturan (ikut umum atau diisi), dan checklist materi tahap → level → sub level.
+/* Editor tahapan khusus: identitas dan checklist materi tahap → level → sub level.
    Disimpan sebagai daftar yang dimatikan (mati), jadi bacaan baru otomatis ikut dipakai. */
 let draf = null;
 function bukaEditorJalur(p, kode) {
   const contoh = CONTOH.find((c) => c.kode === kode), ed = $("jl-editor");
-  const dasar = p ? JSON.parse(JSON.stringify(p)) : { nama: contoh ? contoh.nama : "", catatan: contoh ? contoh.ket : "", ...(contoh ? contoh.buat() : { setelan: {}, mati: {} }) };
-  draf = { id: p ? p.id : null, setelan: dasar.setelan || {}, mati: Object.assign({ tahap: [], level: [], sub: {} }, dasar.mati),
+  const dasar = p ? JSON.parse(JSON.stringify(p)) : { nama: contoh ? contoh.nama : "", catatan: contoh ? contoh.ket : "", ...(contoh ? contoh.buat() : { mati: {} }) };
+  draf = { id: p ? p.id : null, mati: Object.assign({ tahap: [], level: [], sub: {} }, dasar.mati),
     buka: new Set(contoh ? window.TAHAP.map((t) => t.no).filter((n) => tahapOn(dasar.mati, n)) : []), bukaLevel: new Set() };
-  const kendali = (x) => {
-    const v = draf.setelan[x.k], u = umumNilai(x.k);
-    if (x.t === "ya") return `<select data-pk="${x.k}"><option value="">— ikut umum (${u ? x.on : x.off}) —</option><option value="true" ${v === true ? "selected" : ""}>${x.on}</option><option value="false" ${v === false ? "selected" : ""}>${x.off}</option></select>`;
-    if (x.t === "pilih") return `<select data-pk="${x.k}"><option value="">— ikut umum (${esc(nilaiAturTeks(x, u))}) —</option>${x.opsi.map((o) => `<option value="${o[0]}" ${v === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select>`;
-    return `<span class="grup"><input type="number" data-pk="${x.k}" min="${x.min}" max="${x.maks}" inputmode="numeric" placeholder="${u}" value="${v == null ? "" : v}"><span class="satuan">${x.sat}</span></span>`;
-  };
   ed.innerHTML = `<h2>${draf.id ? "Ubah tahapan khusus" : "Tahapan khusus baru"}</h2>
     <div class="pr-identitas"><label>Nama tahapan<input type="text" id="jl-nama" maxlength="60" placeholder="mis. Remedial X-2" value="${esc(dasar.nama)}"></label>
       <label>Catatan (opsional)<input type="text" id="jl-catatan" maxlength="200" placeholder="mis. Bu Rina — persiapan TKA kelas 12" value="${esc(dasar.catatan || "")}"></label></div>
-    <p class="redup kecil">Nama ini dilihat siswa di halaman depannya. Aturan: isi hanya yang ingin dibedakan; kotak kosong mengikuti Pengaturan Umum (angka samar).</p>
-    ${ATUR_KHUSUS.map((g) => `<div class="pr-grup"><div class="ds-sub-judul">${g.g}</div><div class="pr-isian">${g.f.map((x) => `<label><span>${x.l}</span>${kendali(x)}</label>`).join("")}</div></div>`).join("")}
+    <p class="redup kecil">Nama ini dilihat siswa di halaman depannya. Tahapan hanya mengatur materi; jumlah soal, bila salah, dan aturan lain diatur di <b>Profil aturan</b>.</p>
     <div class="pr-grup"><div class="ds-sub-judul">Materi yang dipakai</div>
       <p class="redup kecil" style="margin-top:0">Centang materi yang dipakai. Mematikan <b>tahap</b> ikut mematikan levelnya; mematikan <b>level</b> ikut mematikan sub levelnya. Tombol angka mengatur satu sub level di semua level tahap itu sekaligus.</p>
       <div class="at-alat"><button class="garis kecil" data-alat="semua-on">✓ Pakai semua</button><button class="garis kecil" data-alat="semua-off">Matikan semua</button>
@@ -809,17 +892,9 @@ function bukaEditorJalur(p, kode) {
     galat.classList.add("hidden");
     if (!nama) { g("Isi nama tahapan dulu."); $("jl-nama").focus(); return; }
     if (!ringkasTahapan(draf.mati).level) { g("Pilih minimal satu level di bagian Materi yang dipakai."); return; }
-    const setelan = {};
-    for (const x of SEMUA_KHUSUS) {
-      const v = ed.querySelector(`[data-pk="${x.k}"]`).value.trim();
-      if (v === "") continue;
-      if (x.t === "ya") setelan[x.k] = v === "true";
-      else if (x.t === "pilih") setelan[x.k] = v;
-      else { const n = Number(v); if (!Number.isInteger(n) || n < x.min || n > x.maks) { g(`${x.l}: isi ${x.min}–${x.maks} atau kosongkan.`); return; } setelan[x.k] = n; }
-    }
     const lama = draf.id && PROFIL.find((x) => x.id === draf.id), pakai = lama ? dipakaiTeks(lama) : "";
     if (pakai && !confirm(`Simpan perubahan tahapan "${nama}"?\n\nPerubahan langsung berlaku untuk: ${pakai}. Kemajuan siswa tidak berubah.`)) return;
-    try { await rpc("er_profil_simpan", { p_pin: PIN, p_p: { id: draf.id, nama, catatan: $("jl-catatan").value.trim(), setelan, mati: draf.mati } });
+    try { await rpc("er_profil_simpan", { p_pin: PIN, p_p: { id: draf.id, nama, catatan: $("jl-catatan").value.trim(), mati: draf.mati } });
       toast("Tahapan disimpan"); ed.classList.add("hidden"); draf = null; muatProfil(); }
     catch (e) { g(e.message); }
   };
@@ -877,17 +952,20 @@ try { if (localStorage.getItem(LAPIS_KUNCI)) aturLapis(true); } catch (e) { /* a
 
 /* ---- Aturan & tahapan yang berlaku bagi satu siswa (Cek aturan siswa dan Analisis siswa) */
 function aturanBerlakuHtml(A) {
-  const p = A.profil, jenisP = !p ? "umum" : p.asal === "siswa" ? "siswa" : "kelompok", label = { siswa: "siswa", kelompok: "rombel", umum: "umum" };
-  const sel = (judul, isi, jenis, ket) => `<div class="ab-ring"><small>${judul}</small><b>${esc(isi)}</b><span class="ab-asal a-${jenis}">${esc(ket)}</span></div>`;
+  const p = A.profil, at = A.aturan || {}, isi = at.isi || {}, asal = at.asal || {}, label = { siswa: "siswa", kelompok: "rombel", umum: "umum" };
+  const jenis = (s) => s === "siswa" ? "siswa" : s === "kelas" ? "kelompok" : "umum";
+  const sel = (judul, isiT, j, ket) => `<div class="ab-ring"><small>${judul}</small><b>${esc(isiT)}</b><span class="ab-asal a-${j}">${esc(ket)}</span></div>`;
   const materi = p ? `"${p.nama}" · ${teksRingkas(ringkasTahapan(p.mati))}` : `Tahapan Level · ${teksRingkas(ringkasTahapan((A.umum || {}).mati || null))}`;
+  const jp = !p ? "umum" : p.asal === "siswa" ? "siswa" : "kelompok";
   return `<div class="ab-ringkas">
-      ${sel("Materi yang dipakai", materi, jenisP, label[jenisP])}
-      ${sel("Tahapan siswa", p && p.asal === "siswa" ? p.nama : "Tidak ada", p && p.asal === "siswa" ? "siswa" : "umum", p && p.asal === "siswa" ? "siswa" : "—")}
-      ${sel("Tahapan rombel", p && p.asal === "kelas" ? p.nama : "Tidak ada", p && p.asal === "kelas" ? "kelompok" : "umum", p && p.asal === "kelas" ? "rombel" : "—")}
+      ${sel("Tahapan", materi, jp, label[jp])}
+      ${sel("Profil siswa", at.siswa ? at.siswa.nama : "Tidak ada", at.siswa ? "siswa" : "umum", at.siswa ? "siswa" : "—")}
+      ${sel("Profil rombel", at.kelas ? at.kelas.nama : "Tidak ada", at.kelas ? "kelompok" : "umum", at.kelas ? "rombel" : "—")}
     </div>
     <div class="ab-grup" style="grid-template-columns:repeat(3,minmax(0,1fr))">${ATUR_KHUSUS.map((g) => `<div><div class="ab-judul">${g.g}</div>${g.f.map((x) => {
-      const khusus = p && p.setelan && p.setelan[x.k] != null, v = khusus ? p.setelan[x.k] : ((A.umum || {})[x.k] != null ? A.umum[x.k] : BAWAAN[x.k]), j = khusus ? jenisP : "umum";
-      return `<div class="ab-isi ${khusus ? "khusus" : ""}"><span><small>${x.l}</small><b>${esc(nilaiAturTeks(x, v))}</b></span><span class="ab-asal a-${j}" title="${esc(khusus ? `tahapan "${p.nama}"` : "Pengaturan Umum")}">${label[j]}</span></div>`; }).join("")}</div>`).join("")}</div>`;
+      const j = jenis(asal[x.k]), v = isi[x.k] != null ? isi[x.k] : ((A.umum || {})[x.k] != null ? A.umum[x.k] : BAWAAN[x.k]);
+      const nm = j === "siswa" ? at.siswa && at.siswa.nama : j === "kelompok" ? at.kelas && at.kelas.nama : "";
+      return `<div class="ab-isi ${j !== "umum" ? "khusus" : ""}"><span><small>${x.l}</small><b>${esc(nilaiAturTeks(x, v))}</b></span><span class="ab-asal a-${j}" title="${esc(nm ? `profil "${nm}"` : "Pengaturan Umum")}">${label[j]}</span></div>`; }).join("")}</div>`).join("")}</div>`;
 }
 async function cekSiswa() {
   const q = $("ck-cari").value.trim(), m = q.match(/·\s*(\S+)\s*$/), nisn = m ? m[1] : q;
@@ -895,9 +973,9 @@ async function cekSiswa() {
   if (!r) { $("ck-hasil").innerHTML = q && /^\d{6,}$/.test(q) ? '<p class="redup kecil">NISN tidak ditemukan di rombel Anda.</p>' : ""; return; }
   $("ck-hasil").innerHTML = '<p class="redup kecil">Memuat…</p>';
   try {
-    const A = await rpc("er_aturan_siswa", { p_pin: PIN, p_nisn: r.nisn }), n = A.profil ? aturanProfil(A.profil).length : 0;
+    const A = await rpc("er_aturan_siswa", { p_pin: PIN, p_nisn: r.nisn }), n = Object.keys((A.aturan && A.aturan.isi) || {}).length;
     $("ck-hasil").innerHTML = `<div class="ck-kepala"><div><b>${esc(r.nama)}</b><span class="redup kecil">${esc(r.kelas)} · NISN ${esc(r.nisn)}</span></div>
-      <span class="lencana ${A.profil ? "emas" : ""}">${A.profil ? `Tahapan "${esc(A.profil.nama)}"${n ? ` · ${n} aturan khusus` : ""}` : "Semua dari Pengaturan Umum"}</span></div>${aturanBerlakuHtml(A)}
+      <span><span class="lencana ${n ? "emas" : ""}">${n ? n + " aturan khusus" : "Semua aturan dari Pengaturan Umum"}</span>${A.profil ? ` <span class="lencana biru">Tahapan "${esc(A.profil.nama)}"</span>` : ""}</span></div>${aturanBerlakuHtml(A)}
       <p class="redup kecil" style="margin:var(--j3) 0 0">Label menunjukkan asal aturan: <span class="ab-asal a-siswa">siswa</span> <span class="ab-asal a-kelompok">rombel</span> <span class="ab-asal a-umum">umum</span>. Arahkan penunjuk ke label untuk melihat nama tahapannya.</p>`;
   } catch (e) { $("ck-hasil").innerHTML = `<p class="redup kecil">${esc(e.message)}</p>`; }
 }
@@ -1043,8 +1121,9 @@ function gambarSiswa() {
       [O.macet.length, "sub level macet", "ulang", O.macet.length ? "buruk" : ""],
     ])}</div>
     ${terkunci ? `<div class="kartu"><div class="baris"><span class="tumbuh"><b>Latihan siswa ini sedang dikunci</b> karena terlalu sering keluar halaman saat sesi kelas.</span><button id="an-kunci">Buka kunci</button></div></div>` : ""}
-    ${D.atur ? `<details class="kartu atur-siswa" ${p ? "open" : ""}><summary><h2 style="display:inline">Aturan dan tahapan yang berlaku</h2>
-      <span class="lencana ${p ? "emas" : ""}">${p ? `Tahapan "${esc(p.nama)}"` : "Pengaturan Umum"}</span></summary>${aturanBerlakuHtml(D.atur)}</details>` : ""}
+    ${D.atur ? (() => { const nA = Object.keys((D.atur.aturan && D.atur.aturan.isi) || {}).length;
+      return `<details class="kartu atur-siswa" ${p || nA ? "open" : ""}><summary><h2 style="display:inline">Aturan dan tahapan yang berlaku</h2>
+      <span class="lencana ${nA ? "emas" : ""}">${nA ? nA + " aturan khusus" : "Pengaturan Umum"}</span>${p ? ` <span class="lencana biru">Tahapan "${esc(p.nama)}"</span>` : ""}</summary>${aturanBerlakuHtml(D.atur)}</details>`; })() : ""}
     <div class="kartu"><h2>Catatan otomatis</h2><ul class="catatan">${catatanOtomatis(D, k, O).map((x) => `<li>${x}</li>`).join("")}</ul></div>
     <div class="kartu"><h2>Kemajuan sub level lulus</h2><p class="redup kecil" style="margin-top:0">Jumlah sub level yang sudah lulus (kumulatif) pada tiap tanggal berlatih, 2 bulan terakhir.</p><div class="grafik" id="g-maju"></div></div>
     <div class="dua">
@@ -1072,9 +1151,10 @@ function gambarSiswa() {
           return `<tr><td class="kecil">${tglTeks(h.waktu, true)}</td><td>${esc(b ? labelLevel(b) : h.level)}</td><td>${esc(namaSub(b, h.sub))}</td><td class="angka">${h.percobaan}</td><td class="angka">${h.nilai}%</td></tr>`; }).join("")}</tbody></table></div>`
         : '<p class="redup">Belum ada sub level yang lulus (dicatat sejak login siswa dipakai).</p>'}
     </div>
-    <div class="kartu ubah"><h2>Tahapan khusus siswa ini</h2>
-      <p class="redup kecil" style="margin-top:0">Untuk siswa yang perlu remedial atau pengayaan sendiri. Mengalahkan tahapan rombel; pilih <b>Ikut rombel</b> untuk kembali. Kemajuan siswa tidak berubah.</p>
-      <div class="baris"><select id="an-profil" class="tumbuh"><option value="">Ikut rombel</option>${PROFIL.map((x) => `<option value="${esc(x.id)}" ${p && p.asal === "siswa" && p.id === x.id ? "selected" : ""}>${esc(x.nama)}</option>`).join("")}</select>
+    <div class="kartu ubah"><h2>Aturan dan tahapan siswa ini</h2>
+      <p class="redup kecil" style="margin-top:0">Untuk siswa yang perlu remedial atau pengayaan sendiri. Pilihan siswa mengalahkan pilihan rombel; pilih <b>Ikut rombel</b> untuk kembali. Kemajuan siswa tidak berubah.</p>
+      <div class="baris"><span class="kecil redup" style="min-width:110px">Profil aturan</span><select id="an-aturan" class="tumbuh"><option value="">Ikut rombel</option>${ATPROFIL.map((x) => { const as = D.atur && D.atur.aturan && D.atur.aturan.siswa; return `<option value="${esc(x.id)}" ${as && as.id === x.id ? "selected" : ""}>${esc(x.nama)}</option>`; }).join("")}</select></div>
+      <div class="baris" style="margin-top:var(--j2)"><span class="kecil redup" style="min-width:110px">Tahapan</span><select id="an-profil" class="tumbuh"><option value="">Ikut rombel</option>${PROFIL.map((x) => `<option value="${esc(x.id)}" ${p && p.asal === "siswa" && p.id === x.id ? "selected" : ""}>${esc(x.nama)}</option>`).join("")}</select>
         <button id="an-pasang">Simpan</button></div></div>
     <div class="kartu ubah bahaya-kartu"><h2>Hapus data latihan</h2>
       <p class="redup kecil" style="margin-top:0">Menghapus kemajuan, riwayat nilai, dan sesi siswa ini, misalnya setelah uji coba. Data siswa tidak terhapus. Tidak bisa dibatalkan.</p>
@@ -1084,10 +1164,16 @@ function gambarSiswa() {
     try { await rpc("er_buka_kunci_guru", { p_pin: PIN, p_nisn: D.siswa.nisn }); toast("Kunci dibuka"); bukaSiswa(D.siswa.nisn); } catch (e) { toast(e.message); }
   };
   $("an-pasang").onclick = async () => {
-    const v = $("an-profil").value, x = PROFIL.find((y) => y.id === v);
-    if (!confirm(x ? `Pasang tahapan "${x.nama}" untuk ${D.siswa.nama}?` : `${D.siswa.nama} kembali ikut tahapan rombel?`)) return;
-    try { await rpc("er_pasang_siswa", { p_pin: PIN, p_nisn: [D.siswa.nisn], p_profil: v || null }); toast("Tahapan siswa disimpan"); bukaSiswa(D.siswa.nisn); muatKelas(); muatProfil(true); }
-    catch (e) { toast(e.message); }
+    const vA = $("an-aturan").value, vT = $("an-profil").value, a = ATPROFIL.find((y) => y.id === vA), x = PROFIL.find((y) => y.id === vT);
+    if (!confirm(`Simpan untuk ${D.siswa.nama}?
+
+Aturan: ${a ? `profil "${a.nama}"` : "ikut rombel"}
+Tahapan: ${x ? `"${x.nama}"` : "ikut rombel"}`)) return;
+    try {
+      await rpc("er_atur_profil_siswa", { p_pin: PIN, p_nisn: [D.siswa.nisn], p_profil: vA || null });
+      await rpc("er_pasang_siswa", { p_pin: PIN, p_nisn: [D.siswa.nisn], p_profil: vT || null });
+      toast("Aturan dan tahapan siswa disimpan"); bukaSiswa(D.siswa.nisn); muatKelas(); muatProfil(true);
+    } catch (e) { toast(e.message); }
   };
   $("hl-hapus").onclick = async () => {
     if (!confirm(`Hapus SEMUA data latihan ${D.siswa.nama}?\n\nKemajuan, riwayat nilai, dan sesi dihapus. Tindakan ini tidak bisa dibatalkan.`)) return;
