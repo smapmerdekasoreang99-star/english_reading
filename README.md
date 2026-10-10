@@ -215,7 +215,7 @@ Halaman guru dibangun ulang dari `Matematika_Dasar/guru.html` (CSS disalin apa a
   riwayat sub level lulus, tahapan khusus siswa, hapus data latihan.
 - **Pengaturan & Tahapan Khusus:** cara sistem memilih (siswa → rombel → umum), **Cek aturan siswa** beserta asalnya,
   tahapan khusus (contoh siap pakai + editor checklist), pemasangan per rombel.
-- **Pengaturan Umum** (admin): Halaman Latihan, Pengawasan keluar halaman, Aturan naik sub level, Sesi mandiri.
+- **Pengaturan Umum** (admin): Halaman Latihan, Pengawasan keluar halaman, Aturan naik sub level, Sesi (lama satu sesi mandiri dalam menit, `durasi_menit`).
 - **Tahapan Level:** 6 tahap → level → sub level. **Contoh** (kosakata/pola/bacaan + soal, Tampilkan Jawaban,
   Mode Layar Penuh), **Coba** (uji coba guru: `index.html#coba=<id level>`, data hanya di tab itu), dan admin bisa
   **menutup tahap/level/sub level** untuk tahapan umum (`er_pengaturan` umum.mati; tahapan khusus tidak terpengaruh).

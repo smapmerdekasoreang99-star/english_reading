@@ -630,7 +630,7 @@ const ATUR_KHUSUS = [
 ];
 const SEMUA_KHUSUS = ATUR_KHUSUS.flatMap((g) => g.f);
 const BAWAAN = { jumlahSoal: 10, harusDengar: true, harusBaca: true, syaratBaca: 75, tampilJawaban: true, bilaSalah: "akhir", batasSalah: 0,
-  mandiri: true, mandiri_jam: 3, maks_keluar: 0, toleransi_keluar: 10, kode_buka: "" };
+  mandiri: true, durasi_menit: 180, maks_keluar: 0, toleransi_keluar: 10, kode_buka: "" };
 const umumNilai = (k) => (G.umum && G.umum[k] != null ? G.umum[k] : BAWAAN[k]);
 const nilaiAturTeks = (x, v) => x.t === "ya" ? (v ? x.on : x.off) : x.t === "pilih" ? ((x.opsi.find((o) => o[0] === v) || [])[1] || v)
   : (x.k === "batasSalah" || x.k === "maks_keluar") ? (v ? `${v} ${x.sat}` : "tanpa batas") : x.sat === "%" ? `${v}%` : `${v} ${x.sat}`;
@@ -1258,8 +1258,8 @@ const SEKSI = [
     { k: "harusBaca", jenis: "ya", l: "Baca teks dulu sebelum sub level 1", s: "Siswa membaca keras teks level (Baca & Koreksi) sampai akurasi minimal.", on: "Harus Baca", off: "Tanpa Baca" },
     { k: "syaratBaca", jenis: "angka", satuan: "%", min: 50, maks: 100, l: "Akurasi membaca minimal", s: "Dipakai bila Harus Baca." },
   ] },
-  { ikon: "jam", judul: "Sesi latihan mandiri", ket: "Lama satu kali masuk di luar sesi kelas.", baris: [
-    { k: "mandiri_jam", jenis: "angka", satuan: "jam", min: 1, maks: 12, l: "Lama satu sesi mandiri", s: "Setelah waktu habis siswa diminta masuk lagi dengan NISN; kemajuannya tetap tersimpan." },
+  { ikon: "jam", judul: "Sesi", ket: "Lama satu kali latihan mandiri di luar sesi kelas.", baris: [
+    { k: "durasi_menit", jenis: "angka", satuan: "menit", min: 15, maks: 720, l: "Lama satu sesi", s: "Lama satu kali latihan mandiri (15–720 menit). Waktu dihitung ulang setiap siswa menyimpan kemajuan; setelah tidak aktif selama itu, siswa diminta masuk lagi dengan NISN. Kemajuannya tetap tersimpan." },
   ], catatan: "Lama sesi kelas dipilih guru saat membuka sesi di <b>Sesi Kegiatan</b>." },
 ];
 const SEMUA_ATUR = SEKSI.flatMap((s) => s.baris);
@@ -1270,7 +1270,7 @@ function ringkasAtur(a) {
     c(a.maks_keluar > 0 ? "on" : "", "Batas keluar", a.maks_keluar > 0 ? `${a.maks_keluar}×` : "tanpa batas"),
     c("info", "Soal per sub level", `${a.jumlahSoal} soal`),
     c("info", "Bila salah", ({ akhir: "diulang di akhir", ulang: "diulang sampai benar", lanjut: "maju terus" })[a.bilaSalah] || a.bilaSalah),
-    c("info", "Sesi mandiri", `${a.mandiri_jam} jam`),
+    c("info", "Sesi", `${a.durasi_menit} menit`),
   ].join("");
 }
 function kendaliAtur(x, a, boleh) {
