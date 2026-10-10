@@ -199,6 +199,20 @@ Meniru Matematika Dasar. Halaman **⚙️ Pengaturan & Tahapan** (`#pengaturan`,
   Di halaman siswa, menu ini hanya-baca: tab Khusus menampilkan tahapan yang dipasang untuknya, sedangkan editor dan
   tautan `#khusus=` dialihkan. Tautan `#khusus=` hanya berlaku pada mode luring tanpa server.
 
+## Kemajuan resmi dan latihan mandiri terpisah (10 Okt 2026)
+
+Kemajuan dan nilai **resmi** hanya bertambah dari **sesi kelas** yang diawasi guru, supaya latihan tanpa pengawasan
+(bisa dibantu orang lain atau AI) tidak menaikkan kemajuan resmi. **Latihan mandiri** di luar sesi punya kemajuan
+sendiri (`er_kemajuan.mandiri`; resmi di `er_kemajuan.data`), dan setiap nilai diberi tanda `er_hasil.mode`.
+Kemajuan yang sudah ada saat fitur ini dipasang disalin ke kedua jalur.
+
+- Siswa: saat sesi kelas terlihat kemajuan resmi; saat latihan mandiri terlihat kemajuan mandiri dengan pita
+  "Latihan mandiri · kemajuan di sini terpisah". Data di perangkat diberi tanda mode (`er_mode_lokal`) agar tidak tercampur.
+- Guru: rekap, analisis, dan papan teratas memakai kemajuan resmi. Latihan mandiri tetap terlihat untuk menilai
+  ketekunan: kolom **Latihan mandiri (7 hari)** di Perkembangan Siswa dan rekap Excel, kartu **Latihan mandiri
+  (di luar sesi)** di Analisis Siswa, serta label **Rajin mandiri**, **Tanpa latihan mandiri**, dan
+  **Mandiri jauh di atas sesi** (rata-rata nilai mandiri ≥ 25 poin di atas nilai sesi).
+
 ## Meniru tampilan dan fasilitas Matematika Dasar (10 Okt 2026)
 
 Halaman guru dibangun ulang dari `Matematika_Dasar/guru.html` (CSS disalin apa adanya). Yang berbeda hanya editor

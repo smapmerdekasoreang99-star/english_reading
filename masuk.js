@@ -112,6 +112,7 @@
   function pasangKepala() {
     const s = akun.siswa || {};
     $('hd-sub').textContent = akun.coba ? 'Uji coba guru · tidak masuk rekap' : [s.nama, s.kelas, akun.mode === 'kelas' ? 'Sesi kelas' : 'Latihan mandiri'].filter(Boolean).join(' · ');
+    if (!akun.coba && akun.mode === 'mandiri') $('uji-pita-wadah').innerHTML = '<div class="uji-pita" role="note"><b>Latihan mandiri</b> · kemajuan di sini terpisah dari kemajuan resmi. Kemajuan resmi hanya bertambah saat sesi kelas bersama guru.</div>';
     $('btn-keluar').hidden = false;
     clearInterval(jamT);
     const jam = $('jam');
@@ -234,18 +235,22 @@
   }
 
   // ---------- Setelah masuk ----------
+  // Kemajuan resmi (sesi kelas) dan kemajuan latihan mandiri terpisah: data di perangkat diberi tanda mode-nya
+  // (er_mode_lokal), dan hanya digabung ke server bila siswa dan mode-nya sama.
   function siapkan(p, pertama) {
-    const nisn = p.siswa.nisn, milik = baca('er_milik', null);
+    const nisn = p.siswa.nisn, milik = baca('er_milik', null), modeLokal = baca('er_mode_lokal', null);
     let lokal = dataLokal(), pindah = false;
-    if (milik && milik !== nisn) { lokal = {}; antre = []; tulis('er_antre', antre); }   // perangkat dipakai siswa lain
+    const sama = milik === nisn && (modeLokal || 'kelas') === p.mode;
+    if (milik && !sama) { lokal = {}; antre = []; tulis('er_antre', antre); }          // siswa lain, atau mode lain
     else if (!milik && adaIsi(lokal)) pindah = true;                                     // kemajuan sebelum ada login
-    const gab = gabung(p.kemajuan, milik === nisn || pindah ? lokal : {});
+    const gab = gabung(p.kemajuan, sama || pindah ? lokal : {});
     tulisLokal(gab);
     tulis('er_milik', nisn);
+    tulis('er_mode_lokal', p.mode);
     tulis('er_token', p.token);
     akun = p;
     window.ER_AKUN = { siswa: p.siswa, mode: p.mode, berakhir: p.berakhir, atur: p.atur || {}, pindah, pertama };
-    if (pindah || antre.length || milik === nisn) kirim();
+    if (pindah || antre.length || sama) kirim();
     pasangKepala();
     if (p.terkunci) tampilKunci();
     muatAplikasi();
