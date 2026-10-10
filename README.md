@@ -212,6 +212,12 @@ Kemajuan yang sudah ada saat fitur ini dipasang disalin ke kedua jalur.
   ketekunan: kolom **Latihan mandiri (7 hari)** di Perkembangan Siswa dan rekap Excel, kartu **Latihan mandiri
   (di luar sesi)** di Analisis Siswa, serta label **Rajin mandiri**, **Tanpa latihan mandiri**, dan
   **Mandiri jauh di atas sesi** (rata-rata nilai mandiri ≥ 25 poin di atas nilai sesi).
+- Latihan mandiri tidak harus sama dengan sesi. Guru bisa memasang **aturan latihan mandiri** (profil aturan
+  tersendiri, mis. Harus Dengar/Baca menyala untuk latihan pengucapan di rumah walau mati di sekolah) dan
+  **saran latihan mandiri** (tahapan khusus sebagai anjuran) per rombel atau per siswa (`er_mandiri_kelas`,
+  `er_mandiri_siswa`). Siswa bebas memilih tahap dan level; saran tampil sebagai "Saran latihan dari guru" dan bisa dilepas.
+- Di kartu Latihan mandiri halaman awal, siswa memilih jumlah soal (10/15/20/25) dan tampil jawaban. Guru melihat
+  akurasi pengucapan di rumah dan pilihan siswa di kartu Analisis.
 
 ## Meniru tampilan dan fasilitas Matematika Dasar (10 Okt 2026)
 
