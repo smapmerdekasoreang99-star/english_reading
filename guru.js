@@ -1097,12 +1097,26 @@ async function bukaSiswa(nisn) {
   }
   $("pil-siswa").value = nisn;
   $("d-isi").innerHTML = '<div class="kartu kosong-data">Memuat…</div>';
-  try { DETAIL = await rpc("er_detail", { p_pin: PIN, p_nisn: nisn }); }
+  try { [DETAIL, RIWAYAT] = await Promise.all([rpc("er_detail", { p_pin: PIN, p_nisn: nisn }), rpc("er_rekap_semester_siswa", { p_pin: PIN, p_nisn: nisn }).catch(() => [])]); }
   catch (e) { $("d-isi").innerHTML = `<div class="kartu kosong-data">${esc(e.message)}</div>`; return; }
   gambarSiswa();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 const tglLokal = (iso) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Asia/Jakarta" });
+/* Rekap semester yang rinciannya sudah diarsipkan (er_rekap_semester, 11 Okt 2026) */
+let RIWAYAT = [];
+function kartuRiwayat(L) {
+  if (!L || !L.length) return "";
+  const r2 = (j, n) => n ? Math.round(j / n) : "–";
+  return `<div class="kartu"><h2>Riwayat semester (arsip)</h2>
+    <p class="redup kecil" style="margin-top:0">Rincian semester ini sudah diarsipkan; di sini rekapnya (sudah ikut dihitung di Perkembangan Siswa). Rincian per kegiatan bisa dibuka dengan <a href="arsip.html" target="_blank" rel="noopener">Buka Arsip</a> dari berkas arsip sekolah.</p>
+    <div class="gulir"><table class="tabel" data-beku="1"><thead><tr><th>Semester</th><th>Jenis</th><th class="angka">Kegiatan</th><th class="angka">Sub lulus</th><th class="angka">Rata-rata sub</th>
+      <th class="angka">Pengucapan</th><th class="angka">Hari</th><th class="angka">Sesi</th><th class="angka">Waktu</th></tr></thead><tbody>
+    ${L.map((r) => `<tr><td><b>${esc(r.nama)}</b></td><td>${r.mode === "mandiri" ? "Latihan mandiri" : "Sesi kelas"}</td><td class="angka">${r.n_hasil}</td>
+      <td class="angka">${r.n_lulus}/${r.n_sub}</td><td class="angka">${r2(r.jumlah_sub, r.n_sub)}</td><td class="angka">${r.n_baca ? r2(r.jumlah_baca, r.n_baca) + "%" : "–"}</td>
+      <td class="angka">${r.hari}</td><td class="angka">${r.n_sesi}</td><td class="angka">${lamaTeks(r.detik)}</td></tr>`).join("")}
+    </tbody></table></div></div>`;
+}
 function olahHasil(H) {
   const urut = H.slice().sort((a, b) => new Date(a.waktu) - new Date(b.waktu)), sub = urut.filter((h) => h.jenis === "sub");
   // Sub level lulus pertama kali: percobaan sampai lulus
@@ -1176,6 +1190,7 @@ function gambarSiswa() {
       return `<details class="kartu atur-siswa" ${p || nA ? "open" : ""}><summary><h2 style="display:inline">Aturan dan tahapan yang berlaku</h2>
       <span class="lencana ${nA ? "emas" : ""}">${nA ? nA + " aturan khusus" : "Pengaturan Umum"}</span>${p ? ` <span class="lencana biru">Tahapan "${esc(p.nama)}"</span>` : ""}</summary>${aturanBerlakuHtml(D.atur)}</details>`; })() : ""}
     <div class="kartu"><h2>Catatan otomatis</h2><ul class="catatan">${catatanOtomatis(D, k, O, H, Om, km).map((x) => `<li>${x}</li>`).join("")}</ul></div>
+    ${kartuRiwayat(RIWAYAT)}
     <div class="kartu"><h2>Latihan mandiri (di luar sesi)</h2>
       <p class="redup kecil" style="margin-top:0">Latihan tanpa pengawasan guru. Kemajuannya terpisah dan <b>tidak menaikkan kemajuan resmi</b>; dipakai untuk menilai ketekunan siswa.
         ${(() => { const sb = HM.filter((h) => h.jenis === "sub" && h.rincian && h.rincian.soal); if (!sb.length) return "";
@@ -1620,6 +1635,114 @@ async function unduhKartuBanyak(daftar) { if (!daftar.length) return;
   try { const isi = []; for (const g of daftar) isi.push({ isi: pngKartu(g), nama: namaBerkasKartu(g) }); const st = await simpanBanyak(isi);
     if (st !== "batal") toast(st === "disimpan" ? `${daftar.length} kartu tersimpan di folder pilihan` : `${daftar.length} kartu diunduh${daftar.length > 1 ? ' — bila peramban bertanya "unduh beberapa berkas", pilih Izinkan' : ""}`); }
   catch (e) { toast("Gagal membuat PNG: " + e.message); } }
+/* ----------------------------------------------------------- Arsip semester & ukuran database (11 Okt 2026)
+   RENCANA_MASA_SIMPAN.md: rincian satu semester yang sudah berakhir → rekap per siswa (er_rekap_semester) → berkas
+   SQLite diunduh admin (jumlahnya dicocokkan dengan server) → PIN + ketik konfirmasi → rincian dihapus bertahap.
+   Kemajuan tetap; total di Perkembangan Siswa ikut menghitung rekap yang sudah diarsip (er_rekap). Berkas dibuka dengan arsip.html (Buka Arsip). */
+let ARSIP = null;
+const mbTeks = (b) => (Number(b || 0) / 1048576).toLocaleString("id-ID", { maximumFractionDigits: 1 }) + " MB";
+const angkaTeks = (n) => Number(n || 0).toLocaleString("id-ID");
+const arsipBerjalan = (p) => ARSIP && ARSIP.arsip.find((a) => a.periode === p && ["rekap", "unduh", "hapus"].includes(a.status));
+async function muatArsip() {
+  const el = $("arsip-isi"); if (!el) return;
+  try { ARSIP = await rpc("er_arsip_daftar", { p_pin: PIN }, 30000); }
+  catch (e) { el.innerHTML = `<p class="pesan buruk">${esc(e.message)}</p>`; return; }
+  gambarArsip();
+}
+function gambarArsip() {
+  const el = $("arsip-isi"); if (!el || !ARSIP) return;
+  const A = ARSIP, waspada = A.ukuran >= A.peringatan, selesai = A.arsip.filter((a) => a.status === "selesai");
+  el.innerHTML = `
+    <div class="atur-baris susun"><div class="l"><b>Ukuran database: ${mbTeks(A.ukuran)} dari ${mbTeks(A.batas)}</b>
+      <span>Database ini dipakai bersama English Reading, Matematika Dasar, dan Asesmen Merdeka. ${waspada
+        ? '<strong style="color:var(--absen-tua)">Sudah melewati 350 MB: arsipkan semester yang sudah berakhir, atau pertimbangkan Supabase Pro.</strong>'
+        : "Batas paket gratis 500 MB; peringatan muncul pada 350 MB."}</span>
+      <div class="arsip-ukuran"><div class="batang" role="img" aria-label="Terpakai ${Math.round(100 * A.ukuran / A.batas)} persen"><i style="width:${Math.min(100, 100 * A.ukuran / A.batas)}%;${waspada ? "background:var(--absen)" : ""}"></i></div>
+        <span class="kecil redup">Rincian hasil ${mbTeks((A.tabel || {}).er_hasil)} · sesi ${mbTeks((A.tabel || {}).er_sesi)} · kemajuan ${mbTeks((A.tabel || {}).er_kemajuan)}</span></div></div></div>
+    <div class="gulir seksi-tabel"><table class="tabel"><thead><tr><th>Semester</th><th class="angka">Rincian hasil</th><th class="angka">Sesi</th><th>Keadaan</th><th></th></tr></thead><tbody>
+      ${A.periode.length ? A.periode.map((p) => { const b = arsipBerjalan(p.periode);
+        const sudah = !b && !Number(p.n_hasil) && A.arsip.some((a) => a.periode === p.periode && a.status === "selesai");
+        return `<tr><td><b>${esc(p.nama)}</b></td><td class="angka">${angkaTeks(p.n_hasil)}</td><td class="angka">${angkaTeks(p.n_sesi)}</td>
+          <td>${b ? `<span class="lencana emas">Arsip belum selesai: ${{ rekap: "sedang merangkum", unduh: "menunggu unduhan berkas", hapus: "menunggu penghapusan" }[b.status]}</span>`
+            : sudah ? '<span class="lencana baik">Sudah diarsipkan</span>' : p.berakhir ? '<span class="lencana">Sudah berakhir</span>' : '<span class="lencana biru">Sedang berjalan</span>'}</td>
+          <td class="kanan">${p.berakhir && !sudah ? `<button class="${b ? "" : "garis "}kecil" data-arsip="${esc(p.periode)}">${b ? "Lanjutkan arsip…" : "Arsipkan…"}</button>` : ""}</td></tr>`; }).join("")
+        : '<tr><td colspan="5" class="redup">Belum ada rincian latihan.</td></tr>'}
+    </tbody></table></div>
+    ${selesai.length ? `<p class="catatan-seksi"><span><b>Sudah diarsipkan:</b> ${selesai.map((a) => `${esc(a.nama)} (${angkaTeks(a.n_hasil)} hasil, berkas <code>${esc(a.berkas || "")}</code>, ${esc(tglTeks(a.selesai, true))}, oleh ${esc(a.oleh || "admin")})`).join("; ")}</span></p>` : ""}
+    <p class="catatan-seksi"><span>Semester ganjil 1 Juli–31 Desember, genap 1 Januari–30 Juni. Arsipkan sesudah rapor semester itu dibagikan.
+      Berkas arsip (SQLite) disimpan sekolah, mis. di Google Drive sekolah, dua salinan. Buka dengan <a href="arsip.html" target="_blank" rel="noopener"><b>Buka Arsip</b></a> (bisa tanpa internet) untuk mencari rincian per siswa.</span></p>`;
+  el.querySelectorAll("[data-arsip]").forEach((b) => b.onclick = () => bukaArsip(b.dataset.arsip));
+}
+function bukaArsip(periode) {
+  const w = $("arsip-kerja"), p = ARSIP.periode.find((x) => x.periode === periode), b = arsipBerjalan(periode);
+  const kata = `ARSIPKAN ${p.nama.toUpperCase()}`;
+  let A = b || null;
+  w.innerHTML = `<div class="arsip-kerja" role="region" aria-label="Arsip ${esc(p.nama)}">
+    <div class="aksi" style="justify-content:space-between"><b>Arsip semester ${esc(p.nama)}</b><button class="garis kecil" id="ak-tutup">Tutup</button></div>
+    <ol class="arsip-langkah">
+      <li id="ak-l1"><b>Rangkum dan unduh berkas arsip</b>
+        <span class="kecil redup">Rekap per siswa dibuat lebih dulu, lalu seluruh rincian hasil latihan dan sesi semester ini diunduh ke satu berkas SQLite. Jumlahnya dicocokkan dengan server.</span>
+        <div class="aksi"><button class="kecil" id="ak-unduh">${A && A.status === "hapus" ? "Unduh ulang berkas" : "Rangkum &amp; unduh berkas"}</button></div>
+        <div class="arsip-maju ${A && A.status === "hapus" ? "" : "hidden"}" id="ak-maju1"><div class="batang"><i id="ak-b1" style="width:${A && A.status === "hapus" ? 100 : 0}%"></i></div>
+          <span class="kecil" id="ak-t1">${A && A.status === "hapus" ? `<span class="arsip-selesai">Sudah diunduh: ${esc(A.berkas || "")} (${angkaTeks(A.n_hasil)} hasil, ${angkaTeks(A.n_sesi)} sesi).</span>` : ""}</span></div></li>
+      <li id="ak-l2" class="${A && A.status === "hapus" ? "" : "mati"}"><b>Hapus rincian dari database</b>
+        <span class="kecil redup">Hanya sesudah berkas tersimpan di tempat aman. Rekap dan kemajuan siswa tetap.</span>
+        <label class="cek"><input type="checkbox" id="ak-aman"> Berkas arsip sudah saya simpan di tempat aman (mis. Google Drive sekolah, dua salinan)</label>
+        <input type="text" id="ak-ketik" autocomplete="off" spellcheck="false" placeholder="Ketik ${esc(kata)}" aria-label="Ketik ${esc(kata)}">
+        <input type="password" id="ak-pin" autocomplete="off" placeholder="PIN admin" aria-label="PIN admin">
+        <div class="aksi"><button class="bahaya kecil" id="ak-hapus" disabled>Hapus rincian semester ini</button>${A ? '<button class="garis kecil" id="ak-batal">Batalkan arsip</button>' : ""}</div>
+        <div class="arsip-maju hidden" id="ak-maju2"><div class="batang"><i id="ak-b2" style="width:0"></i></div><span class="kecil" id="ak-t2"></span></div></li>
+    </ol></div>`;
+  w.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  const lapor = (n, teks, persen) => { $("ak-maju" + n).classList.remove("hidden"); $("ak-t" + n).innerHTML = teks; $("ak-b" + n).style.width = Math.max(0, Math.min(100, persen)) + "%"; };
+  const langkah2 = () => {
+    const siap = A && A.status === "hapus";
+    $("ak-l2").classList.toggle("mati", !siap);
+    $("ak-hapus").disabled = !(siap && $("ak-aman").checked && $("ak-ketik").value.trim().replace(/\s+/g, " ").toUpperCase() === kata && $("ak-pin").value.trim());
+  };
+  ["ak-aman", "ak-ketik", "ak-pin"].forEach((id) => $(id).addEventListener("input", langkah2));
+  $("ak-aman").addEventListener("change", langkah2);
+  $("ak-tutup").onclick = () => { w.innerHTML = ""; };
+  $("ak-unduh").onclick = async (ev) => {
+    const t = ev.currentTarget; t.disabled = true;
+    try {
+      A = await rpc("er_arsip_buat", { p_pin: PIN, p_periode: periode }, 30000);
+      while (A.status === "rekap") {
+        lapor(1, `Merangkum per siswa: ${angkaTeks(A.rekap_ke)} dari ${angkaTeks(A.n_siswa)}…`, 5 * A.rekap_ke / Math.max(1, A.n_siswa));
+        A = await rpc("er_arsip_rekap", { p_pin: PIN, p_arsip: A.id }, 30000);
+      }
+      const hasil = await buatBerkasArsip("english_reading", { rpcFn: rpc, pin: PIN, arsip: A, sekolah: typeof SEKOLAH === "string" ? SEKOLAH : "",
+        lapor: (teks, persen) => lapor(1, esc(teks), 5 + persen * 0.93) });
+      await simpanBerkas(hasil.bytes, hasil.nama, "application/vnd.sqlite3");
+      A = await rpc("er_arsip_tandai", { p_pin: PIN, p_arsip: A.id, p_n_hasil: hasil.jumlah.n_hasil, p_n_sesi: hasil.jumlah.n_sesi, p_berkas: hasil.nama }, 30000);
+      lapor(1, `<span class="arsip-selesai">Berkas diunduh: ${esc(hasil.nama)} (${mbTeks(hasil.bytes.length)}) — ${angkaTeks(hasil.jumlah.n_hasil)} hasil, ${angkaTeks(hasil.jumlah.n_sesi)} sesi, ${angkaTeks(A.n_rekap)} rekap siswa. Jumlahnya cocok dengan server.</span> Lihat folder Unduhan.`, 100);
+      t.textContent = "Unduh ulang berkas";
+      langkah2(); muatArsip();
+    } catch (e) { lapor(1, `<span style="color:var(--absen-tua)">${esc(e.message)}</span> Tekan tombol lagi untuk melanjutkan.`, 0); }
+    finally { t.disabled = false; }
+  };
+  $("ak-hapus").onclick = async (ev) => {
+    const t = ev.currentTarget, pin = $("ak-pin").value.trim(), ketik = $("ak-ketik").value;
+    if (!confirm(`Hapus semua rincian hasil latihan dan sesi semester ${p.nama} dari database?\n\nPastikan berkas ${A.berkas} sudah tersimpan. Rekap per siswa dan kemajuan siswa tetap.`)) return;
+    t.disabled = true; let n = 0; const total = Number(A.n_hasil) + Number(A.n_sesi);
+    try {
+      do {
+        A = await rpc("er_arsip_hapus", { p_pin: pin, p_arsip: A.id, p_konfirmasi: ketik }, 30000);
+        n += A.dihapus || 0;
+        lapor(2, `Menghapus rincian: ${angkaTeks(n)} dari ${angkaTeks(total)}…`, 100 * n / Math.max(1, total));
+      } while (A.status !== "selesai");
+      lapor(2, `<span class="arsip-selesai">Selesai. Rincian semester ${esc(p.nama)} sudah diarsipkan (${angkaTeks(n)} baris dihapus).</span>`, 100);
+      toast(`Arsip ${p.nama} selesai`); muatArsip();
+    } catch (e) { lapor(2, `<span style="color:var(--absen-tua)">${esc(e.message)}</span> Tekan tombol lagi untuk melanjutkan.`, 100 * n / Math.max(1, total)); t.disabled = false; }
+  };
+  if ($("ak-batal")) $("ak-batal").onclick = async () => {
+    if (!A || !confirm(`Batalkan arsip ${p.nama}? Rekap yang sudah dibuat dibuang; rincian tetap di database.`)) return;
+    try { await rpc("er_arsip_batal", { p_pin: PIN, p_arsip: A.id }); toast("Arsip dibatalkan"); w.innerHTML = ""; muatArsip(); }
+    catch (e) { toast(e.message); }
+  };
+  langkah2();
+}
+
 async function muatAdmin() {
   try { ADM = await rpc("er_admin_guru", { p_pin: PIN }); }
   catch (e) { $("f-admin").innerHTML = `<p class="pesan buruk">${esc(e.message)}</p>`; return; }
@@ -1673,6 +1796,12 @@ function gambarAdmin() {
         <input type="password" id="adm-pin-ulang" autocomplete="new-password" placeholder="Ulangi PIN baru" aria-label="Ulangi PIN admin baru">
         <button class="gelap" id="adm-pin-simpan">Ganti PIN</button></div></div></div>
   </section>
+  <section class="kartu seksi">
+    <div class="seksi-kepala"><span class="seksi-ikon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9M10 13h4"/></svg></span>
+      <div><h2>Ukuran database &amp; arsip semester</h2><p>Rincian latihan semester yang sudah berakhir disimpan sebagai berkas arsip, lalu dihapus dari database supaya tetap muat di paket gratis.</p></div></div>
+    <div id="arsip-isi"><p class="butir redup">Memuat…</p></div>
+    <div id="arsip-kerja"></div>
+  </section>
   <section class="kartu seksi bahaya">
     <div class="seksi-kepala"><span class="seksi-ikon" aria-hidden="true">${IKON.sampah}</span><div><h2>Kosongkan data latihan</h2><p>Untuk memulai dari nol, misalnya setelah uji coba atau di awal tahun ajaran.</p></div></div>
     <div class="atur-baris susun"><div class="l"><b>Kosongkan semua data latihan</b><span>Menghapus kemajuan, riwayat nilai, dan sesi <strong>semua siswa</strong> English Reading. Data siswa, pengaturan, dan tahapan khusus tetap. Hanya dengan <strong>PIN kepala sekolah</strong>. Tidak bisa dibatalkan.</span></div>
@@ -1681,6 +1810,7 @@ function gambarAdmin() {
         <button class="bahaya" id="ks-tombol" disabled>Kosongkan semua</button></div></div></div>
     <p class="catatan-seksi"><span>Hanya beberapa siswa? Hapus satu siswa di <b>Analisis Siswa</b>; beberapa siswa atau satu rombel di <b>Sesi Kegiatan</b> → centang → <b>Hapus data latihan</b>.</span></p>
   </section>`;
+  muatArsip();
 
   if ($("adm-unduh")) $("adm-unduh").onclick = (ev) => jalankanUnduh(ev.currentTarget, async () => {
     const pilih = L.filter((g) => ADM_PILIH.has(g.id) && g.aktif && g.status === "acak"), A = pilih.length ? pilih : L.filter((g) => g.aktif);

@@ -445,6 +445,17 @@ table.tabel tr.dipilih td { background: var(--emas-kabut); }
 .seksi.bahaya .seksi-ikon { background: var(--absen-tua); color: #fff; }
 .kosongkan { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: var(--j2); width: 100%; }
 .kosongkan input { padding: var(--j2) var(--j3); font-size: var(--h-m); }
+/* Arsip semester (11 Okt 2026) — sama dengan Matematika Dasar */
+.arsip-ukuran { display: flex; align-items: center; gap: var(--j3); flex-wrap: wrap; }
+.arsip-ukuran .batang { flex: 1 1 220px; max-width: 420px; height: 10px; }
+.arsip-kerja { border: 1px solid var(--garis); border-radius: var(--r2); padding: var(--j3) var(--j4); margin: var(--j3) var(--j5); background: var(--kertas-2); display: grid; gap: var(--j3); }
+.arsip-langkah { margin: 0; padding-left: 1.3em; display: grid; gap: var(--j4); }
+.arsip-langkah > li { display: grid; gap: var(--j2); }
+.arsip-langkah > li.mati { opacity: .5; }
+.arsip-langkah input[type=text], .arsip-langkah input[type=password] { max-width: 380px; padding: var(--j2) var(--j3); font-size: var(--h-m); }
+.arsip-langkah label.cek { display: inline-flex; align-items: center; gap: 6px; font-size: var(--h-s); cursor: pointer; }
+.arsip-maju { display: grid; gap: 4px; max-width: 520px; }
+.arsip-selesai { color: var(--hadir-tua); font-weight: 600; }
 @media (max-width: 640px) { .kosongkan { grid-template-columns: 1fr; } }
 input[type=search] { width: 100%; font: inherit; font-size: var(--h-b); padding: var(--j3); border: 1px solid var(--garis-2); border-radius: var(--r1); background: #fff; color: var(--tinta); }
 .titik-on { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--hadir); margin-right: 6px; box-shadow: 0 0 0 3px var(--hadir-muda); vertical-align: middle; }
@@ -1006,6 +1017,7 @@ body.lihat .ubah { display: none !important; }
 <script>window.XL_APLIKASI = "English Reading";</script>
 <script src="assets/kepala-excel.js?v=1"></script>
 <script src="assets/excel.js?v=5"></script>
-<script src="guru.js?v=7"></script>
+<script src="assets/arsip.js?v=2"></script>
+<script src="guru.js?v=8"></script>
 </body>
 </html>

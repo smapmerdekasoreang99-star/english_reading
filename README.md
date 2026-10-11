@@ -199,6 +199,23 @@ Meniru Matematika Dasar. Halaman **⚙️ Pengaturan & Tahapan** (`#pengaturan`,
   Di halaman siswa, menu ini hanya-baca: tab Khusus menampilkan tahapan yang dipasang untuknya, sedangkan editor dan
   tautan `#khusus=` dialihkan. Tautan `#khusus=` hanya berlaku pada mode luring tanpa server.
 
+## Arsip semester (11 Okt 2026)
+
+Sama dengan Matematika Dasar (rencana: `RENCANA_MASA_SIMPAN.md` di folder utama). **Admin → Ukuran database
+& arsip semester**: ukuran database (peringatan 350 MB) dan daftar semester (ganjil 1 Jul–31 Des, genap
+1 Jan–30 Jun WIB). **Arsipkan…** → rekap per siswa (`er_rekap_semester`: kegiatan, sub level lulus, jumlah
+nilai, pengucapan, pemahaman, hari, waktu, per level; sesi kelas & mandiri terpisah) → seluruh rincian
+`er_hasil`/`er_sesi` diunduh ke `arsip_english_reading_<periode>.sqlite` (jumlah dicocokkan) → centang,
+ketik `ARSIPKAN …`, PIN admin → rincian dihapus bertahap.
+
+- Kemajuan siswa (`er_kemajuan`) tidak tersentuh. Karena English Reading tidak punya ringkasan seumur,
+  `er_rekap` kini **menjumlahkan rekap semester yang sudah diarsip** — angka di Perkembangan Siswa sama
+  persis sebelum dan sesudah arsip (diuji). Analisis Siswa menampilkan kartu **Riwayat semester (arsip)**.
+- **Buka Arsip** (`arsip.html`, salinan sama dengan Matematika Dasar + `bacaan.js` untuk judul level):
+  buka berkas di browser, cari siswa, lihat rekap, sesi, dan setiap hasil; unduh Excel.
+- `assets/arsip.js` dan `assets/vendor/sql-asm-1.10.3.js` (sql.js, MIT) **sama** dengan Matematika Dasar;
+  ubah keduanya bersamaan. Pemulihan: `./db.sh pulihkan <berkas>` di `database_tryout`.
+
 ## Kemajuan resmi dan latihan mandiri terpisah (10 Okt 2026)
 
 Kemajuan dan nilai **resmi** hanya bertambah dari **sesi kelas** yang diawasi guru, supaya latihan tanpa pengawasan
