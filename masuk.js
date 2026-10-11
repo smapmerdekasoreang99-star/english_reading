@@ -26,7 +26,7 @@
     try {
       r = await fetch(`${SB.url}/rest/v1/rpc/${fn}`, {
         method: 'POST', keepalive: !!(opsi && opsi.keepalive),
-        headers: { 'Content-Type': 'application/json', apikey: SB.key, Authorization: 'Bearer ' + SB.key },
+        headers: { 'Content-Type': 'application/json', apikey: SB.key, ...(/^eyJ[\w-]*\.[\w-]+\.[\w-]*$/.test(SB.key) ? { Authorization: 'Bearer ' + SB.key } : {}) },   // Bearer hanya untuk JWT (siap pindah server)
         body: JSON.stringify(args || {})
       });
       t = await r.text();
