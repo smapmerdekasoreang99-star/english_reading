@@ -1669,7 +1669,7 @@ function gambarPeringkat() {
   $("rk-ket").innerHTML = `${esc(j.ket(periodeRk()))} ${H.length} dari ${L.length} siswa masuk peringkat ini.` + (PRK.periode.kasar ? ` <b>${KASAR_RK}</b>` : "");
   $("t-peringkat").innerHTML = `<thead><tr><th>No</th><th>Nama</th>${semua ? "<th>Rombel</th>" : ""}`
     + K.map(([k, t, , cls]) => `<th class="${cls === "angka" ? "angka" : ""}${k === j.kolom ? " rk-utama" : ""}">${t}</th>`).join("") + "</tr></thead><tbody>"
-    + (T.length ? T.map(({ r, no }) => `<tr class="klik" data-n="${esc(r.nisn)}"><td><span class="rk-no${no <= 3 ? " p" + no : ""}">${no}</span></td><td><b>${esc(r.nama)}</b></td>`
+    + (T.length ? T.map(({ r, no }) => `<tr class="klik" data-n="${esc(r.nisn)}"><td><span class="rk-no${no <= 3 ? " p" + no : ""}"${no <= 3 ? ` title="Peringkat ${no}"` : ""}>${no}</span></td><td><b>${esc(r.nama)}</b></td>`
         + (semua ? `<td>${esc(r.kelas)}</td>` : "")
         + K.map(([k, , f, cls]) => `<td class="${cls}${k === j.kolom ? " rk-utama" : ""}">${f(r)}</td>`).join("") + "</tr>").join("")
       : `<tr><td colspan="${K.length + 3}" class="kosong-data">Belum ada siswa yang memenuhi syarat peringkat ini pada cakupan dan periode yang dipilih.</td></tr>`) + "</tbody>";

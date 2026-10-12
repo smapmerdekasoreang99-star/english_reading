@@ -109,11 +109,11 @@
 .subtab button { background: transparent; color: var(--tinta-2); border: 0; box-shadow: none; padding: 8px 18px; border-radius: var(--r-bulat); font-weight: 700; font-size: var(--h-m); }
 .subtab button.on { background: var(--gelap); color: #fff; }
 .subtab button:focus-visible { outline: 2px solid var(--emas); outline-offset: 2px; }
-/* Perkembangan Siswa: Peringkat (nomor 1–3 diberi warna, kolom yang diurutkan disorot) */
+/* Perkembangan Siswa: Peringkat (nomor 1–3 = emas, perak, perunggu, kolom yang diurutkan disorot) */
 .rk-no { display: inline-grid; place-items: center; min-width: 28px; height: 28px; padding: 0 6px; border-radius: var(--r-bulat); font-weight: 800; font-variant-numeric: tabular-nums; color: var(--tinta-2); }
 .rk-no.p1 { background: var(--emas); color: var(--utama-teks); }
-.rk-no.p2 { background: var(--netral-muda); color: var(--tinta); }
-.rk-no.p3 { background: var(--emas-muda); color: var(--emas-teks); box-shadow: inset 0 0 0 1px var(--emas-tua); }
+.rk-no.p2 { background: #6E7B88; color: #fff; }   /* perak */
+.rk-no.p3 { background: #9A5B2A; color: #fff; }   /* perunggu */
 .tabel th.rk-utama, .tabel td.rk-utama { background: var(--emas-kabut); font-weight: 800; }
 .rk-sub { display: block; font-size: var(--h-xs); font-weight: 400; color: var(--tinta-3); }
 /* Pengaturan Umum: pilihan sasaran & asal tiap isian */
@@ -1047,6 +1047,6 @@ body.lihat .ubah { display: none !important; }
 <script src="assets/kepala-excel.js?v=1"></script>
 <script src="assets/excel.js?v=5"></script>
 <script src="assets/arsip.js?v=2"></script>
-<script src="guru.js?v=9"></script>
+<script src="guru.js?v=10"></script>
 </body>
 </html>
