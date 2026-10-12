@@ -455,9 +455,16 @@ async function muatSesi() {
 }
 const sisaSesi = (k) => k.sesi ? Math.max(0, Math.ceil((new Date(k.sesi.sampai).getTime() - (Date.now() - SELISIH)) / 60000)) : 0;
 const jamTeks = (iso) => new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+// Lama bawaan membuka sesi kelas: "Lama satu sesi" profil aturan rombel, bila kosong Pengaturan Umum (5–300 = batas er_buka_kelas).
+function menitBawaan(kel) {
+  const ar = aturanRombel(kel), p = ar && ATPROFIL.find((x) => x.id === ar.id), dariProfil = !!(p && p.aturan && p.aturan.durasi_menit);
+  const m = +(dariProfil ? p.aturan.durasi_menit : umumNilai("durasi_menit"));
+  return { m: m > 0 ? Math.max(5, Math.min(300, m)) : 90, asal: dariProfil ? "profil" : "umum" };
+}
 function pilihMenit(kel) {
-  const pilih = MENIT_PILIH[kel] || 90;
-  return `<select data-menit="${esc(kel)}" aria-label="Lama sesi ${esc(kel)}">${LAMA_SESI.map((m) => `<option value="${m}" ${m === pilih ? "selected" : ""}>${m} menit</option>`).join("")}</select>`;
+  const b = menitBawaan(kel), pilih = MENIT_PILIH[kel] || b.m;
+  const L = [...new Set([...LAMA_SESI, b.m, pilih])].sort((x, y) => x - y);
+  return `<select data-menit="${esc(kel)}" aria-label="Lama sesi ${esc(kel)}">${L.map((m) => `<option value="${m}" ${m === pilih ? "selected" : ""}>${m} menit${m === b.m ? ` (${b.asal})` : ""}</option>`).join("")}</select>`;
 }
 const IKON_QR = '<svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z"/></svg>';
 const IKON_TERATAS = '<svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21V9h6v12M3 21v-7h6M15 21v-9h6v9M2 21h20"/></svg>';
@@ -485,7 +492,7 @@ function gambarSesi() {
           : `${pilihMenit(k.kelas)}<button class="kecil" data-buka="${esc(k.kelas)}">Buka sesi</button>`}</div></div>`;
     }).join("");
   const cari = (kel) => G.rombel.find((x) => x.kelas === kel);
-  $("sesi-isi").querySelectorAll("[data-menit]").forEach((s) => s.onchange = () => { MENIT_PILIH[s.dataset.menit] = +s.value; });
+  $("sesi-isi").querySelectorAll("[data-menit]").forEach((s) => s.onchange = () => { if (+s.value === menitBawaan(s.dataset.menit).m) delete MENIT_PILIH[s.dataset.menit]; else MENIT_PILIH[s.dataset.menit] = +s.value; });
   $("sesi-isi").querySelectorAll("[data-buka]").forEach((b) => b.onclick = async () => {
     const k = b.dataset.buka, m = +$("sesi-isi").querySelector(`[data-menit="${CSS.escape(k)}"]`).value, sampai = new Date(Date.now() + m * 60000);
     if (!confirm(`Buka sesi latihan untuk ${k} selama ${m} menit?\n\nSiswa ${k} memasukkan NISN dan kode akses yang muncul setelah ini; keluar halaman diawasi. Sesi tertutup sendiri pukul ${jamTeks(sampai)}.`)) return;
@@ -679,6 +686,8 @@ const ATUR_KHUSUS = [
   { g: "Pengawasan keluar halaman", f: [
     { k: "maks_keluar", l: "Batas keluar halaman", t: "angka", sat: "kali", min: 0, maks: 20 },
     { k: "toleransi_keluar", l: "Abaikan keluar di bawah", t: "angka", sat: "detik", min: 0, maks: 120 } ] },
+  { g: "Sesi", f: [
+    { k: "durasi_menit", l: "Lama satu sesi", t: "angka", sat: "menit", min: 5, maks: 300 } ] },
 ];
 const SEMUA_KHUSUS = ATUR_KHUSUS.flatMap((g) => g.f);
 const BAWAAN = { jumlahSoal: 10, harusDengar: true, harusBaca: true, syaratBaca: 75, tampilJawaban: true, bilaSalah: "akhir", batasSalah: 0,
@@ -709,7 +718,7 @@ function gambarInfoKelompok() {
   $("info-kel").classList.toggle("hidden", !kel.length);
   if (!kel.length) return;
   const chip = (x, v, kls) => `<span class="ik-chip ${kls || ""}"><small>${x.l}</small><b>${esc(nilaiAturTeks(x, v))}</b></span>`;
-  const isianUmum = ["jumlahSoal", "bilaSalah", "maks_keluar"].map((k) => SEMUA_KHUSUS.find((x) => x.k === k));
+  const isianUmum = ["jumlahSoal", "bilaSalah", "maks_keluar", "durasi_menit"].map((k) => SEMUA_KHUSUS.find((x) => x.k === k));
   const hitung = (L) => { const m = new Map(); L.forEach((v) => m.set(v, (m.get(v) || 0) + 1)); return [...m].map(([v, c]) => `${esc(v)} (${c})`).join(", "); };
   const baris = kel.map((k) => {
     const pr = profilRombel(k), ar = aturanRombel(k), a = ar && ATPROFIL.find((x) => x.id === ar.id), p = pr && PROFIL.find((x) => x.id === pr.id);
@@ -742,7 +751,7 @@ const dipakaiSesi = (p) => [p.kelas.length ? `rombel ${p.kelas.join(", ")} (${p.
 async function muatProfil(diam) {
   try { [PROFIL, ATPROFIL] = await Promise.all([rpc("er_profil_daftar", { p_pin: PIN }), rpc("er_atur_profil_daftar", { p_pin: PIN })]); }
   catch (e) { if (!diam) toast(e.message); return; }
-  gambarAturProfil(); gambarProfil(); gambarKelompokAturan(); gambarInfoKelompok();
+  gambarAturProfil(); gambarProfil(); gambarKelompokAturan(); gambarInfoKelompok(); gambarSesi();   // lama bawaan sesi ikut profil
 }
 async function muatSemua() {
   try { SEMUA = await rpc("er_siswa_daftar", { p_pin: PIN }); } catch (e) { return; }
@@ -779,7 +788,7 @@ function bukaEditorAturan(p) {
       <label>Catatan (opsional)<input type="text" id="pr-catatan" maxlength="300" placeholder="mis. Bu Rina — rombel yang perlu waktu lebih" value="${esc(p && p.catatan || "")}"></label></div>
     <p class="redup kecil">Isi hanya yang ingin dibedakan. Kotak kosong mengikuti aturan di bawahnya; angka samar = Pengaturan Umum.</p>
     ${ATUR_KHUSUS.map((g) => `<div class="pr-grup"><div class="ds-sub-judul">${g.g}</div><div class="pr-isian">${g.f.map((x) => `<label><span>${x.l}</span>${kendali(x)}</label>`).join("")}</div></div>`).join("")}
-    <p class="redup kecil">Latihan mandiri, lama sesi, dan kode buka diatur di <b>Pengaturan Umum</b>; materi yang dipakai diatur di <b>Tahapan khusus</b>.</p>
+    <p class="redup kecil"><b>Lama satu sesi</b> = lama bawaan saat guru membuka sesi kelas rombel yang memakai profil ini (tetap bisa diganti saat membuka). Latihan mandiri dan kode buka diatur di <b>Pengaturan Umum</b>; materi yang dipakai diatur di <b>Tahapan khusus</b>.</p>
     <div class="baris" style="margin-top:var(--j4)"><button id="pr-simpan">Simpan profil</button><button class="garis" id="pr-batal">Batal</button></div>`;
   $("pr-batal").onclick = () => ed.classList.add("hidden");
   $("pr-simpan").onclick = async () => {
@@ -1440,9 +1449,9 @@ const SEKSI = [
     { k: "harusBaca", jenis: "ya", l: "Baca teks dulu sebelum sub level 1", s: "Siswa membaca keras teks level (Baca & Koreksi) sampai akurasi minimal.", on: "Harus Baca", off: "Tanpa Baca" },
     { k: "syaratBaca", jenis: "angka", satuan: "%", min: 50, maks: 100, l: "Akurasi membaca minimal", s: "Dipakai bila Harus Baca." },
   ] },
-  { ikon: "jam", judul: "Sesi", ket: "Lama satu kali latihan mandiri di luar sesi kelas.", baris: [
-    { k: "durasi_menit", jenis: "angka", satuan: "menit", min: 15, maks: 720, l: "Lama satu sesi", s: "Lama satu kali latihan mandiri (15–720 menit). Waktu dihitung ulang setiap siswa menyimpan kemajuan; setelah tidak aktif selama itu, siswa diminta masuk lagi dengan NISN. Kemajuannya tetap tersimpan." },
-  ], catatan: "Lama sesi kelas dipilih guru saat membuka sesi di <b>Sesi Kegiatan</b>." },
+  { ikon: "jam", judul: "Sesi", ket: "Lama bawaan sesi kelas dan lama satu kali latihan mandiri.", baris: [
+    { k: "durasi_menit", jenis: "angka", satuan: "menit", min: 15, maks: 720, l: "Lama satu sesi", s: "Lama bawaan saat guru membuka sesi kelas di Sesi Kegiatan (paling lama 300 menit; bisa diganti saat membuka), dan lama satu kali latihan mandiri (15–720 menit). Waktu dihitung ulang setiap siswa menyimpan kemajuan; setelah tidak aktif selama itu, siswa diminta masuk lagi dengan NISN. Kemajuannya tetap tersimpan." },
+  ], catatan: "Rombel yang memakai profil aturan berisi <b>Lama satu sesi</b> memakai nilai profilnya sebagai lama bawaan sesi kelas." },
 ];
 const SEMUA_ATUR = SEKSI.flatMap((s) => s.baris);
 function ringkasAtur(a) {
