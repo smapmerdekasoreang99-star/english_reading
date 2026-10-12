@@ -109,6 +109,13 @@
 .subtab button { background: transparent; color: var(--tinta-2); border: 0; box-shadow: none; padding: 8px 18px; border-radius: var(--r-bulat); font-weight: 700; font-size: var(--h-m); }
 .subtab button.on { background: var(--gelap); color: #fff; }
 .subtab button:focus-visible { outline: 2px solid var(--emas); outline-offset: 2px; }
+/* Perkembangan Siswa: Peringkat (nomor 1–3 diberi warna, kolom yang diurutkan disorot) */
+.rk-no { display: inline-grid; place-items: center; min-width: 28px; height: 28px; padding: 0 6px; border-radius: var(--r-bulat); font-weight: 800; font-variant-numeric: tabular-nums; color: var(--tinta-2); }
+.rk-no.p1 { background: var(--emas); color: var(--utama-teks); }
+.rk-no.p2 { background: var(--netral-muda); color: var(--tinta); }
+.rk-no.p3 { background: var(--emas-muda); color: var(--emas-teks); box-shadow: inset 0 0 0 1px var(--emas-tua); }
+.tabel th.rk-utama, .tabel td.rk-utama { background: var(--emas-kabut); font-weight: 800; }
+.rk-sub { display: block; font-size: var(--h-xs); font-weight: 400; color: var(--tinta-3); }
 /* Pengaturan Umum: pilihan sasaran & asal tiap isian */
 .atur-sasaran { display: grid; gap: 4px; font-size: var(--h-xs); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--tinta-2); }
 .atur-sasaran select { min-width: 260px; padding: var(--j2) var(--j3); font-size: var(--h-m); text-transform: none; letter-spacing: 0; font-weight: 600; color: var(--tinta); }
@@ -780,7 +787,7 @@ body.lihat .ubah { display: none !important; }
     <div id="p-kelas" class="hidden">
       <div class="kepala-hal"><div><span class="eyebrow">Pemantauan</span><h1 id="judul-kelas">Perkembangan Siswa</h1>
         <p>Posisi, kemajuan, dan siswa yang perlu perhatian. Ketuk nama siswa untuk melihat analisisnya.</p></div></div>
-      <div class="baris">
+      <div class="baris" id="baris-kelas">
         <select id="pil-kelas" style="max-width:220px" aria-label="Pilih rombel"></select>
         <select id="pil-urut" style="max-width:240px" aria-label="Urutkan">
           <option value="perhatian">Urut: perlu perhatian dulu</option>
@@ -795,6 +802,7 @@ body.lihat .ubah { display: none !important; }
       <div class="subtab" role="tablist" aria-label="Tampilan perkembangan">
         <button role="tab" data-sub="siswa" class="on" aria-selected="true">Per Siswa</button>
         <button role="tab" data-sub="kelompok" aria-selected="false">Per Rombel</button>
+        <button role="tab" data-sub="peringkat" aria-selected="false">Peringkat</button>
       </div>
       <div id="pk-siswa">
       <div class="kartu">
@@ -811,6 +819,27 @@ body.lihat .ubah { display: none !important; }
       </div>
       <div class="kartu"><h2>Perbandingan rombel</h2><div class="gulir"><table class="tabel" id="t-perkelompok" data-beku="1"></table></div>
         <p class="redup kecil">Ketuk baris rombel untuk menampilkan ringkasan dan sebarannya di atas. Macet: satu sub level dicoba 3 kali atau lebih dalam 30 hari tanpa mencapai 80%. Tidak aktif: tidak berlatih dalam 7 hari terakhir.</p></div>
+      </div>
+      <!-- Peringkat: sekolah / angkatan / rombel, menurut periode -->
+      <div id="pk-peringkat" class="hidden">
+      <div class="baris">
+        <select id="rk-cakupan" style="max-width:220px" aria-label="Cakupan peringkat"></select>
+        <select id="rk-periode" style="max-width:220px" aria-label="Periode"></select>
+        <select id="rk-jenis" style="max-width:240px" aria-label="Jenis peringkat"></select>
+        <select id="rk-n" style="max-width:150px" aria-label="Banyak siswa ditampilkan">
+          <option value="10">10 teratas</option><option value="25">25 teratas</option><option value="50">50 teratas</option><option value="0">Semua</option>
+        </select>
+        <span class="tumbuh"></span>
+        <button class="garis kecil" id="rk-muat">Muat ulang</button>
+        <button class="btn-unduh utama" data-fmt="xlsx" id="rk-unduh" title="Peringkat lengkap dan perbandingan dalam satu buku kerja Excel">Unduh peringkat</button>
+      </div>
+      <div class="ubin" id="rk-ubin"></div>
+      <div class="kartu"><h2 id="rk-judul">Peringkat</h2><p class="redup kecil" id="rk-ket" style="margin-top:0"></p>
+        <div class="gulir"><table class="tabel" id="t-peringkat" data-beku="2"></table></div>
+        <p class="redup kecil">Hanya kemajuan resmi (sesi kelas yang diawasi); latihan mandiri tidak ikut. Level tuntas mengikuti tahapan yang berlaku bagi siswa. Nilai yang sama mendapat peringkat yang sama. Ketuk nama untuk melihat analisisnya.</p></div>
+      <div class="kartu" id="rk-banding-kartu"><h2 id="rk-banding-judul">Perbandingan</h2>
+        <div class="gulir"><table class="tabel" id="t-rk-banding" data-beku="1"></table></div>
+        <p class="redup kecil">Ketuk baris untuk melihat peringkat di dalamnya. Rata-rata level tuntas dihitung dari siswa yang sudah mulai.</p></div>
       </div>
     </div>
 
@@ -1018,6 +1047,6 @@ body.lihat .ubah { display: none !important; }
 <script src="assets/kepala-excel.js?v=1"></script>
 <script src="assets/excel.js?v=5"></script>
 <script src="assets/arsip.js?v=2"></script>
-<script src="guru.js?v=8"></script>
+<script src="guru.js?v=9"></script>
 </body>
 </html>
