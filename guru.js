@@ -270,7 +270,7 @@ async function muatDaftar(diam) {
 $("dl-kelompok").onchange = () => { muatDaftar(); gambarSesi(); };
 $("dl-muat").onclick = () => { muatDaftar(); muatSesi(); };
 $("dl-status").onchange = () => gambarDaftar();
-$("dl-tingkat").onchange = () => gambarDaftar();
+$("dl-tingkat").onchange = () => { gambarDaftar(); gambarSesi(); };
 $("dl-cari").oninput = () => gambarDaftar();
 const PILIH = new Set();
 
@@ -457,8 +457,9 @@ const IKON_TERATAS = '<svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><
 function gambarSesi() {
   if (!G) return;
   if (document.activeElement && document.activeElement.matches("#sesi-isi [data-tambah-menit]")) return;
-  const pilih = $("dl-kelompok").value, terbuka = (k) => !!k.sesi && sisaSesi(k) > 0;
-  const L = G.rombel.filter((k) => !pilih || k.kelas === pilih).sort((a, b) => terbuka(b) - terbuka(a) || a.kelas.localeCompare(b.kelas, "id", { numeric: true }));
+  const pilih = $("dl-kelompok").value, tk = $("dl-tingkat").value, terbuka = (k) => !!k.sesi && sisaSesi(k) > 0;
+  // Saringan tingkat ikut berlaku untuk daftar sesi rombel (10-1 / X-1 → 10)
+  const L = G.rombel.filter((k) => (!pilih || k.kelas === pilih) && (!tk || tingkatSiswa(k) === tk)).sort((a, b) => terbuka(b) - terbuka(a) || a.kelas.localeCompare(b.kelas, "id", { numeric: true }));
   $("sesi-kartu").classList.toggle("hidden", !L.length);
   if (L.some((k) => k.sesi && sisaSesi(k) === 0)) setTimeout(muatSesi, 1500);
   const LB = L.filter(terbuka);
