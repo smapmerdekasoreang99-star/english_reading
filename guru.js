@@ -93,6 +93,7 @@ function isiPilihanRombel() {
   if (k1 && G.rombel.some((r) => r.kelas === k1)) $("pil-kelas").value = k1;
   $("dl-kelompok").innerHTML = opsi + semua;
   $("dl-kelompok").value = k2 && [...$("dl-kelompok").options].some((o) => o.value === k2) ? k2 : $("pil-kelas").value;
+  aturTingkat();
 }
 function gambarSinkron() {
   const el = $("info-sinkron");
@@ -267,7 +268,13 @@ async function muatDaftar(diam) {
   catch (e) { if (!diam) $("t-daftar").innerHTML = `<tr><td class="kosong-data">${esc(e.message)}</td></tr>`; return; }
   gambarDaftar();
 }
-$("dl-kelompok").onchange = () => { muatDaftar(); gambarSesi(); };
+// Saringan tingkat hanya berarti saat semua kelompok/rombel dipilih; satu kelompok/rombel → dikunci di "Semua tingkat".
+function aturTingkat() {
+  const satu = !!$("dl-kelompok").value, el = $("dl-tingkat");
+  el.disabled = satu; if (satu) el.value = "";
+  el.title = satu ? "Saringan tingkat hanya bisa dipakai saat memilih semua" : "";
+}
+$("dl-kelompok").onchange = () => { aturTingkat(); muatDaftar(); gambarSesi(); };
 $("dl-muat").onclick = () => { muatDaftar(); muatSesi(); };
 $("dl-status").onchange = () => gambarDaftar();
 $("dl-tingkat").onchange = () => { gambarDaftar(); gambarSesi(); };

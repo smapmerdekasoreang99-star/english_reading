@@ -427,6 +427,7 @@ body.ct-terkunci { overflow: hidden; }
 
 /* ---- Daftar siswa ---- */
 .daftar-alat { display: grid; grid-template-columns: 190px 150px minmax(0, 1fr) 190px auto auto; gap: var(--j2); align-items: center; }
+#dl-tingkat:disabled { opacity: .5; cursor: not-allowed; }   /* tingkat hanya untuk pilihan "Semua" */
 @media (max-width: 960px) { .daftar-alat { grid-template-columns: 1fr 1fr; } .daftar-alat #dl-cari { grid-column: 1 / -1; grid-row: 1; } }
 /* Bilah aksi massal: muncul saat ada siswa dicentang, menempel di bawah layar */
 .massal { display: none; position: sticky; bottom: var(--j3); z-index: var(--lapis-bar); align-items: center; gap: var(--j2) var(--j3); flex-wrap: wrap;
@@ -1047,6 +1048,6 @@ body.lihat .ubah { display: none !important; }
 <script src="assets/kepala-excel.js?v=1"></script>
 <script src="assets/excel.js?v=5"></script>
 <script src="assets/arsip.js?v=2"></script>
-<script src="guru.js?v=12"></script>
+<script src="guru.js?v=13"></script>
 </body>
 </html>
