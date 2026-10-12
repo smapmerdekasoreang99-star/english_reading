@@ -673,21 +673,24 @@ if (new URLSearchParams(location.search).get("simulasi") === "teratas") tampilTe
 
 /* ----------------------------------------------------------- aturan (isian tahapan khusus & Pengaturan Umum) */
 // Aturan yang boleh dibuat khusus di tahapan khusus, dikelompokkan seperti Pengaturan Umum.
+// g/d = judul & keterangan kelompok; kol = kolom di editor profil (1 kiri, 2 kanan; seimbang 5–5 isian);
+// s = keterangan isian; sekolah = hanya berlaku di sesi di sekolah (tidak di latihan mandiri).
 const ATUR_KHUSUS = [
-  { g: "Halaman latihan", f: [
-    { k: "tampilJawaban", l: "Jawaban benar saat salah", t: "ya", on: "Ditampilkan", off: "Disembunyikan" },
-    { k: "bilaSalah", l: "Bila jawaban salah", t: "pilih", opsi: [["akhir", "Diulang di akhir sesi"], ["ulang", "Diulang di nomor itu sampai benar"], ["lanjut", "Maju terus"]] } ] },
-  { g: "Naik sub level", f: [
-    { k: "jumlahSoal", l: "Jumlah soal per sub level", t: "angka", sat: "soal", min: 5, maks: 50 },
-    { k: "batasSalah", l: "Batas salah per sub level", t: "angka", sat: "kali", min: 0, maks: 50 },
-    { k: "harusDengar", l: "Dengar teks dulu", t: "ya", on: "Harus Dengar", off: "Tanpa Dengar" },
-    { k: "harusBaca", l: "Baca teks dulu", t: "ya", on: "Harus Baca", off: "Tanpa Baca" },
-    { k: "syaratBaca", l: "Akurasi membaca minimal", t: "angka", sat: "%", min: 50, maks: 100 } ] },
-  { g: "Pengawasan keluar halaman", f: [
-    { k: "maks_keluar", l: "Batas keluar halaman", t: "angka", sat: "kali", min: 0, maks: 20 },
-    { k: "toleransi_keluar", l: "Abaikan keluar di bawah", t: "angka", sat: "detik", min: 0, maks: 120 } ] },
-  { g: "Sesi", f: [
-    { k: "durasi_menit", l: "Lama satu sesi", t: "angka", sat: "menit", min: 5, maks: 300 } ] },
+  { g: "Halaman latihan", d: "Yang dilihat siswa saat menjawab.", kol: 1, f: [
+    { k: "tampilJawaban", l: "Jawaban benar saat salah", t: "ya", on: "Ditampilkan", off: "Disembunyikan", s: "Beserta penjelasannya, saat siswa menjawab salah." },
+    { k: "bilaSalah", l: "Bila jawaban salah", t: "pilih", opsi: [["akhir", "Diulang di akhir sesi"], ["ulang", "Diulang di nomor itu sampai benar"], ["lanjut", "Maju terus"]], s: "Berlaku untuk setiap nomor di sub level." } ] },
+  { g: "Naik sub level", d: "Kapan sub level tuntas dan syarat sebelum mulai.", kol: 2, f: [
+    { k: "jumlahSoal", l: "Jumlah soal per sub level", t: "angka", sat: "soal", min: 5, maks: 50, s: "5–50 soal. Lulus bila nilainya paling sedikit 80%." },
+    { k: "batasSalah", l: "Batas salah per sub level", t: "angka", sat: "kali", min: 0, maks: 50, s: "Lebih dari ini, sub level diulang dari nomor 1. 0 = tanpa batas." },
+    { k: "harusDengar", l: "Dengar teks dulu", t: "ya", on: "Harus Dengar", off: "Tanpa Dengar", s: "Teks dibacakan sampai selesai sebelum sub level 1." },
+    { k: "harusBaca", l: "Baca teks dulu", t: "ya", on: "Harus Baca", off: "Tanpa Baca", s: "Siswa membaca keras teks sebelum sub level 1." },
+    { k: "syaratBaca", l: "Akurasi membaca minimal", t: "angka", sat: "%", min: 50, maks: 100, s: "50–100%. Dipakai bila Harus Baca." } ] },
+  { g: "Pengawasan keluar halaman", d: "Hanya saat sesi di sekolah; latihan mandiri tidak diawasi.", kol: 1, f: [
+    { k: "maks_keluar", l: "Batas keluar halaman", t: "angka", sat: "kali", min: 0, maks: 20, s: "Saat tercapai, latihan dikunci sampai dibuka guru. 0 = tanpa batas." },
+    { k: "toleransi_keluar", l: "Abaikan keluar di bawah", t: "angka", sat: "detik", min: 0, maks: 120, s: "Keluar sesingkat ini hanya dicatat, tidak dihitung." } ] },
+  { g: "Sesi", d: "Lama sesi yang dibuka guru di sekolah.", kol: 1, f: [
+    { k: "durasi_menit", l: "Lama satu sesi", t: "angka", sat: "menit", min: 5, maks: 300, sekolah: true,
+      s: "Lama bawaan saat guru membuka sesi di sekolah (5–300 menit). Latihan mandiri tidak terpengaruh: lamanya mengikuti Pengaturan Umum." } ] },
 ];
 const SEMUA_KHUSUS = ATUR_KHUSUS.flatMap((g) => g.f);
 const BAWAAN = { jumlahSoal: 10, harusDengar: true, harusBaca: true, syaratBaca: 75, tampilJawaban: true, bilaSalah: "akhir", batasSalah: 0,
@@ -783,13 +786,26 @@ function bukaEditorAturan(p) {
     if (x.t === "pilih") return `<select data-pk="${x.k}"><option value="">— ikut umum (${esc(nilaiAturTeks(x, u))}) —</option>${x.opsi.map((o) => `<option value="${o[0]}" ${v === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select>`;
     return `<span class="grup"><input type="number" data-pk="${x.k}" min="${x.min}" max="${x.maks}" inputmode="numeric" placeholder="${u}" value="${v == null ? "" : v}"><span class="satuan">${x.sat}</span></span>`;
   };
-  ed.innerHTML = `<h2>${p ? "Ubah profil aturan" : "Profil aturan baru"}</h2>
-    <div class="pr-identitas"><label>Nama profil<input type="text" id="pr-nama" maxlength="80" placeholder="mis. Santai 20 soal" value="${esc(p ? p.nama : "")}"></label>
-      <label>Catatan (opsional)<input type="text" id="pr-catatan" maxlength="300" placeholder="mis. Bu Rina — rombel yang perlu waktu lebih" value="${esc(p && p.catatan || "")}"></label></div>
-    <p class="redup kecil">Isi hanya yang ingin dibedakan. Kotak kosong mengikuti aturan di bawahnya; angka samar = Pengaturan Umum.</p>
-    ${ATUR_KHUSUS.map((g) => `<div class="pr-grup"><div class="ds-sub-judul">${g.g}</div><div class="pr-isian">${g.f.map((x) => `<label><span>${x.l}</span>${kendali(x)}</label>`).join("")}</div></div>`).join("")}
-    <p class="redup kecil"><b>Lama satu sesi</b> = lama bawaan saat guru membuka sesi kelas rombel yang memakai profil ini (tetap bisa diganti saat membuka). Latihan mandiri dan kode buka diatur di <b>Pengaturan Umum</b>; materi yang dipakai diatur di <b>Tahapan khusus</b>.</p>
-    <div class="baris" style="margin-top:var(--j4)"><button id="pr-simpan">Simpan profil</button><button class="garis" id="pr-batal">Batal</button></div>`;
+  // Satu baris per isian (nama + keterangan | kendali), kelompok dalam dua kolom seimbang; baris yang dibedakan disorot.
+  const baris = (x) => `<label class="pe-baris${a[x.k] != null ? " khusus" : ""}">
+      <span class="pe-label"><b>${x.l}${x.sekolah ? '<span class="pe-tanda" title="Tidak berlaku untuk latihan mandiri">Sesi di sekolah saja</span>' : ""}</b><small>${x.s || ""}</small></span>
+      <span class="pe-kendali">${kendali(x)}</span></label>`;
+  const grup = (g) => `<section class="pe-grup"><div class="pe-grup-kepala"><h3>${g.g}</h3><p>${g.d || ""}</p></div>${g.f.map(baris).join("")}</section>`;
+  const kolom = (n) => `<div class="pe-tumpuk">${ATUR_KHUSUS.filter((g) => (g.kol || 1) === n).map(grup).join("")}</div>`;
+  ed.innerHTML = `<div class="pe-kepala"><div><h2>${p ? "Ubah profil aturan" : "Profil aturan baru"}</h2>
+        <p>Isi hanya yang ingin dibedakan. Kotak kosong mengikuti Pengaturan Umum; angka samar dan pilihan "ikut umum" menunjukkan nilainya.</p></div>
+      <span class="pe-hitung" id="pe-hitung"></span></div>
+    <div class="pr-identitas"><label><span>Nama profil</span><input type="text" id="pr-nama" maxlength="80" placeholder="mis. Santai 20 soal" value="${esc(p ? p.nama : "")}"></label>
+      <label><span>Catatan <span class="redup">(opsional)</span></span><input type="text" id="pr-catatan" maxlength="300" placeholder="mis. Bu Rina — rombel yang perlu waktu lebih" value="${esc(p && p.catatan || "")}"></label></div>
+    <div class="pe-kolom">${kolom(1)}${kolom(2)}</div>
+    <div class="pe-kaki"><p>Latihan mandiri dan kode buka kunci diatur di <b>Pengaturan Umum</b>; materi yang dipakai diatur di <b>Tahapan khusus</b>.</p>
+      <span class="pe-tombol"><button class="garis" id="pr-batal">Batal</button><button id="pr-simpan">Simpan profil</button></span></div>`;
+  // Sorot baris yang dibedakan dan hitung jumlahnya selagi guru mengisi
+  const tandai = () => { let n = 0;
+    ed.querySelectorAll("[data-pk]").forEach((i) => { const ada = i.value.trim() !== ""; n += ada; i.closest(".pe-baris").classList.toggle("khusus", ada); });
+    $("pe-hitung").textContent = n ? `${n} aturan dibedakan` : "Belum ada yang dibedakan"; $("pe-hitung").classList.toggle("kosong", !n); };
+  ed.querySelectorAll("[data-pk]").forEach((i) => { i.oninput = tandai; i.onchange = tandai; });
+  tandai();
   $("pr-batal").onclick = () => ed.classList.add("hidden");
   $("pr-simpan").onclick = async () => {
     const nama = $("pr-nama").value.trim(), aturan = {};
@@ -1022,8 +1038,9 @@ function aturanBerlakuHtml(A) {
       ${sel("Profil siswa", at.siswa ? at.siswa.nama : "Tidak ada", at.siswa ? "siswa" : "umum", at.siswa ? "siswa" : "—")}
       ${sel("Profil rombel", at.kelas ? at.kelas.nama : "Tidak ada", at.kelas ? "kelompok" : "umum", at.kelas ? "rombel" : "—")}
     </div>
-    <div class="ab-grup" style="grid-template-columns:repeat(3,minmax(0,1fr))">${ATUR_KHUSUS.map((g) => `<div><div class="ab-judul">${g.g}</div>${g.f.map((x) => {
-      const j = jenis(asal[x.k]), v = isi[x.k] != null ? isi[x.k] : ((A.umum || {})[x.k] != null ? A.umum[x.k] : BAWAAN[x.k]);
+    <div class="ab-grup" style="grid-template-columns:repeat(2,minmax(0,1fr))">${ATUR_KHUSUS.map((g) => `<div><div class="ab-judul">${g.g}</div>${g.f.map((x) => {
+      const pakaiUmum = mandiri && x.sekolah;   // mis. Lama satu sesi profil tidak berlaku untuk latihan mandiri
+      const j = pakaiUmum ? "umum" : jenis(asal[x.k]), v = !pakaiUmum && isi[x.k] != null ? isi[x.k] : ((A.umum || {})[x.k] != null ? A.umum[x.k] : BAWAAN[x.k]);
       const nm = j === "siswa" ? at.siswa && at.siswa.nama : j === "kelompok" ? at.kelas && at.kelas.nama : "";
       return `<div class="ab-isi ${j !== "umum" ? "khusus" : ""}"><span><small>${x.l}</small><b>${esc(nilaiAturTeks(x, v))}</b></span><span class="ab-asal a-${j}" title="${esc(nm ? `profil "${nm}"` : "Pengaturan Umum")}">${label[j]}</span></div>`; }).join("")}</div>`).join("")}</div>`;
 }

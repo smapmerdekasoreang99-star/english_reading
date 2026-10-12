@@ -84,7 +84,39 @@
 .khusus-kepala { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--j3); flex-wrap: wrap; border-bottom: 1px solid var(--garis-2); padding-bottom: var(--j2); margin-bottom: var(--j2); }
 .khusus-kepala h2 { margin: 0; font-size: 20px; } .khusus-kepala p { margin: 2px 0 0; max-width: 72ch; }
 .pr-editor { border-top: 4px solid var(--emas); scroll-margin-top: 140px; }
-.pr-identitas { display: grid; grid-template-columns: 1fr 1.6fr; gap: var(--j3); } @media (max-width: 640px) { .pr-identitas { grid-template-columns: 1fr; } }
+.pr-identitas { display: grid; grid-template-columns: 1fr 1fr; gap: var(--j4); } @media (max-width: 640px) { .pr-identitas { grid-template-columns: 1fr; } }
+.pr-identitas input { height: 42px; }
+/* Editor profil aturan (12 Okt 2026): kepala + penghitung, dua kolom kelompok seimbang (5–5 isian),
+   satu baris per isian (nama & keterangan | kendali selebar & setinggi sama), baris yang dibedakan disorot emas. */
+.pe-kepala { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--j3); flex-wrap: wrap; margin-bottom: var(--j4); }
+.pe-kepala h2 { margin: 0; font-size: var(--h-judul-s); }
+.pe-kepala p { margin: 4px 0 0; max-width: 70ch; font-size: var(--h-s); color: var(--tinta-2); }
+.pe-hitung { flex: none; padding: 5px 12px; border-radius: var(--r-bulat); font-size: var(--h-xs); font-weight: 700; background: var(--emas-muda); color: var(--emas-teks); }
+.pe-hitung.kosong { background: var(--netral-muda); color: var(--tinta-2); }
+.pe-kolom { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--j4); margin-top: var(--j4); align-items: stretch; }
+/* kelompok terakhir tiap kolom memanjang sampai bawah, jadi tepi bawah kedua kolom rata */
+.pe-tumpuk { display: flex; flex-direction: column; gap: var(--j4); } .pe-tumpuk > .pe-grup:last-child { flex: 1; }
+.pe-grup { background: var(--kertas-2); border: 1px solid var(--garis); border-radius: var(--r3); overflow: hidden; box-shadow: var(--bayang-1); }
+.pe-grup-kepala { padding: var(--j3) var(--j4); background: var(--kertas-3); border-bottom: 1px solid var(--garis); }
+.pe-grup-kepala h3 { margin: 0; font-size: var(--h-m); font-weight: 800; color: var(--tinta); }
+.pe-grup-kepala p { margin: 2px 0 0; font-size: var(--h-xs); color: var(--tinta-2); }
+.pe-baris { display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: var(--j4); align-items: center; padding: var(--j3) var(--j4);
+  border-top: 1px solid var(--garis); box-shadow: inset 3px 0 0 transparent; transition: background-color .15s, box-shadow .15s; cursor: default; }
+.pe-grup-kepala + .pe-baris { border-top: 0; }
+.pe-baris.khusus { background: var(--emas-kabut); box-shadow: inset 3px 0 0 var(--emas); }
+.pe-label b { display: block; font-size: var(--h-s); font-weight: 700; color: var(--tinta); }
+.pe-label small { display: block; margin-top: 3px; font-size: var(--h-xs); line-height: 1.45; color: var(--tinta-2); }
+.pe-tanda { display: inline-block; margin-left: var(--j2); padding: 1px 8px; border-radius: var(--r-bulat); font-size: 10.5px; font-weight: 700; letter-spacing: .02em;
+  vertical-align: 1px; background: var(--sakit-muda); color: var(--sakit-tua); white-space: nowrap; }
+.pe-kendali select, .pe-kendali .grup { width: 100%; height: 40px; }
+.pe-kendali select { padding: 0 var(--j3); font-size: var(--h-s); }
+.pe-kendali .grup input { flex: 1; width: auto; min-width: 0; height: 40px; }
+.pe-kendali .grup .satuan { min-width: 64px; justify-content: center; font-size: var(--h-s); }
+.pe-kaki { display: flex; justify-content: space-between; align-items: center; gap: var(--j3); flex-wrap: wrap; margin-top: var(--j4); padding-top: var(--j4); border-top: 1px solid var(--garis); }
+.pe-kaki p { margin: 0; max-width: 64ch; font-size: var(--h-xs); color: var(--tinta-2); }
+.pe-tombol { display: flex; gap: var(--j2); margin-left: auto; }
+@media (max-width: 960px) { .pe-kolom { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .pe-baris { grid-template-columns: 1fr; gap: var(--j2); } .pe-tombol { width: 100%; } .pe-tombol button { flex: 1; } }
 .pr-identitas label, .pr-isian label { display: grid; gap: 4px; font-size: var(--h-s); font-weight: 600; color: var(--tinta); }
 .pr-grup { margin-top: var(--j3); }
 .ds-sub-judul { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--emas-teks); margin-bottom: var(--j2); }
@@ -1048,6 +1080,6 @@ body.lihat .ubah { display: none !important; }
 <script src="assets/kepala-excel.js?v=1"></script>
 <script src="assets/excel.js?v=5"></script>
 <script src="assets/arsip.js?v=2"></script>
-<script src="guru.js?v=14"></script>
+<script src="guru.js?v=16"></script>
 </body>
 </html>
