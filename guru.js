@@ -1557,13 +1557,16 @@ const angkaId = (x, d = 1) => Number(x).toLocaleString("id-ID", { maximumFractio
 const mulaiRk = (r) => lengkapi(r).mulai || r.hari_total > 0;
 const lajuRk = (r) => r.hari ? r.lulus / r.hari : 0;
 const sejakLulus = (r) => r.lulus_terakhir ? Math.floor((Date.now() - new Date(r.lulus_terakhir)) / 864e5) : RK_BELUM;
+/* Kapan siswa mencapai posisi sekarang = waktu sub level terakhir yang lulus (detik, dibulatkan agar yang benar-benar bersamaan
+   tetap sama peringkatnya). Tanpa catatan lulus padahal ada sub level tuntas = lulusnya sebelum rincian diarsipkan → paling dulu. */
+const sampaiRk = (r) => r.lulus_terakhir ? Math.floor(Date.parse(r.lulus_terakhir) / 1000) : lengkapi(r).subLulus ? 0 : 9e12;
 const posisiRk = (r) => { const k = lengkapi(r); return k.selesai ? "Semua level tuntas" : mulaiRk(r) && k.posisi ? `Tahap ${k.posisi.tahap} · Level ${nomorLevel(k.posisi)}: ${k.posisi.judul}` : "Belum mulai"; };
 const periodeRk = () => PRK.periode.kode === "semua" ? "seluruh waktu" : PRK.periode.nama.replace(/^Semester/, "semester");
 // ikut = siapa yang diperingkat; banding = urutan tanpa nama (0 = peringkat sama); kolom = kolom tabel yang disorot.
 const JENIS_RK = {
   tinggi: { nama: "Level tertinggi", kolom: "level", ikut: mulaiRk,
-    banding: (a, b) => lengkapi(b).levelTuntas - lengkapi(a).levelTuntas || lengkapi(b).subLulus - lengkapi(a).subLulus || a.hari_total - b.hari_total,
-    ket: () => "Level tuntas sekarang, lalu sub level lulus. Bila sama, yang sampai dengan lebih sedikit hari berlatih di atas. Tidak bergantung periode." },
+    banding: (a, b) => lengkapi(b).levelTuntas - lengkapi(a).levelTuntas || lengkapi(b).subLulus - lengkapi(a).subLulus || a.hari_total - b.hari_total || sampaiRk(a) - sampaiRk(b),
+    ket: () => "Level tuntas sekarang, lalu sub level lulus. Bila sama, yang sampai dengan lebih sedikit hari berlatih di atas, lalu yang lebih dulu mencapai posisi itu. Tidak bergantung periode." },
   cepat: { nama: "Paling cepat naik", kolom: "lulus", ikut: (r) => r.lulus > 0,
     banding: (a, b) => b.lulus - a.lulus || a.hari - b.hari || a.detik - b.detik,
     ket: (p) => `Banyak sub level berbeda yang lulus (≥ ${TUNTAS}%) selama ${p}. Bila sama, yang memakai lebih sedikit hari lalu lebih sedikit waktu di atas.` },
