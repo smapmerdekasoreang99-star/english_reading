@@ -26,6 +26,8 @@
 <style>
 /* Tombol Panduan membaca data di kepala halaman (13 Okt 2026): PDF untuk dibuka, Word untuk dicetak/disunting */
 .panduan { position: relative; }
+/* Kepala halaman (lapisan 30) dinaikkan di atas bilah navigasi (40) dan bilah aksi (35) selama menu terbuka */
+.atas.panduan-buka { z-index: var(--lapis-saran); }
 .panduan > summary { list-style: none; cursor: pointer; font-weight: 700; font-size: var(--h-s); color: var(--tinta-terang);
   border: 1.5px solid rgba(255,255,255,.35); border-radius: var(--r2); padding: var(--j1) var(--j3); min-height: 36px; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 .panduan > summary::-webkit-details-marker { display: none; }
@@ -1098,6 +1100,6 @@ body.lihat .ubah { display: none !important; }
 <script src="assets/kepala-excel.js?v=1"></script>
 <script src="assets/excel.js?v=5"></script>
 <script src="assets/arsip.js?v=2"></script>
-<script src="guru.js?v=17"></script>
+<script src="guru.js?v=18"></script>
 </body>
 </html>

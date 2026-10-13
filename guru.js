@@ -105,6 +105,7 @@ $("pin").addEventListener("keydown", (e) => { if (e.key === "Enter") $("btn-pin"
 // Panduan: tutup menu saat mengetuk di luar atau menekan Esc
 document.addEventListener("click", (e) => { const p = $("panduan"); if (p.open && !p.contains(e.target)) p.open = false; });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("panduan").open = false; });
+$("panduan").addEventListener("toggle", () => document.querySelector("header.atas").classList.toggle("panduan-buka", $("panduan").open));
 $("btn-keluar").onclick = () => { ssSet(KUNCI_PIN, null); location.reload(); };
 
 $("tab").querySelectorAll("button").forEach((b) => b.onclick = () => bukaTab(b.dataset.v));
