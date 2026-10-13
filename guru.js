@@ -77,7 +77,7 @@ async function masuk(pin, diam) {
     $("tab-admin").classList.toggle("hidden", PERAN !== "admin"); $("tab").classList.toggle("tujuh", PERAN === "admin");
     $("pin-sementara").classList.toggle("hidden", !G.sementara);
     $("pin-sementara").innerHTML = G.sementara ? `Anda masuk dengan <b>ID guru</b> (PIN sementara). Minta PIN pribadi kepada admin agar akun Anda tidak bisa dipakai orang lain; PIN yang sama berlaku di Asesmen Merdeka dan Matematika Dasar.` : "";
-    $("v-pin").classList.add("hidden"); $("v-utama").classList.remove("hidden"); $("btn-keluar").classList.remove("hidden");
+    $("v-pin").classList.add("hidden"); $("v-utama").classList.remove("hidden"); $("btn-keluar").classList.remove("hidden"); $("panduan").classList.remove("hidden");
     isiPilihanRombel();
     gambarSinkron(); bukaTab("daftar"); muatKelas(); gambarTingkat(); muatProfil(true); muatSemua();
   } catch (e) {
@@ -102,6 +102,9 @@ function gambarSinkron() {
 }
 $("btn-pin").onclick = () => masuk($("pin").value.trim());
 $("pin").addEventListener("keydown", (e) => { if (e.key === "Enter") $("btn-pin").click(); });
+// Panduan: tutup menu saat mengetuk di luar atau menekan Esc
+document.addEventListener("click", (e) => { const p = $("panduan"); if (p.open && !p.contains(e.target)) p.open = false; });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("panduan").open = false; });
 $("btn-keluar").onclick = () => { ssSet(KUNCI_PIN, null); location.reload(); };
 
 $("tab").querySelectorAll("button").forEach((b) => b.onclick = () => bukaTab(b.dataset.v));
