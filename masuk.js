@@ -151,9 +151,29 @@
       const sisa = Math.max(0, Math.round((new Date(akun.berakhir) - Date.now()) / 1000));
       jam.textContent = `${Math.floor(sisa / 60)}:${String(sisa % 60).padStart(2, '0')}`;
       jam.classList.toggle('hampir', sisa <= 60);
-      if (sisa <= 0) { clearInterval(jamT); kirim().finally(() => sesiHabis('Waktu sesi kelas sudah habis. Kemajuanmu tersimpan. Masuk lagi untuk berlatih mandiri.')); }
+      if (sisa <= 0) {
+        // Sebelum menutup, tanya server dulu: guru mungkin baru menambah waktu sesi
+        if (cekJalan) return;
+        if (Date.now() - cekPada > 5000) { cekWaktu(); return; }
+        clearInterval(jamT); kirim().finally(() => sesiHabis('Waktu sesi kelas sudah habis. Kemajuanmu tersimpan. Masuk lagi untuk berlatih mandiri.'));
+      } else if (Date.now() - cekPada > 60000) cekWaktu();
     };
+    cekPada = Date.now();
     detak(); jamT = setInterval(detak, 1000);
+  }
+  /* Sisa waktu dari server (13 Okt 2026): guru bisa menambah/mengurangi waktu sesi kelas. Dibaca tiap menit selama
+     sesi kelas (er_sisa_waktu, ringan) dan sekali lagi sebelum sesi ditutup. */
+  let cekPada = 0, cekJalan = false;
+  async function cekWaktu() {
+    if (!akun || !akun.token || cekJalan) return;
+    cekJalan = true; cekPada = Date.now();
+    try {
+      const r = await rpc('er_sisa_waktu', { p_token: akun.token });
+      const baru = r.ok ? Date.now() + r.sisa_detik * 1000 : Date.now() - 1000, lama = new Date(akun.berakhir).getTime();
+      if (r.ok && Math.abs(baru - lama) > 30000) toast(baru > lama ? 'Waktu sesi ditambah oleh guru.' : 'Waktu sesi dikurangi oleh guru.');
+      akun.berakhir = new Date(baru).toISOString();
+    } catch (e) { /* jaringan: tetap pakai hitungan di HP */ }
+    finally { cekJalan = false; }
   }
   $('btn-keluar').onclick = () => {
     diamPantau = true;

@@ -474,7 +474,7 @@ const IKON_QR = '<svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path 
 const IKON_TERATAS = '<svg class="ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21V9h6v12M3 21v-7h6M15 21v-9h6v9M2 21h20"/></svg>';
 function gambarSesi() {
   if (!G) return;
-  if (document.activeElement && document.activeElement.matches("#sesi-isi [data-tambah-menit]")) return;
+  if (document.activeElement && document.activeElement.matches("#sesi-isi [data-uw-menit]")) return;
   const pilih = $("dl-kelompok").value, tk = $("dl-tingkat").value, terbuka = (k) => !!k.sesi && sisaSesi(k) > 0;
   // Saringan tingkat ikut berlaku untuk daftar sesi rombel (10-1 / X-1 → 10)
   const L = G.rombel.filter((k) => (!pilih || k.kelas === pilih) && (!tk || tingkatSiswa(k) === tk)).sort((a, b) => terbuka(b) - terbuka(a) || a.kelas.localeCompare(b.kelas, "id", { numeric: true }));
@@ -491,8 +491,8 @@ function gambarSesi() {
         <div class="sesi-status">${buka ? `<span class="lencana baik"><span class="titik-on"></span>Dibuka · sisa ${sisaSesi(k)} menit</span><small>dibuka ${esc(k.sesi.oleh || "guru")} · sampai pukul ${jamTeks(k.sesi.sampai)} · ${k.aktif} sedang berlatih</small>`
           : `<span class="lencana">Ditutup</span><small>${(G.umum || {}).mandiri === false ? "siswa tidak bisa masuk" : "siswa hanya bisa latihan mandiri"}${k.aktif ? ` · ${k.aktif} berlatih mandiri` : ""}</small>`}</div>
         <div class="sesi-kode">${buka ? `<small>Kode akses</small><b>${esc(k.sesi.kode)}</b>` : ""}</div>
-        <div class="sesi-aksi">${buka
-          ? `<button class="garis kecil sesi-layar" data-layar="${esc(k.kelas)}">${IKON_QR}QR &amp; kode masuk</button><button class="garis kecil sesi-layar" data-teratas="${esc(k.kelas)}">${IKON_TERATAS}Tampilkan teratas</button><span class="sesi-tambah"><button class="garis kecil" data-tambah="${esc(k.kelas)}" title="Memperpanjang sesi yang sedang berjalan; kode akses tetap">+ Tambah</button><input type="number" data-tambah-menit="${esc(k.kelas)}" min="1" max="300" step="1" inputmode="numeric" value="${MENIT_TAMBAH[k.kelas] || 15}" aria-label="Menit tambahan ${esc(k.kelas)}"><span class="satuan">menit</span></span><button class="kecil bahaya" data-tutup="${esc(k.kelas)}">Tutup sekarang</button>`
+        <div class="sesi-aksi${buka ? " buka" : ""}">${buka
+          ? `<button class="garis kecil sesi-layar" data-layar="${esc(k.kelas)}">${IKON_QR}QR &amp; kode masuk</button><button class="garis kecil sesi-layar" data-teratas="${esc(k.kelas)}">${IKON_TERATAS}Tampilkan teratas</button><button class="kecil bahaya" data-tutup="${esc(k.kelas)}">Tutup sekarang</button><div class="ubah-waktu" role="group" aria-label="Ubah waktu sesi ${esc(k.kelas)}"><button type="button" class="uw-kurang" data-uw="-1" data-kel="${esc(k.kelas)}" ${sisaSesi(k) <= 1 ? 'disabled title="Sisa waktu kurang dari 2 menit. Untuk mengakhiri, pakai Tutup sekarang."' : 'title="Mempersingkat sesi ini; siswa yang sedang berlatih ikut selesai lebih cepat"'}><b aria-hidden="true">−</b>Kurangi</button><label class="uw-isi"><input type="number" data-uw-menit="${esc(k.kelas)}" min="1" max="300" step="1" inputmode="numeric" value="${esc(MENIT_TAMBAH[k.kelas] || 15)}" aria-label="Jumlah menit"><span>menit</span></label><button type="button" class="uw-tambah" data-uw="1" data-kel="${esc(k.kelas)}" title="Memperpanjang sesi ini; kode akses tetap"><b aria-hidden="true">+</b>Tambah</button></div>`
           : `${pilihMenit(k.kelas)}<button class="kecil" data-buka="${esc(k.kelas)}">Buka sesi</button>`}</div></div>`;
     }).join("");
   const cari = (kel) => G.rombel.find((x) => x.kelas === kel);
@@ -503,16 +503,8 @@ function gambarSesi() {
     try { G.rombel = await rpc("er_buka_kelas", { p_pin: PIN, p_kelas: [k], p_menit: m }); await muatSesi(); tampilKode(k); toast(`Sesi ${k} dibuka, kode ${cari(k).sesi.kode}`); }
     catch (e) { toast(e.message); }
   });
-  $("sesi-isi").querySelectorAll("[data-tambah-menit]").forEach((i) => {
-    i.oninput = () => { MENIT_TAMBAH[i.dataset.tambahMenit] = i.value; };
-    i.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); i.parentNode.querySelector("[data-tambah]").click(); } };
-  });
-  $("sesi-isi").querySelectorAll("[data-tambah]").forEach((b) => b.onclick = async () => {
-    const k = b.dataset.tambah, i = b.parentNode.querySelector("[data-tambah-menit]"), m = +i.value;
-    if (!Number.isInteger(m) || m < 1 || m > 300) { toast("Isi menit tambahan 1–300"); i.focus(); return; }
-    try { G.rombel = await rpc("er_buka_kelas", { p_pin: PIN, p_kelas: [k], p_menit: m }); MENIT_TAMBAH[k] = m; toast(`Sesi ${k} diperpanjang ${m} menit, kode tetap`); muatSesi(); }
-    catch (e) { toast(e.message); }
-  });
+  $("sesi-isi").querySelectorAll("[data-uw-menit]").forEach((i) => { i.oninput = () => { MENIT_TAMBAH[i.dataset.uwMenit] = i.value; }; });
+  $("sesi-isi").querySelectorAll("[data-uw]").forEach((b) => b.onclick = () => ubahWaktu(b.dataset.kel, +b.dataset.uw, b));
   $("sesi-isi").querySelectorAll("[data-tutup]").forEach((b) => b.onclick = async () => {
     const k = cari(b.dataset.tutup);
     if (!confirm(`Tutup sesi ${k.kelas} sekarang?\n\n${k.aktif ? `${k.aktif} siswa yang sedang berlatih dalam sesi akan dikeluarkan. ` : ""}Kemajuan siswa tetap tersimpan. Kode ${k.sesi.kode} tidak berlaku lagi.`)) return;
@@ -521,6 +513,26 @@ function gambarSesi() {
   });
   $("sesi-isi").querySelectorAll("[data-layar]").forEach((b) => b.onclick = () => tampilKode(b.dataset.layar));
   $("sesi-isi").querySelectorAll("[data-teratas]").forEach((b) => b.onclick = () => tampilTeratas(b.dataset.teratas));
+}
+/* Tambah / kurangi waktu sesi yang sedang berjalan (13 Okt 2026). Sesi siswa ikut bergeser sebanyak menit yang sama;
+   HP siswa membaca sisa waktu baru dalam ±1 menit. Pengurangan harus menyisakan paling sedikit 1 menit. */
+async function ubahWaktu(kel, arah, tombol) {
+  const k = G.rombel.find((x) => x.kelas === kel), i = $("sesi-isi").querySelector(`[data-uw-menit="${CSS.escape(kel)}"]`), m = +i.value;
+  if (!k || !k.sesi && k.sesi.sampai) return toast("Sesi ini sudah ditutup.");
+  if (!Number.isInteger(m) || m < 1 || m > 300) { toast("Isi jumlah menit 1–300"); i.focus(); return; }
+  const akhir = new Date(k.sesi && k.sesi.sampai).getTime(), sisa = (akhir - (Date.now() - SELISIH)) / 1000;
+  if (arah < 0) {
+    const maks = Math.floor((sisa - 60) / 60);
+    if (m > maks) { toast(maks > 0 ? `Sisa waktu ${kel} tinggal ${Math.ceil(sisa / 60)} menit, jadi paling banyak dikurangi ${maks} menit.` : `Sisa waktu ${kel} kurang dari 2 menit. Untuk mengakhiri, pakai Tutup sekarang.`); i.focus(); return; }
+    if (!confirm(`Kurangi waktu sesi ${kel} ${m} menit?\n\nSesi berakhir pukul ${jamTeks(new Date(akhir - m * 60000))} (sebelumnya ${jamTeks(akhir)}). Siswa yang sedang berlatih ikut selesai lebih cepat; kemajuannya tetap tersimpan.`)) return;
+  } else if (sisa / 60 + m > 300) { toast("Sisa waktu sesi paling lama 300 menit (5 jam)."); i.focus(); return; }
+  tombol.disabled = true;
+  try {
+    G.rombel = await rpc("er_ubah_waktu", { p_pin: PIN, p_kelas: kel, p_menit: arah * m });
+    MENIT_TAMBAH[kel] = m;
+    toast(`Waktu sesi ${kel} ${arah > 0 ? "ditambah" : "dikurangi"} ${m} menit · berakhir pukul ${jamTeks((G.rombel.find((x) => x.kelas === kel) || {}).sesi ? G.rombel.find((x) => x.kelas === kel).sesi.sampai : akhir + arah * m * 60000)}; kode tetap`);
+    await muatSesi(); muatDaftar(true);
+  } catch (e) { toast(e.message); tombol.disabled = false; }
 }
 setInterval(() => { if (G && !document.hidden && !$("p-daftar").classList.contains("hidden")) gambarSesi(); }, 20000);
 

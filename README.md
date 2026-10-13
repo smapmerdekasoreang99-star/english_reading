@@ -298,7 +298,7 @@ Meniru Matematika Dasar. Data di project Supabase Tryout, tabel dan fungsi beraw
 - Masuk dengan **PIN pribadi** yang sama dengan Tryout/Matdas (`mtd_guru`). Guru yang belum punya PIN bisa masuk
   sementara dengan ID gurunya. Admin masuk dengan PIN admin Matdas/operator.
 - Guru hanya melihat **rombel Bahasa Inggris yang diajarnya**, sesuai jadwal KBM di Data Induk.
-- 🏫 **Sesi Kegiatan:** buka sesi per rombel (30–120 menit), perpanjang 15 menit, atau tutup. Tersedia layar penuh
+- 🏫 **Sesi Kegiatan:** buka sesi per rombel (30–120 menit), **− Kurangi / + Tambah** waktu N menit saat sesi berjalan (`er_ubah_waktu`; sesi siswa ikut bergeser, HP siswa membaca sisa waktu lewat `er_sisa_waktu` tiap menit; pengurangan menyisakan ≥ 1 menit), atau tutup. Tersedia layar penuh
   berisi kode akses besar dan QR untuk proyektor, serta daftar siswa yang sedang aktif, terkunci, atau keluar halaman,
   dengan tombol buka kunci.
 - 📈 **Perkembangan:** tabel per rombel berisi tahap sekarang, level tuntas, sub level lulus, hasil 7 hari, dan terakhir aktif.
