@@ -488,7 +488,7 @@ function gambarSesi() {
       const buka = terbuka(k);
       return `<div class="sesi-baris ${buka ? "buka" : ""}">
         <div class="sesi-nama"><b>${esc(k.kelas)}</b><small>${k.siswa} siswa${k.terkunci ? ` · <span style="color:var(--absen-tua)">${k.terkunci} terkunci</span>` : ""}</small></div>
-        <div class="sesi-status">${buka ? `<span class="lencana baik"><span class="titik-on"></span>Dibuka · sisa ${sisaSesi(k)} menit</span><small>dibuka ${esc(k.sesi.oleh || "guru")} · sampai pukul ${jamTeks(k.sesi.sampai)} · ${k.aktif} sedang berlatih</small>`
+        <div class="sesi-status">${buka ? `<span class="lencana baik"><span class="titik-on"></span>Dibuka · sisa ${sisaSesi(k)} menit</span><small>dibuka ${esc(k.sesi.oleh || "guru")} · sampai pukul ${jamTeks(k.sesi.sampai)} · ${k.aktif} sedang berlatih${k.mandiri ? ` · <b style="color:var(--emas-teks)" title="Masih di latihan mandiri: tidak ikut sesi ini">${k.mandiri} di antaranya latihan mandiri</b>` : ""}</small>`
           : `<span class="lencana">Ditutup</span><small>${(G.umum || {}).mandiri === false ? "siswa tidak bisa masuk" : "siswa hanya bisa latihan mandiri"}${k.aktif ? ` · ${k.aktif} berlatih mandiri` : ""}</small>`}</div>
         <div class="sesi-kode">${buka ? `<small>Kode akses</small><b>${esc(k.sesi.kode)}</b>` : ""}</div>
         <div class="sesi-aksi${buka ? " buka" : ""}">${buka

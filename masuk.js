@@ -106,7 +106,7 @@
       else if (antre.length) setTimeout(kirim, 300);
     } catch (e) {
       if (e.jaringan) { tandaSinkron('tertunda'); coba++; clearTimeout(jadwal); jadwal = setTimeout(kirim, Math.min(60000, 5000 * coba)); }
-      else if (/berakhir|masuk lagi/i.test(e.message)) { sesiHabis(); }
+      else if (/berakhir|masuk lagi/i.test(e.message)) { sesiHabisCek(); }
       else tandaSinkron('galat');
     } finally { sedang = false; }
   }
@@ -146,6 +146,8 @@
     clearInterval(jamT);
     const jam = $('jam');
     jam.hidden = akun.mode !== 'kelas' || !akun.berakhir;
+    // Latihan mandiri: periksa tiap menit apakah guru membuka sesi kelas (13 Okt 2026)
+    if (akun.mode === 'mandiri' && !akun.coba && akun.token) { jamT = setInterval(cekMandiri, 60000); return; }
     if (jam.hidden) return;
     const detak = () => {
       const sisa = Math.max(0, Math.round((new Date(akun.berakhir) - Date.now()) / 1000));
@@ -164,6 +166,20 @@
   /* Sisa waktu dari server (13 Okt 2026): guru bisa menambah/mengurangi waktu sesi kelas. Dibaca tiap menit selama
      sesi kelas (er_sisa_waktu, ringan) dan sekali lagi sebelum sesi ditutup. */
   let cekPada = 0, cekJalan = false;
+  /* Guru membuka sesi kelas saat siswa latihan mandiri (13 Okt 2026): server mengakhiri latihan mandiri.
+     Siswa diarahkan masuk lagi dengan kode akses BARU, supaya tahapan rombel dan kemajuan resmi berlaku. */
+  const PESAN_SESI_KELAS = 'Gurumu membuka sesi kelas. Latihan mandirimu sudah tersimpan. Masuk lagi dengan NISN dan kode akses yang BARU dari guru.';
+  async function sesiHabisCek() {
+    if (akun && akun.mode === 'mandiri' && akun.token) {
+      try { const r = await rpc('er_sisa_waktu', { p_token: akun.token }); if (r.alasan === 'sesi_kelas') return sesiHabis(PESAN_SESI_KELAS); }
+      catch (e) { /* tetap ke pesan biasa */ }
+    }
+    sesiHabis();
+  }
+  async function cekMandiri() {
+    try { const r = await rpc('er_sisa_waktu', { p_token: akun.token }); if (!r.ok) { clearInterval(jamT); sesiHabis(r.alasan === 'sesi_kelas' ? PESAN_SESI_KELAS : undefined); } }   // antrean kemajuan tetap di HP, terkirim setelah masuk lagi
+    catch (e) { /* jaringan: coba lagi menit berikutnya */ }
+  }
   async function cekWaktu() {
     if (!akun || !akun.token || cekJalan) return;
     cekJalan = true; cekPada = Date.now();
@@ -220,7 +236,7 @@
       bunyiAlarm();
       if (r.terkunci) return tampilKunci();
       tampilPeringatan(r, d);
-    } catch (e) { if (/berakhir/i.test(e.message)) sesiHabis(); }
+    } catch (e) { if (/berakhir/i.test(e.message)) sesiHabisCek(); }
   }
   ['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, siapAlarm, { passive: true }));
   document.addEventListener('visibilitychange', () => (document.hidden ? pergi() : kembali()));
@@ -270,7 +286,7 @@
         akun.terkunci = !!p.terkunci;
         if (akun.terkunci) return toast('Latihan masih dikunci.');
         hentiAlarm(); tutupTirai(); toast('Kunci dibuka — lanjutkan latihan'); kirim();
-      } catch (e) { if (/berakhir/i.test(e.message)) return sesiHabis(); toast(e.message); }
+      } catch (e) { if (/berakhir/i.test(e.message)) return sesiHabisCek(); toast(e.message); }
     };
     $('t-buka').onclick = () => buka('er_buka_kunci', { p_token: akun.token, p_kode_buka: $('t-kode').value.trim() });
     $('t-periksa').onclick = () => buka('er_lanjut', { p_token: akun.token });
