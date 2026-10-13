@@ -703,7 +703,8 @@ const ATUR_KHUSUS = [
     { k: "syaratBaca", l: "Akurasi membaca minimal", t: "angka", sat: "%", min: 50, maks: 100, s: "50–100%. Dipakai bila Harus Baca." } ] },
   { g: "Pengawasan keluar halaman", d: "Hanya saat sesi di sekolah; latihan mandiri tidak diawasi.", kol: 1, f: [
     { k: "maks_keluar", l: "Batas keluar halaman", t: "angka", sat: "kali", min: 0, maks: 20, s: "Saat tercapai, latihan dikunci sampai dibuka guru. 0 = tanpa batas." },
-    { k: "toleransi_keluar", l: "Abaikan keluar di bawah", t: "angka", sat: "detik", min: 0, maks: 120, s: "Keluar sesingkat ini hanya dicatat, tidak dihitung." } ] },
+    { k: "toleransi_keluar", l: "Abaikan keluar di bawah", t: "angka", sat: "detik", min: 0, maks: 120, s: "Keluar sesingkat ini hanya dicatat, tidak dihitung." },
+    { k: "kode_buka", l: "Kode buka kunci", t: "kode", s: "Kode dari guru untuk membuka latihan yang terkunci (1–20 huruf/angka). PIN guru dan kode akses sesi juga selalu bisa." } ] },
   { g: "Sesi", d: "Lama sesi yang dibuka guru di sekolah.", kol: 1, f: [
     { k: "durasi_menit", l: "Lama satu sesi", t: "angka", sat: "menit", min: 5, maks: 300, sekolah: true,
       s: "Lama bawaan saat guru membuka sesi di sekolah (5–300 menit). Latihan mandiri tidak terpengaruh: lamanya mengikuti Pengaturan Umum." } ] },
@@ -712,7 +713,7 @@ const SEMUA_KHUSUS = ATUR_KHUSUS.flatMap((g) => g.f);
 const BAWAAN = { jumlahSoal: 10, harusDengar: true, harusBaca: true, syaratBaca: 75, tampilJawaban: true, bilaSalah: "akhir", batasSalah: 0,
   mandiri: true, durasi_menit: 180, maks_keluar: 0, toleransi_keluar: 10, kode_buka: "" };
 const umumNilai = (k) => (G.umum && G.umum[k] != null ? G.umum[k] : BAWAAN[k]);
-const nilaiAturTeks = (x, v) => x.t === "ya" ? (v ? x.on : x.off) : x.t === "pilih" ? ((x.opsi.find((o) => o[0] === v) || [])[1] || v)
+const nilaiAturTeks = (x, v) => x.t === "kode" ? (v ? String(v) : "PIN guru") : x.t === "ya" ? (v ? x.on : x.off) : x.t === "pilih" ? ((x.opsi.find((o) => o[0] === v) || [])[1] || v)
   : (x.k === "batasSalah" || x.k === "maks_keluar") ? (v ? `${v} ${x.sat}` : "tanpa batas") : x.sat === "%" ? `${v}%` : `${v} ${x.sat}`;
 const aturanProfil = (p) => SEMUA_KHUSUS.filter((x) => p && p.aturan && p.aturan[x.k] != null);
 const ringkasAturan = (p) => aturanProfil(p).map((x) => `${x.l} ${nilaiAturTeks(x, p.aturan[x.k])}`).join(", ");
@@ -799,6 +800,7 @@ function bukaEditorAturan(p) {
   const kendali = (x) => {
     const v = a[x.k], u = umumNilai(x.k);
     if (x.t === "ya") return `<select data-pk="${x.k}"><option value="">— ikut umum (${u ? x.on : x.off}) —</option><option value="true" ${v === true ? "selected" : ""}>${x.on}</option><option value="false" ${v === false ? "selected" : ""}>${x.off}</option></select>`;
+    if (x.t === "kode") return `<input type="text" data-pk="${x.k}" maxlength="20" autocomplete="off" spellcheck="false" style="text-transform:uppercase" placeholder="${esc(u ? "ikut umum: " + u : "ikut umum (PIN guru)")}" value="${esc(v || "")}">`;
     if (x.t === "pilih") return `<select data-pk="${x.k}"><option value="">— ikut umum (${esc(nilaiAturTeks(x, u))}) —</option>${x.opsi.map((o) => `<option value="${o[0]}" ${v === o[0] ? "selected" : ""}>${o[1]}</option>`).join("")}</select>`;
     return `<span class="grup"><input type="number" data-pk="${x.k}" min="${x.min}" max="${x.maks}" inputmode="numeric" placeholder="${u}" value="${v == null ? "" : v}"><span class="satuan">${x.sat}</span></span>`;
   };
@@ -814,7 +816,7 @@ function bukaEditorAturan(p) {
     <div class="pr-identitas"><label><span>Nama profil</span><input type="text" id="pr-nama" maxlength="80" placeholder="mis. Santai 20 soal" value="${esc(p ? p.nama : "")}"></label>
       <label><span>Catatan <span class="redup">(opsional)</span></span><input type="text" id="pr-catatan" maxlength="300" placeholder="mis. Bu Rina — rombel yang perlu waktu lebih" value="${esc(p && p.catatan || "")}"></label></div>
     <div class="pe-kolom">${kolom(1)}${kolom(2)}</div>
-    <div class="pe-kaki"><p>Latihan mandiri dan kode buka kunci diatur di <b>Pengaturan Umum</b>; materi yang dipakai diatur di <b>Tahapan khusus</b>.</p>
+    <div class="pe-kaki"><p>Latihan mandiri diatur di <b>Pengaturan Umum</b>; materi yang dipakai diatur di <b>Tahapan khusus</b>.</p>
       <span class="pe-tombol"><button class="garis" id="pr-batal">Batal</button><button id="pr-simpan">Simpan profil</button></span></div>`;
   // Sorot baris yang dibedakan dan hitung jumlahnya selagi guru mengisi
   const tandai = () => { let n = 0;
@@ -831,6 +833,7 @@ function bukaEditorAturan(p) {
       if (v === "") continue;
       if (x.t === "ya") aturan[x.k] = v === "true";
       else if (x.t === "pilih") aturan[x.k] = v;
+      else if (x.t === "kode") { const kd = v.toUpperCase().replace(/s/g, ""); if (!/^[A-Z0-9]{1,20}$/.test(kd)) return toast("Kode buka kunci: 1–20 huruf atau angka, atau kosongkan."); aturan[x.k] = kd; }
       else { const n = Number(v); if (!Number.isInteger(n) || n < x.min || n > x.maks) return toast(`${x.l}: isi ${x.min}–${x.maks} atau kosongkan.`); aturan[x.k] = n; }
     }
     if (!Object.keys(aturan).length) return toast("Isi paling sedikit satu aturan yang ingin dibedakan.");
