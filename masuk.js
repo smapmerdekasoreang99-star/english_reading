@@ -165,6 +165,27 @@
   }
   /* Sisa waktu dari server (13 Okt 2026): guru bisa menambah/mengurangi waktu sesi kelas. Dibaca tiap menit selama
      sesi kelas (er_sisa_waktu, ringan) dan sekali lagi sebelum sesi ditutup. */
+  /* Tombol mata di kotak PIN guru (13 Okt 2026), sama dengan halaman guru: lihat / sembunyikan PIN yang diketik. */
+  const MATA = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const MATA_TUTUP = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.2M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  function pasangMata(i) {
+    if (!i || i.closest('.pin-bungkus')) return;
+    if (!document.getElementById('gaya-pin-lihat')) {
+      const g = document.createElement('style'); g.id = 'gaya-pin-lihat';
+      g.textContent = '.pin-bungkus{position:relative;display:block}.pin-bungkus>input{width:100%;box-sizing:border-box}.pin-bungkus>input::placeholder{letter-spacing:normal}'
+        + '.pin-bungkus .pin-lihat{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:38px;height:38px;min-height:0;min-width:0;margin:0;padding:0;display:grid;place-items:center;border:0;border-radius:8px;background:transparent;color:#6b6b6b;box-shadow:none;cursor:pointer}'
+        + '.pin-bungkus .pin-lihat:hover,.pin-bungkus .pin-lihat[aria-pressed=true]{background:rgba(0,0,0,.06);color:#222}.pin-bungkus .pin-lihat:focus-visible{outline:2px solid #c29433;outline-offset:1px}';
+      document.head.appendChild(g);
+    }
+    const w = document.createElement('span'); w.className = 'pin-bungkus'; i.parentNode.insertBefore(w, i); w.appendChild(i);
+    i.style.paddingRight = '46px'; if (getComputedStyle(i).textAlign === 'center') { i.style.paddingLeft = '46px'; i.style.textAlign = 'center'; }   // tetap di tengah saat PIN ditampilkan
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pin-lihat'; b.innerHTML = MATA;
+    b.title = 'Lihat PIN'; b.setAttribute('aria-label', 'Lihat PIN'); b.setAttribute('aria-pressed', 'false');
+    b.onmousedown = e => e.preventDefault();
+    b.onclick = e => { e.preventDefault(); const lihat = i.type === 'password'; i.type = lihat ? 'text' : 'password'; b.innerHTML = lihat ? MATA_TUTUP : MATA;
+      b.title = lihat ? 'Sembunyikan PIN' : 'Lihat PIN'; b.setAttribute('aria-label', b.title); b.setAttribute('aria-pressed', String(lihat)); i.focus(); };
+    w.appendChild(b);
+  }
   let cekPada = 0, cekJalan = false;
   /* Guru membuka sesi kelas saat siswa latihan mandiri (13 Okt 2026): server mengakhiri latihan mandiri.
      Siswa diarahkan masuk lagi dengan kode akses BARU, supaya tahapan rombel dan kemajuan resmi berlaku. */
@@ -366,7 +387,7 @@
           <h2>Masuk ruang guru</h2>
           <p class="redup">Gunakan PIN pribadi Anda (sama dengan Asesmen Merdeka dan Matematika Dasar).</p>
           <label class="isian" for="er-pin">PIN</label>
-          <input type="password" id="er-pin" autocomplete="off" placeholder="••••••">
+          <input type="password" id="er-pin" autocomplete="one-time-code" placeholder="Ketik PIN" spellcheck="false">
           <div id="er-galat-guru" class="er-pesan" role="alert" hidden></div>
           <button class="er-tombol-masuk" id="er-tombol-guru">Masuk ruang guru →</button>
           <p class="er-kaki-link"><a href="#" id="lnk-siswa" style="color:var(--tinta-2)">‹ Kembali ke masuk siswa</a></p>
@@ -375,6 +396,7 @@
       <div class="er-kaki" id="kaki-guru"><a href="guru.html" id="lnk-guru" class="staf-link"><svg class="ik" viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>Masuk guru</span><svg class="pnh" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
     </section>`;
     const galat = $('er-galat'), tombol = $('er-tombol');
+    pasangMata($('er-pin'));
     const salah = (el, t) => { el.textContent = t; el.hidden = !t; };
     const bukaKode = () => { $('er-kode-baris').hidden = false; $('er-kode').focus(); };
     $('f-siswa').onsubmit = async e => {
