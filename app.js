@@ -366,7 +366,7 @@
     const el = layar.querySelector('.sub-level');
     if (el) el.outerHTML = subHTML(kini.b);
     const pt = $('#petunjuk');
-    if (pt && terbuka) pt.textContent = siapSub(kini.b) ? '🎧 Kamu sudah mendengarkan seluruh teks. Latihan bertahap sub level 1 sudah terbuka.'
+    if (pt && terbuka) pt.textContent = siapSub(kini.b) ? `🎧 Kamu sudah mendengarkan seluruh teks. Latihan bertahap ${teksSubPertama(kini.b)} sudah terbuka.`
       : '🎧 Kamu sudah mendengarkan seluruh teks. Sekarang baca dengan 🎤 Baca & Koreksi.';
   }
 
@@ -937,8 +937,8 @@
     if (elSub) elSub.outerHTML = subHTML(kini.b);
     const pesanSyarat = !punyaSub(kini.b) || bacaSebelum ? ''
       : !baruTerbuka ? `<p class="lanjut">Latihan bertahap terbuka setelah kamu membaca sampai selesai dengan akurasi minimal ${syaratBaca(kini.b)}%.${lengkap ? ' Dengarkan contohnya, latih kata yang masih merah, lalu coba lagi.' : ''}</p>`
-      : sudahDengar(kini.b) ? `<p class="lanjut">🔓 Latihan bertahap sudah terbuka. <a href="#latih/${encodeURIComponent(kini.b.id)}/1">Mulai sub level 1 →</a></p>`
-      : '<p class="lanjut">✓ Syarat membaca terpenuhi. Tinggal 🎧 dengarkan teksnya dengan ▶ Dengarkan sampai selesai, lalu sub level 1 terbuka.</p>';
+      : sudahDengar(kini.b) ? `<p class="lanjut">🔓 Latihan bertahap sudah terbuka. <a href="#latih/${encodeURIComponent(kini.b.id)}/${subPertama(kini.b)}">Mulai ${teksSubPertama(kini.b)} →</a></p>`
+      : `<p class="lanjut">✓ Syarat membaca terpenuhi. Tinggal 🎧 dengarkan teksnya dengan ▶ Dengarkan sampai selesai, lalu ${teksSubPertama(kini.b)} terbuka.</p>`;
 
     $('#legenda').hidden = false;
     hasilEl.innerHTML = `<div class="hasil">
@@ -1020,7 +1020,7 @@
   const dataSub = b => skorSub[b.id] || (skorSub[b.id] = { s: [] });
   const lulusSub = (b, n) => { const d = skorSub[b.id]; return !!d && (!!d.lama || d.s[n - 1] >= TUNTAS); };
   const jumlahLulusSub = b => subDipakai(b).filter(n => lulusSub(b, n)).length;
-  // Sebelum sub level 1 (diatur di Pengaturan halaman utama, tersimpan per perangkat):
+  // Sebelum sub level pertama yang dipakai (diatur di Pengaturan halaman utama, tersimpan per perangkat):
   // - Harus Dengar (10 Okt 2026): seluruh teks level didengarkan dengan ▶ Dengarkan sampai selesai.
   // - Harus Baca (9 Okt 2026): teks dibaca dengan Baca & Koreksi sampai selesai, akurasi ≥ syaratBaca()
   //   (bawaan 75%).
@@ -1837,7 +1837,10 @@
       }).join('')}</div>
     </section>`;
   }
-  // Daftar syarat sebelum sub level 1 (yang aktif di Pengaturan), dengan tanda yang sudah terpenuhi.
+  // Syarat dengar/baca mengunci sub level PERTAMA YANG DIPAKAI (tahapan khusus bisa memakai mis. hanya sub 6–10).
+  const subPertama = b => subDipakai(b)[0] || 1;
+  const teksSubPertama = b => (subPertama(b) === 1 ? 'sub level 1' : `sub level ${subPertama(b)} (sub level pertama di tahapanmu)`);
+  // Daftar syarat sebelum sub level pertama (yang aktif di Pengaturan), dengan tanda yang sudah terpenuhi.
   function syaratSubHTML(b) {
     const isi = b.kosakata ? 'semua kata dan contohnya' : b.pola ? 'contoh kalimatnya' : 'teksnya';
     const daftar = [];
@@ -1848,7 +1851,7 @@
       daftar.push(`<li class="${sudahBaca(b) ? 'ok' : ''}">${sudahBaca(b) ? '✓' : '🎤'} Baca ${isi} dengan <b>🎤 Baca &amp; Koreksi</b> sampai selesai, akurasi minimal
         <b>${syaratBaca(b)}%</b>.${skorTerbaik[b.id] != null && !sudahBaca(b) ? ` Akurasi terbaikmu sekarang ${skorTerbaik[b.id]}%.` : ''}</li>`);
     }
-    return `<div class="sub-syarat">🔒 Sebelum sub level 1 terbuka:<ol>${daftar.join('')}</ol></div>`;
+    return `<div class="sub-syarat">🔒 Sebelum ${teksSubPertama(b)} terbuka:<ol>${daftar.join('')}</ol></div>`;
   }
 
   // ---------- Saran browser ----------
@@ -2485,8 +2488,8 @@
   const umum = k => (setelan[k] == null ? DEF_ATUR[k] : setelan[k]);
   const PILIHAN_ATUR = {
     jumlahSoal: { label: 'Jumlah soal per sub level', pendek: 'Soal', opsi: () => PILIHAN_JUMLAH.map(v => [v, `${v} soal`]) },
-    harusDengar: { label: 'Mendengar teks sebelum sub level 1', pendek: 'Dengar', opsi: () => [[true, 'Harus Dengar'], [false, 'Tanpa Dengar']] },
-    harusBaca: { label: 'Membaca teks sebelum sub level 1', pendek: 'Baca', opsi: () => [[true, 'Harus Baca'], [false, 'Tanpa Baca']] },
+    harusDengar: { label: 'Mendengar teks sebelum sub level pertama', pendek: 'Dengar', opsi: () => [[true, 'Harus Dengar'], [false, 'Tanpa Dengar']] },
+    harusBaca: { label: 'Membaca teks sebelum sub level pertama', pendek: 'Baca', opsi: () => [[true, 'Harus Baca'], [false, 'Tanpa Baca']] },
     syaratBaca: { label: 'Akurasi membaca minimal', pendek: 'Akurasi', opsi: () => PILIHAN_SYARAT_BACA.map(v => [v, `${v}%`]) },
     tampilJawaban: { label: 'Jawaban benar dan penjelasannya', pendek: 'Jawaban', opsi: () => [[true, 'Ditampilkan'], [false, 'Tidak ditampilkan']] },
     bilaSalah: { label: 'Soal yang dijawab salah', pendek: 'Bila salah', opsi: () => [['akhir', 'Diulang di akhir sesi'], ['ulang', 'Diulang di nomor itu sampai benar'], ['lanjut', 'Maju terus, tidak diulang']] },
@@ -2495,7 +2498,7 @@
   };
   const KELOMPOK_ATUR = [
     { ikon: '🧩', judul: 'Latihan bertahap', ket: 'Makin banyak soal, makin yakin penguasaannya. Kata dan kalimat yang sama muncul lagi dalam bentuk soal lain.', kunci: ['jumlahSoal', 'urut'] },
-    { ikon: '🔐', judul: 'Syarat sebelum sub level 1', ket: 'Teks level didengarkan dan/atau dibaca dulu. Level yang sub levelnya sudah mulai dikerjakan tidak terkunci lagi.', kunci: ['harusDengar', 'harusBaca', 'syaratBaca'] },
+    { ikon: '🔐', judul: 'Syarat sebelum sub level pertama', ket: 'Teks level didengarkan dan/atau dibaca dulu sebelum sub level pertama yang dipakai (sub level 1, atau mis. sub level 6 bila tahapan hanya memakai 6–10). Level yang sub levelnya sudah mulai dikerjakan tidak terkunci lagi.', kunci: ['harusDengar', 'harusBaca', 'syaratBaca'] },
     { ikon: '🔁', judul: 'Bila jawaban salah', ket: 'Pengulangan selalu memakai soal baru. Nilai lulus dihitung dari percobaan pertama tiap nomor.', kunci: ['tampilJawaban', 'bilaSalah', 'batasSalah'] }
   ];
   const teksNilai = (k, v) => ((PILIHAN_ATUR[k].opsi().find(([x]) => x === v) || [null, String(v)])[1]);

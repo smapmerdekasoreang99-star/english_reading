@@ -720,8 +720,8 @@ const ATUR_KHUSUS = [
   { g: "Naik sub level", d: "Kapan sub level tuntas dan syarat sebelum mulai.", kol: 2, f: [
     { k: "jumlahSoal", l: "Jumlah soal per sub level", t: "angka", sat: "soal", min: 5, maks: 50, s: "5–50 soal. Lulus bila nilainya paling sedikit 80%." },
     { k: "batasSalah", l: "Batas salah per sub level", t: "angka", sat: "kali", min: 0, maks: 50, s: "Lebih dari ini, sub level diulang dari nomor 1. 0 = tanpa batas." },
-    { k: "harusDengar", l: "Dengar teks dulu", t: "ya", on: "Harus Dengar", off: "Tanpa Dengar", s: "Teks dibacakan sampai selesai sebelum sub level 1." },
-    { k: "harusBaca", l: "Baca teks dulu", t: "ya", on: "Harus Baca", off: "Tanpa Baca", s: "Siswa membaca keras teks sebelum sub level 1." },
+    { k: "harusDengar", l: "Dengar teks dulu", t: "ya", on: "Harus Dengar", off: "Tanpa Dengar", s: "Teks dibacakan sampai selesai sebelum sub level pertama yang dipakai (sub level 1, atau mis. sub level 6 bila tahapan hanya memakai 6–10)." },
+    { k: "harusBaca", l: "Baca teks dulu", t: "ya", on: "Harus Baca", off: "Tanpa Baca", s: "Siswa membaca keras teks sebelum sub level pertama yang dipakai. Berlaku per level: bisa dimatikan untuk tahap/level tertentu lewat aturan per bagian tahapan." },
     { k: "syaratBaca", l: "Akurasi membaca minimal", t: "angka", sat: "%", min: 50, maks: 100, s: "50–100%. Dipakai bila Harus Baca." },
     { k: "urut", l: "Urutan level", t: "ya", on: "Berurutan", off: "Bebas", s: "Berurutan: level berikut terbuka setelah level sebelumnya tuntas (seperti Matematika Dasar)." } ] },
   { g: "Pengawasan keluar halaman", d: "Hanya saat sesi di sekolah; latihan mandiri tidak diawasi.", kol: 1, f: [
@@ -1580,8 +1580,8 @@ const SEKSI = [
   { ikon: "tangga", judul: "Aturan naik sub level", ket: "Kapan siswa tuntas satu sub level dan apa syarat sebelum mulai.", baris: [
     { k: "jumlahSoal", jenis: "angka", satuan: "soal", min: 5, maks: 50, l: "Jumlah soal per sub level", s: "Bawaan 10. Sub level lulus bila nilainya paling sedikit 80%." },
     { k: "batasSalah", jenis: "angka", satuan: "kali", maks: 50, l: "Batas salah per sub level", s: "Lebih dari batas ini, sub level diulang dari nomor 1 dengan soal lain. 0 = tanpa batas." },
-    { k: "harusDengar", jenis: "ya", l: "Dengarkan teks dulu sebelum sub level 1", s: "Teks level dibacakan sampai selesai lebih dulu.", on: "Harus Dengar", off: "Tanpa Dengar" },
-    { k: "harusBaca", jenis: "ya", l: "Baca teks dulu sebelum sub level 1", s: "Siswa membaca keras teks level (Baca & Koreksi) sampai akurasi minimal.", on: "Harus Baca", off: "Tanpa Baca" },
+    { k: "harusDengar", jenis: "ya", l: "Dengarkan teks dulu sebelum sub level pertama", s: "Teks level dibacakan sampai selesai lebih dulu.", on: "Harus Dengar", off: "Tanpa Dengar" },
+    { k: "harusBaca", jenis: "ya", l: "Baca teks dulu sebelum sub level pertama", s: "Siswa membaca keras teks level (Baca & Koreksi) sampai akurasi minimal.", on: "Harus Baca", off: "Tanpa Baca" },
     { k: "syaratBaca", jenis: "angka", satuan: "%", min: 50, maks: 100, l: "Akurasi membaca minimal", s: "Dipakai bila Harus Baca." },
     { k: "urut", jenis: "ya", l: "Urutan level", s: "Berurutan: level berikut terbuka setelah level sebelumnya tuntas; level yang sudah tuntas atau sudah dikerjakan tetap terbuka. Bebas: siswa boleh memilih level mana saja (seperti sebelumnya).", on: "Berurutan", off: "Bebas" },
   ] },
