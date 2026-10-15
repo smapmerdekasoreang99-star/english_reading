@@ -27,7 +27,10 @@
   function baca(kunci, awal) {
     try { const v = simpanan().getItem(kunci); return v === null ? awal : JSON.parse(v); } catch (e) { return awal; }
   }
+  // Hasil tahapanTuntas() diingat selama satu tugas; dibuang setiap kemajuan disimpan.
+  const ingatTuntas = new Map();
   function tulis(kunci, nilai) {
+    ingatTuntas.clear();
     try { simpanan().setItem(kunci, JSON.stringify(nilai)); } catch (e) { /* abaikan */ }
     if (window.ER_SINKRON && window.ER_SINKRON.kunci[kunci]) window.ER_SINKRON.jadwal();
   }
@@ -48,30 +51,51 @@
   const simpanKhusus = () => tulis('er_khusus', khusus);
   // Siswa yang masuk lewat masuk.js: aturan Umum dan tahapan khusus berasal dari server (diatur guru), bukan perangkat.
   const AKUN = window.ER_AKUN || null;
-  const PILIHAN_SOAL_MANDIRI = [10, 15, 20, 25];   // harus termasuk PILIHAN_JUMLAH (jumlah soal yang didukung latihan)
+  const PILIHAN_SOAL_MANDIRI = [10, 15, 20, 25];   // pilihan siswa saat latihan mandiri
+  const KUNCI_LATIH = ['jumlahSoal', 'tampilJawaban', 'bilaSalah', 'batasSalah', 'harusDengar', 'harusBaca', 'syaratBaca', 'urut'];
+  // Lapisan aturan dari server (15 Okt 2026, seperti Matdas): umum ← dasar ← [aturan bagian tahapan | sesudah tahapan] ← siswa.
+  // Lapisan [..] bergantung pada level yang dibuka, jadi dihitung di sini (aturUntuk). LAPIS null = tanpa akun (perangkat).
+  let LAPIS = null;
   if (AKUN && AKUN.atur && !AKUN.luring) {
-    const u = AKUN.atur.umum || {};
-    ['jumlahSoal', 'tampilJawaban', 'bilaSalah', 'batasSalah', 'harusDengar', 'harusBaca', 'syaratBaca'].forEach(k => { if (u[k] != null) setelan[k] = u[k]; });
-    // Profil aturan dari guru (rombel, lalu siswa) mengalahkan Pengaturan Umum, isian demi isian.
-    const ai = (AKUN.atur.aturan && AKUN.atur.aturan.isi) || {};
-    ['jumlahSoal', 'tampilJawaban', 'bilaSalah', 'batasSalah', 'harusDengar', 'harusBaca', 'syaratBaca'].forEach(k => { if (ai[k] != null) setelan[k] = ai[k]; });
+    const u = AKUN.atur.umum || {}, A = AKUN.atur.aturan || {};
+    KUNCI_LATIH.forEach(k => { if (u[k] != null) setelan[k] = u[k]; });
+    // Profil aturan dari guru mengalahkan Pengaturan Umum, isian demi isian ('isi' = server lama tanpa bawah/atas).
+    const bawah = A.bawah || A.isi || {}, atas = Object.assign({}, A.atas || {});
+    KUNCI_LATIH.forEach(k => { if (bawah[k] != null) setelan[k] = bawah[k]; });
     // Latihan mandiri (di luar sesi): siswa memilih sendiri jumlah soal dan tampil jawaban (disimpan di perangkat),
     // dan boleh melepas saran tahapan dari guru untuk memilih materi apa saja.
     if (AKUN.mode === 'mandiri') {
       const ps = baca('er_pilihan_mandiri', {});
-      if (PILIHAN_SOAL_MANDIRI.includes(ps.jumlahSoal)) setelan.jumlahSoal = ps.jumlahSoal;
-      if (typeof ps.tampilJawaban === 'boolean') setelan.tampilJawaban = ps.tampilJawaban;
+      if (PILIHAN_SOAL_MANDIRI.includes(ps.jumlahSoal)) atas.jumlahSoal = ps.jumlahSoal;
+      if (typeof ps.tampilJawaban === 'boolean') atas.tampilJawaban = ps.tampilJawaban;
     }
+    KUNCI_LATIH.forEach(k => { if (atas[k] != null) setelan[k] = atas[k]; });
+    LAPIS = { atas, tahapan: A.tahapan || null, bagian: A.bagian || {}, lanjut: A.lanjut || null };
     const p = AKUN.atur.profil;
-    khusus.daftar = p ? [{ id: p.id, nama: p.nama, catatan: p.catatan || '', setelan: p.setelan || {}, mati: p.mati || {}, asal: p.asal, saran: !!p.saran }] : [];
+    khusus.daftar = p ? [{ id: p.id, nama: p.nama, catatan: p.catatan || '', setelan: p.setelan || {}, mati: p.mati || {}, akhir: p.akhir || 'berhenti',
+      asal: p.asal, saran: !!p.saran }] : [];
     khusus.aktif = p && !(p.saran && baca('er_saran_lepas', false)) ? p.id : null;
   }
   const profilAktif = () => khusus.daftar.find(p => p.id === khusus.aktif) || null;
-  // atur.x = aturan yang berlaku: dari tahapan khusus yang dipakai bila diisi, selain itu Umum.
+  // Profil aturan bagian tahapan untuk level b: profil level, lalu profil tahap; di luar tahapan berujung "lanjut" yang
+  // sudah tuntas: profil sesudah tahapan. null = tidak ada lapisan bagian.
+  function aturBagian(b) {
+    const T = LAPIS && LAPIS.tahapan;
+    if (!T || !b) return null;
+    if (levelOn(T.mati, b)) { const g = LAPIS.bagian || {}, x = (g.level || {})[b.id] || (g.tahap || {})[b.tahap]; return x ? x.isi : null; }
+    return T.akhir === 'lanjut' && LAPIS.lanjut && tahapanTuntas(T.mati) ? LAPIS.lanjut.isi : null;
+  }
+  // Aturan k yang berlaku di level b (b kosong = aturan dasar, mis. di halaman depan).
+  function aturUntuk(b, k) {
+    if (!LAPIS) { const p = profilAktif(); return p && p.setelan && p.setelan[k] != null ? p.setelan[k] : setelan[k]; }
+    const s = aturBagian(b);
+    if (!s || s[k] == null) return setelan[k];
+    return LAPIS.atas[k] != null ? LAPIS.atas[k] : s[k];
+  }
+  let bAtur = null;   // level yang sedang dibuka siswa (halaman level / latihan bertahap)
+  // atur.x = aturan yang berlaku di level yang sedang dibuka.
   const atur = {};
-  ['jumlahSoal', 'tampilJawaban', 'bilaSalah', 'batasSalah', 'harusDengar', 'harusBaca', 'syaratBaca'].forEach(k => Object.defineProperty(atur, k, {
-    get() { const p = profilAktif(); return p && p.setelan && p.setelan[k] != null ? p.setelan[k] : setelan[k]; }
-  }));
+  KUNCI_LATIH.forEach(k => Object.defineProperty(atur, k, { get() { return aturUntuk(bAtur, k); } }));
   const skorTerbaik = baca('er_skor', {});   // pelafalan terbaik per level
   const skorPaham = baca('er_paham', {});     // soal pemahaman terbaik per level
   const dengarSelesai = baca('er_dengar', {}); // level yang teksnya sudah didengar sampai selesai
@@ -584,18 +608,25 @@
     const paham = !!soalDari(b);
     return { ucap: !paham || b.tahap <= 2, paham };
   }
-  function tuntas(b) {
+  // Tuntas menurut sekumpulan "mati" m (sub level yang dipakai); tuntas(b) memakai tahapan yang berlaku untuk b.
+  function tuntasM(m, b) {
     const s = syaratLevel(b);
-    if (s.sub) return jumlahLulusSub(b) === subDipakai(b).length;
+    if (s.sub) return subDipakaiM(m, b).every(n => lulusSub(b, n));
     return (!s.ucap || skorTerbaik[b.id] >= TUNTAS) && (!s.paham || skorPaham[b.id] >= TUNTAS);
   }
+  const tuntas = b => tuntasM(matiUntuk(b), b);
 
   // Status level: tombol lanjut bila tuntas, atau syarat yang belum terpenuhi.
   function statusLevelHTML(b) {
     b = b || kini.b;
     const p = posisiLevel(b);
     if (tuntas(b)) {
-      if (!p.sesudah) return '<p class="lanjut">🏆 Kamu sudah sampai level terakhir. Hebat!</p>';
+      if (!p.sesudah) {
+        const pr = profilAktif();
+        if (selesaiTahapan()) return `<p class="lanjut">🏁 <b>Tahapan latihan selesai.</b> Kamu sudah menuntaskan tahapan "${esc(pr.nama)}". Tunggu arahan gurumu.</p>`;
+        if (pr && !tahapanTuntas(pr.mati)) return '<p class="lanjut">Ini level terakhir di tahapanmu. Tuntaskan level yang belum tuntas agar tahapan selesai.</p>';
+        return '<p class="lanjut">🏆 Kamu sudah sampai level terakhir. Hebat!</p>';
+      }
       const naik = p.sesudah.tahap !== b.tahap;
       return `<p class="lanjut">${naik ? `🎉 Tahap ${b.tahap} selesai! ` : ''}Level ini tuntas.</p>
         <a class="tombol utama" href="#baca/${encodeURIComponent(p.sesudah.id)}">Lanjut: ${labelLevel(p.sesudah)} →</a>`;
@@ -603,7 +634,7 @@
     const s = syaratLevel(b);
     const kurang = [];
     if (s.sub && !sudahDengar(b)) kurang.push('🎧 dengarkan teksnya dengan ▶ Dengarkan sampai selesai');
-    if (s.sub && !sudahBaca(b)) kurang.push(`🎤 baca teksnya dengan Baca & Koreksi sampai selesai, akurasi ≥ ${syaratBaca()}%`);
+    if (s.sub && !sudahBaca(b)) kurang.push(`🎤 baca teksnya dengan Baca & Koreksi sampai selesai, akurasi ≥ ${syaratBaca(b)}%`);
     if (s.sub) kurang.push(`🧩 lulus ${subDipakai(b).length} sub level Latihan bertahap (sudah ${jumlahLulusSub(b)})`);
     if (s.ucap && !(skorTerbaik[b.id] >= TUNTAS)) {
       kurang.push(`🎤 pelafalan ≥ ${TUNTAS}%${skorTerbaik[b.id] != null ? ` (terbaikmu ${skorTerbaik[b.id]}%)` : ''}`);
@@ -905,7 +936,7 @@
     const elSub = layar.querySelector('.sub-level');
     if (elSub) elSub.outerHTML = subHTML(kini.b);
     const pesanSyarat = !punyaSub(kini.b) || bacaSebelum ? ''
-      : !baruTerbuka ? `<p class="lanjut">Latihan bertahap terbuka setelah kamu membaca sampai selesai dengan akurasi minimal ${syaratBaca()}%.${lengkap ? ' Dengarkan contohnya, latih kata yang masih merah, lalu coba lagi.' : ''}</p>`
+      : !baruTerbuka ? `<p class="lanjut">Latihan bertahap terbuka setelah kamu membaca sampai selesai dengan akurasi minimal ${syaratBaca(kini.b)}%.${lengkap ? ' Dengarkan contohnya, latih kata yang masih merah, lalu coba lagi.' : ''}</p>`
       : sudahDengar(kini.b) ? `<p class="lanjut">🔓 Latihan bertahap sudah terbuka. <a href="#latih/${encodeURIComponent(kini.b.id)}/1">Mulai sub level 1 →</a></p>`
       : '<p class="lanjut">✓ Syarat membaca terpenuhi. Tinggal 🎧 dengarkan teksnya dengan ▶ Dengarkan sampai selesai, lalu sub level 1 terbuka.</p>';
 
@@ -995,11 +1026,13 @@
   //   (bawaan 75%).
   // Dikecualikan: browser tanpa suara/pengenal suara (tidak bisa dicatat/dinilai), level yang tuntas
   // sebelumnya, dan siswa yang sudah mulai mengerjakan sub level sebelum aturan ini.
-  const PILIHAN_SYARAT_BACA = [50, 60, 70, 75, 80, 85, 90];
-  const syaratBaca = () => (PILIHAN_SYARAT_BACA.includes(atur.syaratBaca) ? atur.syaratBaca : 75);
+  const PILIHAN_SYARAT_BACA = [50, 60, 70, 75, 80, 85, 90];   // pilihan di Pengaturan perangkat; dari guru boleh 50–100
+  // Nilai bilangan bulat dalam batas (sama dengan er_cek_aturan), selain itu bawaannya (15 Okt 2026: dulu hanya nilai daftar pilihan).
+  const bulat = (v, min, maks, bawaan) => (Number.isInteger(v) && v >= min && v <= maks ? v : bawaan);
+  const syaratBaca = (b = bAtur) => bulat(aturUntuk(b, 'syaratBaca'), 50, 100, 75);
   const sudahMulaiSub = b => !!(skorSub[b.id] && (skorSub[b.id].lama || skorSub[b.id].s.some(x => x != null)));
-  const sudahBaca = b => !SR || !atur.harusBaca || skorTerbaik[b.id] >= syaratBaca() || sudahMulaiSub(b);
-  const sudahDengar = b => !bisaSuara || !atur.harusDengar || !!dengarSelesai[b.id] || sudahMulaiSub(b);
+  const sudahBaca = b => !SR || !aturUntuk(b, 'harusBaca') || skorTerbaik[b.id] >= syaratBaca(b) || sudahMulaiSub(b);
+  const sudahDengar = b => !bisaSuara || !aturUntuk(b, 'harusDengar') || !!dengarSelesai[b.id] || sudahMulaiSub(b);
   const siapSub = b => sudahDengar(b) && sudahBaca(b);
   // Tahapan khusus: m = { tahap: [nomor dimatikan], level: [id dimatikan], sub: { id: [nomor dimatikan] } }; null = Umum.
   // Tahap mati → levelnya mati; level mati → sub levelnya mati; level tanpa sub level yang dipakai dianggap tidak dipakai.
@@ -1011,9 +1044,33 @@
   // Tanpa tahapan khusus: tahapan umum, tanpa tahap/level/sub level yang ditutup admin (Tahapan Level di halaman guru).
   // Latihan mandiri: semua materi boleh dipilih siswa, jadi tahap/level yang ditutup admin untuk tahapan umum tidak berlaku.
   const matiUmum = (AKUN && !AKUN.luring && AKUN.mode !== 'mandiri' && AKUN.atur && AKUN.atur.umum && AKUN.atur.umum.mati) || null;
-  const matiAktif = () => { const p = profilAktif(); return p ? p.mati : matiUmum; };
-  const levelAktif = b => levelOn(matiAktif(), b);
-  const subDipakai = b => subDipakaiM(matiAktif(), b);
+  // Tahapan khusus berujung "lanjut" (15 Okt 2026, seperti Matdas): setelah semua level tahapan tuntas, level lain
+  // (urutan umum tanpa yang ditutup admin) ikut terbuka. Hasil tahapanTuntas diingat sampai akhir tugas yang sedang berjalan.
+  function tahapanTuntas(m) {
+    if (ingatTuntas.has(m)) return ingatTuntas.get(m);
+    if (!ingatTuntas.size) queueMicrotask(() => ingatTuntas.clear());
+    const L = window.BACAAN.filter(b => levelOn(m, b)), v = L.length > 0 && L.every(b => tuntasM(m, b));
+    ingatTuntas.set(m, v);
+    return v;
+  }
+  const lepasTahapan = () => { const p = profilAktif(); return !!p && p.akhir === 'lanjut' && tahapanTuntas(p.mati); };
+  const selesaiTahapan = () => { const p = profilAktif(); return !!p && p.akhir !== 'lanjut' && tahapanTuntas(p.mati); };
+  function matiUntuk(b) {
+    const p = profilAktif();
+    if (!p) return matiUmum;
+    return levelOn(p.mati, b) || !lepasTahapan() ? p.mati : matiUmum;
+  }
+  const levelAktif = b => levelOn(matiUntuk(b), b);
+  const subDipakai = b => subDipakaiM(matiUntuk(b), b);
+  // Urutan level (aturan "urut", 15 Okt 2026): level terbuka bila level sebelumnya di urutan yang berlaku sudah tuntas.
+  // Level yang sudah tuntas atau sudah pernah dikerjakan tetap terbuka.
+  const mulaiLevel = b => sudahMulaiSub(b) || skorTerbaik[b.id] != null || skorPaham[b.id] != null;
+  function terbukaLevel(b) {
+    if (!aturUntuk(b, 'urut') || tuntas(b) || mulaiLevel(b)) return true;
+    if (!levelAktif(b)) return false;
+    const p = posisiLevel(b).sebelum;
+    return !p || tuntas(p);
+  }
   // Sub level terbuka bila sub level dipakai sebelumnya lulus; yang pertama setelah syarat dengar/baca.
   const terbukaSub = (b, n) => { const d = subDipakai(b), i = d.indexOf(n); return i === 0 ? siapSub(b) : i > 0 && lulusSub(b, d[i - 1]); };
   // Level yang sudah tuntas lewat Baca & Koreksi sebelum sub level dipasang dianggap lulus semua.
@@ -1107,8 +1164,8 @@
   // yang muncul lagi (putaran berikut atau ulangan jawaban keliru) tampil dengan bentuk lain.
   const PILIHAN_JUMLAH = [10, 15, 20, 25, 30, 40];
   const PILIHAN_BATAS_SALAH = [0, 3, 5, 8, 10];
-  const batasSalah = () => (PILIHAN_BATAS_SALAH.includes(atur.batasSalah) ? atur.batasSalah : 0);
-  const jumlahSoal = () => (PILIHAN_JUMLAH.includes(atur.jumlahSoal) ? atur.jumlahSoal : 10);
+  const batasSalah = () => bulat(atur.batasSalah, 0, 50, 0);
+  const jumlahSoal = () => bulat(atur.jumlahSoal, 5, 50, 10);
   function isiSampai(kolam, N) {
     const hasil = [];
     while (hasil.length < N && kolam.length) {
@@ -1471,6 +1528,7 @@
   }
 
   function tampilLatih(b, n) {
+    bAtur = b;
     kini = null;
     batalLatih();
     mulaiLatih(b, n);
@@ -1781,12 +1839,12 @@
   function syaratSubHTML(b) {
     const isi = b.kosakata ? 'semua kata dan contohnya' : b.pola ? 'contoh kalimatnya' : 'teksnya';
     const daftar = [];
-    if (bisaSuara && atur.harusDengar) {
+    if (bisaSuara && aturUntuk(b, 'harusDengar')) {
       daftar.push(`<li class="${sudahDengar(b) ? 'ok' : ''}">${sudahDengar(b) ? '✓' : '🎧'} Dengarkan ${isi} dengan <b>▶ Dengarkan</b> sampai selesai.</li>`);
     }
-    if (SR && atur.harusBaca) {
+    if (SR && aturUntuk(b, 'harusBaca')) {
       daftar.push(`<li class="${sudahBaca(b) ? 'ok' : ''}">${sudahBaca(b) ? '✓' : '🎤'} Baca ${isi} dengan <b>🎤 Baca &amp; Koreksi</b> sampai selesai, akurasi minimal
-        <b>${syaratBaca()}%</b>.${skorTerbaik[b.id] != null && !sudahBaca(b) ? ` Akurasi terbaikmu sekarang ${skorTerbaik[b.id]}%.` : ''}</li>`);
+        <b>${syaratBaca(b)}%</b>.${skorTerbaik[b.id] != null && !sudahBaca(b) ? ` Akurasi terbaikmu sekarang ${skorTerbaik[b.id]}%.` : ''}</li>`);
     }
     return `<div class="sub-syarat">🔒 Sebelum sub level 1 terbuka:<ol>${daftar.join('')}</ol></div>`;
   }
@@ -1874,6 +1932,19 @@
     if ($('#er-pm-soal')) { $('#er-pm-soal').onchange = simpanPilihan; $('#er-pm-jawab').onchange = simpanPilihan; }
     if ($('#er-saran-ubah')) $('#er-saran-ubah').onclick = () => { tulis('er_saran_lepas', !baca('er_saran_lepas', false)); location.reload(); };
   }
+  // Pesan di atas daftar: level terkunci yang baru dicoba dibuka, dan tahapan berujung "berhenti" yang sudah tuntas.
+  function pesanDaftar() {
+    let h = '';
+    if (pesanKunci) h += `<div class="pesan pesan-kunci" role="status">🔒 <b>${esc(pesanKunci.judul)}</b> terbuka setelah level sebelumnya tuntas. Lanjutkan dari level yang belum tuntas.</div>`;
+    pesanKunci = null;
+    const p = profilAktif();
+    if (p && selesaiTahapan()) {
+      h += `<div class="hasil tahapan-selesai"><h2>🏁 Tahapan latihan selesai</h2><p>${p.saran
+        ? `Kamu sudah menuntaskan saran latihan "${esc(p.nama)}". Tekan <b>Lihat semua materi</b> untuk berlatih materi lain.`
+        : `Kamu sudah menuntaskan tahapan "${esc(p.nama)}". Tunggu arahan gurumu. Level yang sudah tuntas boleh diulang untuk memperbaiki skor.`}</p></div>`;
+    }
+    return h;
+  }
   function tampilDaftar() {
     kini = null;
     const p = profilAktif();
@@ -1885,8 +1956,8 @@
           (skor terbaik ≥ ${TUNTAS}%), lalu naik ke tahap berikutnya.</p></header>` +
       (p ? `<a class="at-banner" href="#pengaturan/khusus"><span class="at-banner-ikon" aria-hidden="true">🎯</span>
         <span class="at-banner-isi"><small>${p.saran ? 'Saran latihan dari guru' : 'Sedang memakai tahapan khusus'}</small><b>${esc(p.nama)}</b>
-          <span>${teksRingkas(ringkasTahapan(p.mati))}${p.catatan ? ' · ' + esc(p.catatan) : ''}</span></span>
-        <span class="at-banner-aksi">Atur ›</span></a>` : '') + kartuMandiri() + kartuUlang() +
+          <span>${teksRingkas(ringkasTahapan(p.mati))}${p.catatan ? ' · ' + esc(p.catatan) : ''}${lepasTahapan() ? ' · ✓ tuntas, kamu melanjutkan Tahapan Level' : ''}</span></span>
+        <span class="at-banner-aksi">Atur ›</span></a>` : '') + pesanDaftar() + kartuMandiri() + kartuUlang() +
       window.TAHAP.map(t => {
         const semua = window.BACAAN.filter(b => b.tahap === t.no);
         const isi = semua.filter(levelAktif);
@@ -1902,12 +1973,13 @@
             const s = skorTerbaik[b.id];
             const jenis = jenisLevel(b);
             const ukuran = b.kosakata ? `${b.kosakata.length} kata · ${esc(b.kelompok)}` : `${(b.teks.match(/\S+/g) || []).length} kata`;
-            const ok = tuntas(b);
+            const ok = tuntas(b), buka = terbukaLevel(b);
             const sp = skorPaham[b.id];
-            return `<a class="kartu${ok ? ' tuntas' : ''}" href="#baca/${encodeURIComponent(b.id)}">
-              <span class="kartu-level">${ok ? '✓' : i + 1}</span>
+            const tag = buka ? `a class="kartu${ok ? ' tuntas' : ''}" href="#baca/${encodeURIComponent(b.id)}"` : 'span class="kartu kunci" title="Terbuka setelah level sebelumnya tuntas"';
+            return `<${tag}>
+              <span class="kartu-level">${ok ? '✓' : buka ? i + 1 : '🔒'}</span>
               <span class="kartu-isi"><span class="kartu-judul">${esc(b.judul)}</span>
-              <span class="kartu-info"><span class="jenis jenis-${jenis.kunci}">${jenis.nama}</span> Level ${i + 1} · ${ukuran}${punyaSub(b) ? ` · 🧩 <b>${jumlahLulusSub(b)}/${subDipakai(b).length}</b> sub level` : ''}${s != null ? ` · 🎤 <b>${s}%</b>` : ''}${sp != null ? ` · 📝 <b>${sp}%</b>` : ''}${soalDari(b) && sp == null && !punyaSub(b) ? ` · ${soalDari(b).length} soal` : ''}</span></span></a>`;
+              <span class="kartu-info"><span class="jenis jenis-${jenis.kunci}">${jenis.nama}</span> Level ${i + 1} · ${ukuran}${punyaSub(b) ? ` · 🧩 <b>${jumlahLulusSub(b)}/${subDipakai(b).length}</b> sub level` : ''}${s != null ? ` · 🎤 <b>${s}%</b>` : ''}${sp != null ? ` · 📝 <b>${sp}%</b>` : ''}${soalDari(b) && sp == null && !punyaSub(b) ? ` · ${soalDari(b).length} soal` : ''}</span></span></${buka ? 'a' : 'span'}>`;
           }).join('')}</div></section>`;
       }).join('') +
       (bisaSuara ? '' : '<div class="pesan">Browser ini tidak bisa membacakan teks. Gunakan Google Chrome versi terbaru.</div>') +
@@ -1947,7 +2019,8 @@
   function navLevel(b) {
     const p = posisiLevel(b);
     return (p.sebelum ? `<a href="#baca/${encodeURIComponent(p.sebelum.id)}">← ${labelLevel(p.sebelum)}</a>` : '<span></span>') +
-      (p.sesudah ? `<a href="#baca/${encodeURIComponent(p.sesudah.id)}">${labelLevel(p.sesudah)} →</a>` : '<span></span>');
+      (p.sesudah ? terbukaLevel(p.sesudah) ? `<a href="#baca/${encodeURIComponent(p.sesudah.id)}">${labelLevel(p.sesudah)} →</a>`
+        : `<span class="nav-kunci" title="Tuntaskan level ini dulu">🔒 ${labelLevel(p.sesudah)}</span>` : '<span></span>');
   }
 
   function terapkanArti() {
@@ -2327,6 +2400,7 @@
   }
 
   function tampilBaca(b) {
+    bAtur = b;
     const p = pecah(b.teks, b.arti);
     kini = { b, kalimat: p.kalimat, kata: p.kata, pilihK: 0, sejajar: p.sejajar, didengar: new Set() };
     // Kosakata: kalimat genap = kata (titik akhirnya disembunyikan, arti selalu tampil), ganjil = contoh.
@@ -2405,7 +2479,7 @@
   // Meniru Matdas. Umum: aturan bawaan perangkat, semua tahap/level/sub level dipakai. Khusus: profil bernama;
   // aturan yang diisi menimpa Umum satu per satu, dan centang tahap → level → sub level menentukan materi yang dipakai.
   // Tanpa database: profil disimpan di perangkat (er_khusus) dan dibagikan guru sebagai tautan #khusus=<kode>.
-  const DEF_ATUR = { jumlahSoal: 10, harusDengar: true, harusBaca: true, syaratBaca: 75, tampilJawaban: true, bilaSalah: 'akhir', batasSalah: 0 };
+  const DEF_ATUR = { jumlahSoal: 10, harusDengar: true, harusBaca: true, syaratBaca: 75, tampilJawaban: true, bilaSalah: 'akhir', batasSalah: 0, urut: false };
   const umum = k => (setelan[k] == null ? DEF_ATUR[k] : setelan[k]);
   const PILIHAN_ATUR = {
     jumlahSoal: { label: 'Jumlah soal per sub level', pendek: 'Soal', opsi: () => PILIHAN_JUMLAH.map(v => [v, `${v} soal`]) },
@@ -2414,10 +2488,11 @@
     syaratBaca: { label: 'Akurasi membaca minimal', pendek: 'Akurasi', opsi: () => PILIHAN_SYARAT_BACA.map(v => [v, `${v}%`]) },
     tampilJawaban: { label: 'Jawaban benar dan penjelasannya', pendek: 'Jawaban', opsi: () => [[true, 'Ditampilkan'], [false, 'Tidak ditampilkan']] },
     bilaSalah: { label: 'Soal yang dijawab salah', pendek: 'Bila salah', opsi: () => [['akhir', 'Diulang di akhir sesi'], ['ulang', 'Diulang di nomor itu sampai benar'], ['lanjut', 'Maju terus, tidak diulang']] },
+    urut: { label: 'Urutan level', pendek: 'Urutan', opsi: () => [[false, 'Bebas memilih level'], [true, 'Berurutan: level berikut terbuka setelah level sebelumnya tuntas']] },
     batasSalah: { label: 'Batas salah dalam satu sub level', pendek: 'Batas salah', opsi: () => PILIHAN_BATAS_SALAH.map(v => [v, v ? `lebih dari ${v} kali, mulai lagi` : 'Tanpa batas']) }
   };
   const KELOMPOK_ATUR = [
-    { ikon: '🧩', judul: 'Latihan bertahap', ket: 'Makin banyak soal, makin yakin penguasaannya. Kata dan kalimat yang sama muncul lagi dalam bentuk soal lain.', kunci: ['jumlahSoal'] },
+    { ikon: '🧩', judul: 'Latihan bertahap', ket: 'Makin banyak soal, makin yakin penguasaannya. Kata dan kalimat yang sama muncul lagi dalam bentuk soal lain.', kunci: ['jumlahSoal', 'urut'] },
     { ikon: '🔐', judul: 'Syarat sebelum sub level 1', ket: 'Teks level didengarkan dan/atau dibaca dulu. Level yang sub levelnya sudah mulai dikerjakan tidak terkunci lagi.', kunci: ['harusDengar', 'harusBaca', 'syaratBaca'] },
     { ikon: '🔁', judul: 'Bila jawaban salah', ket: 'Pengulangan selalu memakai soal baru. Nilai lulus dihitung dari percobaan pertama tiap nomor.', kunci: ['tampilJawaban', 'bilaSalah', 'batasSalah'] }
   ];
@@ -2506,6 +2581,8 @@
     const d = PILIHAN_ATUR[k];
     const opsi = (profil ? [['', `Ikut umum (${teksNilai(k, umum(k))})`]] : []).concat(d.opsi().map(([v, t]) => [String(v), t]));
     const pilih = nilai == null ? '' : String(nilai);
+    // Nilai dari guru di luar daftar pilihan (mis. 12 soal) tetap ditampilkan apa adanya.
+    if (pilih !== '' && !opsi.some(([v]) => v === pilih)) opsi.push([pilih, k === 'jumlahSoal' ? `${nilai} soal` : k === 'syaratBaca' ? `${nilai}%` : k === 'batasSalah' ? `lebih dari ${nilai} kali, mulai lagi` : String(nilai)]);
     return `<label class="at-baris" data-baris="${k}"><span class="at-baris-label">${d.label}</span>
       <select data-atur="${k}">${opsi.map(([v, t]) => `<option value="${v}"${v === pilih ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label>`;
   }
@@ -2568,13 +2645,22 @@
     </article>`;
   }
   let bagikanId = null;
+  // Daftar aturan yang berbeda di bagian tertentu tahapan (dari guru), untuk halaman Aturan & Tahapan siswa.
+  function aturBagianHTML() {
+    const g = (LAPIS && LAPIS.tahapan && LAPIS.bagian) || {}, L = [];
+    Object.entries(g.tahap || {}).forEach(([t, x]) => L.push(`Tahap ${esc(t)}: <b>${esc(x.nama)}</b>`));
+    Object.entries(g.level || {}).forEach(([id, x]) => { const b = window.BACAAN.find(y => y.id === id); if (b) L.push(`${esc(b.judul)}: <b>${esc(x.nama)}</b>`); });
+    if (LAPIS && LAPIS.lanjut) L.push(`Sesudah tahapan tuntas: <b>${esc(LAPIS.lanjut.nama)}</b>`);
+    return L.length ? `<p class="at-catatan">Aturan berbeda di bagian tertentu: ${L.join(' · ')}.</p>` : '';
+  }
   function tampilAturKhusus() {
     kini = null;
     if (AKUN) {
       const p = profilAktif();
       layar.innerHTML = kepalaAtur('khusus') + (p
         ? `<div class="at-profil-daftar">${kartuProfil(p, true, false).replace(/<div class="at-profil-aksi">[\s\S]*?<\/div>/, '')}</div>
-           <p class="at-catatan">Tahapan ini dipasang gurumu ${p.asal === 'siswa' ? 'khusus untukmu' : 'untuk kelasmu'}.</p>`
+           <p class="at-catatan">Tahapan ini dipasang gurumu ${p.asal === 'siswa' ? 'khusus untukmu' : 'untuk kelasmu'}.
+             ${p.akhir === 'lanjut' ? 'Setelah semua levelnya tuntas, kamu melanjutkan Tahapan Level.' : p.saran ? '' : 'Setelah semua levelnya tuntas, tunggu arahan gurumu.'}</p>${aturBagianHTML()}`
         : '<div class="at-kosong"><span aria-hidden="true">🗺️</span><b>Memakai tahapan umum</b><p>Gurumu belum memasang tahapan khusus. Semua materi bisa kamu latih berurutan.</p></div>');
       return;
     }
@@ -2773,7 +2859,9 @@
     };
   }
 
+  let pesanKunci = null;   // level terkunci yang baru dicoba dibuka (aturan urutan level)
   function rute() {
+    bAtur = null;
     hentikanSuara();
     batalkanRekam();
     batalUlang();
@@ -2792,7 +2880,7 @@
       const bl = window.BACAAN.find(x => x.id === decodeURIComponent(ml[1]));
       const n = +ml[2];
       if (punyaSub(bl) && n >= 1 && n <= daftarSub(bl).length) {
-        if (terbukaSub(bl, n)) tampilLatih(bl, n);
+        if (terbukaLevel(bl) && terbukaSub(bl, n)) tampilLatih(bl, n);
         else location.replace(`#baca/${encodeURIComponent(bl.id)}`);
         window.scrollTo(0, 0);
         return;
@@ -2801,6 +2889,7 @@
     const m = location.hash.match(/^#baca\/(.+)$/);
     const id = m ? decodeURIComponent(m[1]) : '';
     const b = window.BACAAN.find(x => x.id === id);
+    if (b && !terbukaLevel(b)) { pesanKunci = b; location.replace('#'); return; }
     if (b) tampilBaca(b); else if (location.hash === '#ulang') tampilUlang(); else tampilDaftar();
     window.scrollTo(0, 0);
   }

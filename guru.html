@@ -788,6 +788,18 @@ body.lihat .ubah { display: none !important; }
 .at-sub-nama { font-weight: 600; line-height: 1.25; }
 @media (max-width: 560px) { .at-subs { padding-left: var(--j3); grid-template-columns: 1fr; } }
 .jl-editor .pr-isian select { width: 100%; }
+/* Aturan di dalam tahapan khusus (15 Okt 2026, seperti Matdas) */
+.jl-pilih-baris { display: flex; flex-wrap: wrap; align-items: center; gap: var(--j2) var(--j3); }
+.jl-pilih-baris > span { font-weight: 700; min-width: 200px; }
+.jl-pilih-baris select { flex: 1 1 220px; max-width: 420px; }
+.jl-akhir { display: grid; gap: var(--j2); margin-bottom: var(--j3); }
+.jl-akhir label { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.jl-akhir small { flex-basis: 100%; padding-left: 26px; color: var(--tinta-2); }
+select.jl-bagian { max-width: 210px; font-size: 13px; padding: 4px 8px; margin-left: auto; }
+select.jl-bagian.diisi { border-color: var(--emas); background: var(--emas-kabut); font-weight: 700; }
+.ab-bagian { margin-top: var(--j3); padding: var(--j3); border-radius: 12px; background: var(--kertas-3); border: 1px solid var(--garis); }
+.ab-bagian ul { margin: 4px 0 0; padding-left: 18px; }
+@media (max-width: 560px) { select.jl-bagian { max-width: none; flex-basis: 100%; margin-left: 0; } }
 .jl-simpan { position: sticky; bottom: 0; z-index: var(--lapis-isi); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--j2) var(--j3);
   margin: var(--j4) calc(-1 * var(--j5)) calc(-1 * var(--j4)); padding: var(--j3) var(--j5); background: rgba(255,255,255,.96); backdrop-filter: blur(6px);
   border-top: 1px solid var(--garis); box-shadow: var(--bayang-atas); }
@@ -998,11 +1010,11 @@ body.lihat .ubah { display: none !important; }
         <div class="seksi-isi">
           <ol class="lapis">
             <li class="l-siswa"><span class="l-no">1</span><div><b>Siswa tertentu</b><small>Sesi Kegiatan / Analisis Siswa · paling kuat</small></div><span class="l-isi"><span><small>Aturan</small>profil siswa</span><span><small>Tahapan</small>tahapan khusus siswa</span></span></li>
-            <li class="l-kel"><span class="l-no">2</span><div><b>Rombel</b><small>halaman ini, bagian 3 · oleh guru</small></div><span class="l-isi"><span><small>Aturan</small>profil aturan rombel</span><span><small>Tahapan</small>tahapan khusus rombel</span></span></li>
+            <li class="l-kel"><span class="l-no">2</span><div><b>Rombel</b><small>halaman ini, bagian 3 · oleh guru</small></div><span class="l-isi"><span><small>Satu pilihan</small>tahapan khusus beserta aturannya, atau urutan umum + profil aturan</span></span></li>
             <li class="l-umum"><span class="l-no">3</span><div><b>Pengaturan Umum</b><small>diatur admin</small></div><span class="l-isi"><span><small>Aturan</small>Pengaturan Umum</span><span><small>Tahapan</small>urutan Tahapan Level (tanpa yang ditutup admin)</span></span></li>
           </ol>
         </div>
-        <p class="catatan-seksi"><span>Latihan mandiri (di luar sesi) memakai lapis yang sama tetapi dengan pilihannya sendiri: <b>aturan latihan mandiri</b> dan <b>saran tahapan</b> (bagian 3 dan 4). Isian aturan yang tidak diisi profil di atas ikut lapisan di bawahnya, satu per satu. Contoh: profil siswa yang hanya mengubah jumlah soal tetap memakai batas keluar halaman dari profil rombelnya.</span></p>
+        <p class="catatan-seksi"><span>Isian aturan yang tidak diisi profil di atas ikut lapisan di bawahnya, satu per satu. Contoh: profil siswa yang hanya mengubah jumlah soal tetap memakai batas keluar halaman dari rombelnya. Di dalam tahapan khusus: <b>aturan dasar</b> berlaku di semua bagian, profil <b>tahap/level</b> berlaku selama siswa di bagian itu, dan profil <b>sesudah tahapan</b> berlaku di materi lain setelah tahapan berujung "Lanjut" dituntaskan. Profil siswa tetap paling kuat. Latihan mandiri (di luar sesi) punya pilihannya sendiri: <b>aturan latihan mandiri</b> (termasuk <b>Sama dengan sesi kelompok</b>) dan <b>saran tahapan</b>.</span></p>
       </section>
       <p id="lapis-buka-p" class="hidden" style="margin:0 0 var(--j4)"><button class="garis kecil" id="lapis-buka">Tampilkan cara sistem memilih aturan dan tahapan</button></p>
 
@@ -1026,7 +1038,7 @@ body.lihat .ubah { display: none !important; }
 
       <section class="kartu seksi">
         <div class="seksi-kepala"><span class="seksi-ikon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="6" r="2.5"/><path d="M7.5 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h7.5"/></svg></span>
-          <div><h2>2. Tahapan khusus</h2><p>Pilih tahap, level, sampai sub level yang dipakai. Untuk remedial, pengayaan, atau persiapan ujian. Hanya berisi materi.</p></div>
+          <div><h2>2. Tahapan khusus</h2><p>Pilih tahap, level, sampai sub level yang dipakai, beserta aturannya: aturan dasar, aturan per tahap/level, dan apa yang terjadi sesudah semua level tuntas. Untuk remedial, pengayaan, atau persiapan ujian.</p></div>
           <button class="ubah kecil seksi-aksi" id="jl-baru">+ Buat tahapan</button></div>
         <div class="seksi-isi jl-contoh" id="jl-contoh"></div>
         <div class="jl-editor hidden" id="jl-editor"></div>
@@ -1035,7 +1047,7 @@ body.lihat .ubah { display: none !important; }
 
       <section class="kartu seksi">
         <div class="seksi-kepala"><span class="seksi-ikon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 20a6.5 6.5 0 0 0-3-5.5"/></svg></span>
-          <div><h2>3. Untuk seluruh rombel</h2><p>Pilih profil aturan dan tahapan untuk rombel Anda. Yang tidak dipilih mengikuti Pengaturan Umum dan urutan Tahapan Level.</p></div></div>
+          <div><h2>3. Untuk seluruh rombel</h2><p>Satu pilihan untuk sesi: tahapan khusus (beserta aturannya) atau urutan Tahapan Level dengan profil aturan. Latihan mandiri diatur di kolom sebelahnya.</p></div></div>
         <div id="pr-kelompok"></div>
       </section>
 
@@ -1116,7 +1128,7 @@ body.lihat .ubah { display: none !important; }
 <script src="assets/kepala-excel.js?v=1"></script>
 <script src="assets/excel.js?v=5"></script>
 <script src="assets/arsip.js?v=2"></script>
-<script src="guru.js?v=21"></script>
+<script src="guru.js?v=22"></script>
 <script>
 /* Tombol mata di kotak PIN (13 Okt 2026): ketuk untuk melihat PIN yang diketik, ketuk lagi untuk menyembunyikan.
    Berdiri sendiri (gaya disisipkan di sini) supaya sama di semua aplikasi. Kotak PIN ditandai data-lihat. */

@@ -199,6 +199,49 @@ Meniru Matematika Dasar. Halaman **⚙️ Pengaturan & Tahapan** (`#pengaturan`,
   Di halaman siswa, menu ini hanya-baca: tab Khusus menampilkan tahapan yang dipasang untuknya, sedangkan editor dan
   tautan `#khusus=` dialihkan. Tautan `#khusus=` hanya berlaku pada mode luring tanpa server.
 
+### Tahapan khusus seperti Matdas (15 Okt 2026)
+
+Migrasi `database_tryout/supabase/migrations/20261015100000_english_reading_tahapan_seperti_matdas.sql`.
+Halaman guru: tab **Pengaturan & Tahapan Khusus**.
+
+- **Satu pilihan per rombel** (bagian 3, kolom "Latihan di sesi kelompok"): pilih *tahapan khusus* (aturannya
+  diatur di dalam tahapan) **atau** *urutan umum + profil aturan*. Memasang yang satu melepas yang lain
+  (`er_pasang_kelas` / `er_atur_profil_kelas`). Rombel yang dulu memakai keduanya dipindah oleh migrasi:
+  profil rombel menjadi aturan dasar tahapan. Bila satu tahapan dipakai beberapa rombel dengan profil
+  berbeda, tahapan itu disalin per profil.
+- **Di dalam tahapan khusus** (`er_profil`):
+  - `profil_dasar` = **aturan dasar**.
+  - `bagian` = profil per **tahap** atau per **level**; profil level mengalahkan profil tahap. Dipilih di
+    pohon materi editor.
+  - `akhir` = sesudah semua level tuntas:
+    - **Berhenti** (bawaan): siswa melihat "Tahapan latihan selesai".
+    - **Lanjut ke Tahapan Level**: materi lain (tanpa yang ditutup admin) ikut terbuka. Profil
+      `profil_lanjut` berlaku di materi lain itu.
+- **Lapisan aturan** (yang lebih kanan menang): `umum ← dasar ← [bagian | sesudah tahapan] ← siswa`.
+  - `dasar` = aturan dasar tahapan. Bila kosong dan siswa memakai tahapannya sendiri, profil rombel yang
+    dipakai.
+  - Server (`er_atur_lapis`) mengirim `bawah`, `atas`, `bagian`, `lanjut`, dan `tahapan`. HP siswa
+    (`aturUntuk(b, k)` di `app.js`) memilih lapisan bagian sesuai level yang dibuka.
+  - Pengawasan keluar halaman, kode buka, dan lama sesi dihitung server, jadi hanya memakai lapisan tanpa
+    bagian (`isi`).
+- **Latihan mandiri "Sama dengan sesi kelompok"** (`er_mandiri_kelas.sesi`, `er_mandiri_siswa.sesi`):
+  - Dipasang dengan `p_profil = 'sesi'` di `er_pasang_mandiri_*`; kontrak tidak berubah.
+  - Aturannya sama dengan sesi, termasuk aturan per bagian tahapan sesi.
+  - Profil aturan mandiri siswa tetap paling atas.
+  - Materinya tetap pilihan siswa atau saran tahapan.
+- **Aturan baru "Urutan level"** (`urut`, di Pengaturan Umum dan profil aturan):
+  - *Berurutan*: level berikut terbuka setelah level sebelumnya (di urutan yang berlaku) tuntas.
+  - Level yang sudah tuntas atau sudah pernah dikerjakan tetap terbuka.
+  - Tautan langsung ke level terkunci dialihkan ke daftar dengan pesan.
+  - Bawaan *Bebas*, sama dengan perilaku sebelumnya.
+- **Perbaikan:** jumlah soal (5–50), akurasi membaca (50–100%), dan batas salah (0–50) dari guru kini dipakai
+  apa adanya. Dulu HP siswa hanya menerima nilai di daftar pilihannya (10/15/20/25/30/40, dan seterusnya) dan
+  diam-diam kembali ke bawaan.
+- **Diuji 15 Okt 2026** di salinan lokal (server PostgreSQL + PostgREST):
+  - 40 uji fungsi server dan pemindahan data rombel ganda.
+  - 39 uji tampilan di Chrome: siswa sesi dan mandiri, guru, dan admin, tanpa galat JS.
+  - `./db.sh uji` lolos, kontrak 170 fungsi.
+
 ## Arsip semester (11 Okt 2026)
 
 Sama dengan Matematika Dasar (rencana: `RENCANA_MASA_SIMPAN.md` di folder utama). **Admin → Ukuran database

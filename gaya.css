@@ -157,6 +157,13 @@ button { cursor: pointer; border: 0; background: none; }
 .kartu-level { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
   background: var(--biru-muda); color: var(--biru-tua); font-weight: 800; }
 .kartu.tuntas .kartu-level { background: var(--hijau); color: #fff; }
+/* Urutan level terkunci (aturan "urut", 15 Okt 2026) dan tahapan selesai */
+.kartu.kunci { opacity: .55; cursor: not-allowed; }
+.kartu.kunci .kartu-level { background: var(--garis); font-size: 15px; }
+.nav-level .nav-kunci { color: var(--tinta-2); font-weight: 700; }
+.pesan.pesan-kunci { background: var(--biru-muda); color: var(--biru-tua); margin: 0 0 14px; }
+.hasil.tahapan-selesai { margin: 0 0 14px; }
+.hasil.tahapan-selesai h2 { margin: 0 0 6px; }
 @media (max-width: 480px) { .tahap-fokus { margin-left: 0; } }
 
 
