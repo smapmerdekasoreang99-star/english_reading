@@ -65,6 +65,10 @@ button { cursor: pointer; border: 0; background: none; }
 .kotak-grafik { background: var(--gelap); border-radius: var(--r2); padding: 10px 12px 8px; margin: 0 0 12px; }
 .kotak-grafik canvas { display: block; width: 100%; height: 72px; }
 .status-grafik { color: #DCE6F2; font-size: 13px; font-weight: 700; margin-top: 4px; }
+/* Grafik suara kecil di tombol rekam lain: latih/ulang kata, sub level Ucapkan (15 Okt 2026) */
+.kotak-grafik.kecil { display: block; padding: 6px 10px 4px; margin: 8px 0 0; }
+.kotak-grafik.kecil canvas { height: 40px; }
+.kotak-grafik.kecil .status-grafik { font-size: 12px; margin-top: 2px; }
 
 .petunjuk.rekam { color: var(--merah-tua); font-weight: 700; }
 

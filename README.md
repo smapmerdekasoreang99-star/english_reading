@@ -242,6 +242,20 @@ Halaman guru: tab **Pengaturan & Tahapan Khusus**.
   - 39 uji tampilan di Chrome: siswa sesi dan mandiri, guru, dan admin, tanpa galat JS.
   - `./db.sh uji` lolos, kontrak 170 fungsi.
 
+## Grafik suara di semua tombol rekam (15 Okt 2026)
+
+Grafik suara (`mulaiGrafik(kotak)` di `app.js`) muncul di setiap tombol rekam:
+
+- 🎤 Baca & Koreksi;
+- 🎤 Ucapkan di latih kata dan Ulang kosakata;
+- tombol rekam sub level Ucapkan, Baca kalimat, dan Terjemahkan & ucapkan.
+
+Di sebagian HP Android, mikrofon tidak bisa dipakai grafik (getUserMedia) dan pengenal suara sekaligus, sehingga
+pengenal suara gagal dengan `audio-capture`. Di HP seperti itu aplikasi berpindah ke **grafik cadangan**: batangnya
+digerakkan sinyal pengenal suara (`onsoundstart`, `onspeechstart`, hasil sementara). Pilihan ini diingat di perangkat
+(`setelan.tanpaGrafik`), dan rekaman yang bentrok diulang otomatis. Dulu grafik dimatikan begitu saja di HP itu,
+dan tombol rekam lain memang tidak punya grafik.
+
 ## Arsip semester (11 Okt 2026)
 
 Sama dengan Matematika Dasar (rencana: `RENCANA_MASA_SIMPAN.md` di folder utama). **Admin → Ukuran database
