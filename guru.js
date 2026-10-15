@@ -29,6 +29,17 @@ const jenisLevel = (b) => (b.kosakata ? { kunci: "kosakata", nama: "Kosakata" } 
 const levelDari = (id) => window.BACAAN.find((b) => b.id === id);
 const nomorLevel = (b) => window.BACAAN.filter((x) => x.tahap === b.tahap).indexOf(b) + 1;
 const labelLevel = (b) => (b ? `T${b.tahap} · L${nomorLevel(b)} ${b.judul}` : "");
+// Keterangan bentuk soal tiap sub level (sama dengan "ket" di daftarSub app.js), tampil di Tahapan Level.
+const KET_SUB = { "Kenali": "Kata ↔ arti", "Dengar": "Pilih yang kamu dengar", "Situasi": "Kata yang tepat untuk situasinya",
+  "Lengkapi & susun": "Kalimat rumpang, susun kata", "Ucapkan": "Ingat dan ucapkan sendiri",
+  "Pilih bentuk": "Bentuk yang tepat untuk kalimatnya", "Benar atau salah": "Periksa kalimatnya", "Lengkapi": "Ketik bentuk yang tepat",
+  "Susun kalimat": "Urutkan kata-katanya", "Terjemahkan & ucapkan": "Dari bahasa Indonesia ke bahasa Inggris",
+  "Kosakata bacaan": "Kata penting dari teks", "Dengar & pahami": "Kalimat dibacakan, pilih artinya", "Urutkan": "Susun kalimat sesuai urutan teks",
+  "Pemahaman": "Pilihan ganda dan benar/salah", "Baca kalimat": "Baca kalimat dari teks, dinilai per kata", "Rumpang teks": "Lengkapi kalimat dari teks",
+  "Ide pokok & struktur teks": "Topik, tujuan, jenis teks, dan bagian-bagiannya", "Ide pokok & organisasi": "Ide pokok paragraf, judul, susunan teks",
+  "Rincian & rujukan": "Informasi tersurat dan kata rujukan", "Makna kata": "Arti kata sesuai konteks (sinonim)",
+  "Inferensi & sikap penulis": "Kesimpulan, tujuan, sikap, menilai argumen", "Simulasi UTBK/SNBT": "Campuran semua jenis soal ujian",
+  "Simulasi TKA": "Campuran semua jenis soal ujian", "Uji siap naik tahap": "Campuran semua jenis soal, bekal ke tahap berikutnya" };
 const namaSub = (b, n) => { const s = b && daftarSub(b)[n - 1]; return s ? `${s[1]} ${s[0]}` : `Sub level ${n}`; };
 const tahapNama = (no) => (window.TAHAP.find((t) => t.no === no) || {}).nama || "Tahap " + no;
 
@@ -1437,8 +1448,9 @@ function gambarTingkat() {
             <span class="tumbuh"></span>${admin ? `<button class="garis kecil ubah" data-level-aktif="${esc(b.id)}" ${tOn ? "" : "disabled"}>${lOn ? "Tutup level ini" : "Buka level ini"}</button>` : ""}</div>
           <div class="contoh hidden" id="c-${esc(b.id)}"></div>
           ${subs.map(([nama, ikon], k) => { const n = k + 1, sOn = subOn(m, b, n);
-            return `<div class="lv-baris${sOn ? "" : " tutup"}"><span class="no">Sub ${n}</span><span class="ik-sub" aria-hidden="true">${ikon}</span><span class="kt">${esc(nama)}</span>
+            return `<div class="lv-baris${sOn ? "" : " tutup"}"><span class="no">Sub ${n}</span><span class="ik-sub" aria-hidden="true">${ikon}</span><span class="kt">${esc(nama)}${KET_SUB[nama] ? `<small class="redup"> · ${esc(KET_SUB[nama])}</small>` : ""}</span>
               ${!sOn && lOn && tOn ? '<span class="lencana buruk" title="Dilewati siswa yang memakai tahapan umum; Tahapan Khusus tidak terpengaruh">ditutup</span>' : ""}
+              <button class="garis kecil" data-coba="${esc(b.id)}" data-coba-sub="${n}" title="Kerjakan sub level ini seperti siswa">Coba</button>
               ${admin ? `<button class="garis kecil" data-sub-aktif="${esc(b.id)}|${n}" ${lOn && tOn ? "" : "disabled"}>${sOn ? "Tutup" : "Buka"}</button>` : ""}</div>`; }).join("")}
         </div></details>`;
       }).join("")}</div>`;
@@ -1461,7 +1473,7 @@ function gambarTingkat() {
     simpanMati(mm, `${namaSub(bb, +n)} ${tutup ? "ditutup" : "dibuka"} untuk tahapan umum`);
   });
   $("t-tingkat").querySelectorAll("[data-coba]").forEach((b) => b.onclick = () => {
-    const w = window.open(`index.html#coba=${encodeURIComponent(b.dataset.coba)}`, "_blank");
+    const w = window.open(`index.html#coba=${encodeURIComponent(b.dataset.coba)}${b.dataset.cobaSub ? "/" + b.dataset.cobaSub : ""}`, "_blank");
     if (!w) toast("Peramban memblokir tab baru. Izinkan pop-up untuk halaman ini.");
   });
   $("t-tingkat").querySelectorAll("[data-contoh]").forEach((b) => {

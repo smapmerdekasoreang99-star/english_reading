@@ -1065,14 +1065,16 @@
   // Urutan level (aturan "urut", 15 Okt 2026): level terbuka bila level sebelumnya di urutan yang berlaku sudah tuntas.
   // Level yang sudah tuntas atau sudah pernah dikerjakan tetap terbuka.
   const mulaiLevel = b => sudahMulaiSub(b) || skorTerbaik[b.id] != null || skorPaham[b.id] != null;
+  // Uji coba guru (Tahapan Level → Coba): semua level dan sub level terbuka tanpa syarat, agar bentuk soal bisa dilihat.
+  const cobaGuru = !!(AKUN && AKUN.coba);
   function terbukaLevel(b) {
-    if (!aturUntuk(b, 'urut') || tuntas(b) || mulaiLevel(b)) return true;
+    if (cobaGuru || !aturUntuk(b, 'urut') || tuntas(b) || mulaiLevel(b)) return true;
     if (!levelAktif(b)) return false;
     const p = posisiLevel(b).sebelum;
     return !p || tuntas(p);
   }
   // Sub level terbuka bila sub level dipakai sebelumnya lulus; yang pertama setelah syarat dengar/baca.
-  const terbukaSub = (b, n) => { const d = subDipakai(b), i = d.indexOf(n); return i === 0 ? siapSub(b) : i > 0 && lulusSub(b, d[i - 1]); };
+  const terbukaSub = (b, n) => { const d = subDipakai(b), i = d.indexOf(n); return cobaGuru ? i >= 0 : i === 0 ? siapSub(b) : i > 0 && lulusSub(b, d[i - 1]); };
   // Level yang sudah tuntas lewat Baca & Koreksi sebelum sub level dipasang dianggap lulus semua.
   (function () {
     const cek = baca('er_sub_cek', []);
@@ -1823,7 +1825,7 @@
       <p class="petunjuk">Pelajari ${b.pola ? 'polanya dan contoh kalimatnya' : b.kosakata ? 'kata-katanya' : 'teksnya (dengarkan dan baca)'} di atas, lalu kerjakan ${dipakai.length} sub level secara berurutan (${jumlahSoal()} soal per sub level). Tiap sub level lulus bila
         ≥ ${TUNTAS}% benar; soalnya diacak sehingga berbeda tiap kali dikerjakan.${d.lama ? ' Level ini sudah kamu tuntaskan sebelumnya, jadi semua sub level terbuka untuk mengulang.' : ''}</p>
       ${dipakai.length < SB.length ? `<p class="at-info-sub">🎯 Tahapan khusus <b>${esc(p.nama)}</b> memakai ${dipakai.length} dari ${SB.length} sub level di level ini.</p>` : ''}
-      ${siapSub(b) ? '' : syaratSubHTML(b)}
+      ${cobaGuru ? '<p class="at-info-sub">🧪 Uji coba guru: semua sub level terbuka tanpa syarat.</p>' : siapSub(b) ? '' : syaratSubHTML(b)}
       <div class="sub-daftar">${dipakai.map((n, idx) => {
         const sub = SB[n - 1], buka = terbukaSub(b, n), sk = d.s[n - 1], ok = sk >= TUNTAS;
         const isi = `<span class="sub-no">${ok ? '✓' : buka ? n : '🔒'}</span>

@@ -436,7 +436,10 @@
     window.ER_AKUN = { siswa: akun.siswa, mode: 'coba', atur: {}, luring: true, coba: true };
     pasangKepala();
     $('uji-pita-wadah').innerHTML = '<div class="uji-pita" role="note"><b>Uji coba guru</b> · kemajuan hanya tersimpan di tab ini dan tidak masuk rekap siswa. Tutup tab ini bila selesai.</div>';
-    if (levelId) history.replaceState(null, '', location.pathname + '#baca/' + encodeURIComponent(levelId));
+    // #coba=<id level> membuka halaman level; #coba=<id level>/<n> langsung membuka sub level n (15 Okt 2026).
+    const m = levelId && levelId.match(/^(.+)\/(\d+)$/);
+    if (m) history.replaceState(null, '', location.pathname + '#latih/' + encodeURIComponent(m[1]) + '/' + m[2]);
+    else if (levelId) history.replaceState(null, '', location.pathname + '#baca/' + encodeURIComponent(levelId));
     muatAplikasi();
   }
 
