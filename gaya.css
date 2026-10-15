@@ -88,6 +88,9 @@ button { cursor: pointer; border: 0; background: none; }
 .kata.sedang { color: var(--emas-teks); background: var(--emas-muda); }
 .kata.salah { color: var(--merah-tua); background: var(--merah-muda); text-decoration: underline wavy var(--merah); text-underline-offset: 4px; }
 .kata.lewat { color: var(--tinta-3); }
+/* Selama membaca (15 Okt 2026): kata yang sudah dikenali diberi latar hijau tegas agar jelas terlihat (dulu hijau pucat). */
+.kata { transition: background-color .2s, color .2s; }
+.teks:not(.dinilai) .kata.benar { background: var(--hijau); color: #fff; box-shadow: 0 0 0 1px var(--hijau); }
 /* Setelah dinilai: persentase tampil di bawah tiap kata */
 .k-skor { display: none; }
 .teks.dinilai .kata { display: inline-flex; flex-direction: column; align-items: center; vertical-align: top; line-height: 1.25; padding: 2px 3px; margin-bottom: 6px; }
