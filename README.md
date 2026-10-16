@@ -256,6 +256,13 @@ digerakkan sinyal pengenal suara (`onsoundstart`, `onspeechstart`, hasil sementa
 (`setelan.tanpaGrafik`), dan rekaman yang bentrok diulang otomatis. Dulu grafik dimatikan begitu saja di HP itu,
 dan tombol rekam lain memang tidak punya grafik.
 
+**Bentrok senyap (16 Okt 2026).** Di sebagian perangkat bentroknya tanpa galat: grafik bergerak, tetapi pengenal
+suara hanya menerima hening, dan Baca & Koreksi berakhir "tidak ada suara yang terdengar". Grafik nyata kini
+menghitung bingkai bersuara; bila ±3 detik bersuara (`BINGKAI_SENYAP`) tanpa satu pun tanda dari pengenal suara
+(`onsoundstart`/`onspeechstart`/hasil), mikrofon dilepas untuk pengenal suara, grafik cadangan dipakai, pengenal
+dinyalakan ulang (rekaman pendek diulang otomatis), dan pilihannya diingat di perangkat itu. Bila mikrofon menangkap
+suara tetapi tetap tidak ada kata yang dikenali, pesannya kini menyebut internet/VPN, bukan "tidak ada suara".
+
 ## Arsip semester (11 Okt 2026)
 
 Sama dengan Matematika Dasar (rencana: `RENCANA_MASA_SIMPAN.md` di folder utama). **Admin → Ukuran database
