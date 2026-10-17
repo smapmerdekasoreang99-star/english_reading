@@ -293,6 +293,8 @@ Kemajuan yang sudah ada saat fitur ini dipasang disalin ke kedua jalur.
   ketekunan: kolom **Latihan mandiri (7 hari)** di Perkembangan Siswa dan rekap Excel, kartu **Latihan mandiri
   (di luar sesi)** di Analisis Siswa, serta label **Rajin mandiri**, **Tanpa latihan mandiri**, dan
   **Mandiri jauh di atas sesi** (rata-rata nilai mandiri ≥ 25 poin di atas nilai sesi).
+- Sub-tab **Peringkat → Paling rajin latihan mandiri** (17 Okt 2026): urut hari berlatih mandiri, lalu kegiatan, lalu waktu,
+  untuk periode 7/30 hari, semester, atau sejak awal (`er_peringkat` kolom `m_*`); jenis peringkat lain tetap resmi. Guru hanya melihat rombel miliknya, admin semua.
 - Latihan mandiri tidak harus sama dengan sesi. Guru bisa memasang **aturan latihan mandiri** (profil aturan
   tersendiri, mis. Harus Dengar/Baca menyala untuk latihan pengucapan di rumah walau mati di sekolah) dan
   **saran latihan mandiri** (tahapan khusus sebagai anjuran) per rombel atau per siswa (`er_mandiri_kelas`,

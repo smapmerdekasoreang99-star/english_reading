@@ -1703,7 +1703,7 @@ async function muatPerKelompok() {
 /* ----------------------------------------------------------- Perkembangan Siswa: Peringkat (12 Okt 2026) */
 /* Peringkat satu sekolah, satu angkatan, atau satu rombel (er_peringkat), meniru Matematika Dasar. Server mengirim angka satu
    periode per siswa; level tuntas dihitung di sini dari blob kemajuan + tahapan yang berlaku (lengkapi), sama dengan Per Siswa.
-   Guru hanya melihat rombelnya sendiri, admin semua. Hanya kemajuan resmi (sesi kelas). Nilai sama = peringkat sama (1, 2, 2, 4). */
+   Guru hanya melihat rombelnya sendiri, admin semua. Kemajuan resmi (sesi kelas), kecuali "Paling rajin latihan mandiri" (m_*). Nilai sama = peringkat sama (1, 2, 2, 4). */
 let PRK = null;   // { periode, pilihan, siswa }
 const RK_MIN_HARI = 3, RK_MIN_SUB = 10, RK_BELUM = 99999;
 const angkaId = (x, d = 1) => Number(x).toLocaleString("id-ID", { maximumFractionDigits: d });
@@ -1729,6 +1729,10 @@ const JENIS_RK = {
   rajin: { nama: "Paling rajin", kolom: "hari", ikut: (r) => r.hari > 0,
     banding: (a, b) => b.hari - a.hari || b.n_hasil - a.n_hasil,
     ket: (p) => `Banyak hari berlatih selama ${p}. Bila sama, yang menyelesaikan lebih banyak kegiatan di atas.` },
+  // 17 Okt 2026: satu-satunya peringkat dari latihan mandiri (di luar sesi); kemajuan resmi tidak terpengaruh.
+  mandiri: { nama: "Paling rajin latihan mandiri", kolom: "mandiri", ikut: (r) => r.m_hari > 0,
+    banding: (a, b) => b.m_hari - a.m_hari || b.m_hasil - a.m_hasil || b.m_detik - a.m_detik,
+    ket: (p) => `Banyak hari berlatih mandiri (di luar sesi kelas) selama ${p}. Bila sama, yang menyelesaikan lebih banyak kegiatan di atas, lalu yang lebih lama berlatih.` },
   teliti: { nama: "Nilai terbaik", kolom: "rata", ikut: (r) => r.n_sub >= RK_MIN_SUB,
     banding: (a, b) => b.rata - a.rata || b.n_sub - a.n_sub,
     ket: (p) => `Rata-rata nilai sub level selama ${p}; paling sedikit ${RK_MIN_SUB} sub level dikerjakan.` },
@@ -1746,7 +1750,10 @@ const KOLOM_RK = [
   ["rata", "Rata-rata<br>nilai", (r) => r.rata != null ? `${r.rata}%<span class="rk-sub">${r.n_sub} sub level</span>` : "–", "angka"],
   ["waktu", "Waktu<br>latihan", (r) => r.detik ? lamaTeks(r.detik) : "–", "angka"],
   ["perhatian", "Macet &amp;<br>lulus terakhir", (r) => `<span class="pos-nm">${r.macet ? `${r.macet} sub level macet` : "Tidak macet"}</span><span class="pos-lv">${r.lulus_terakhir ? "lulus terakhir " + esc(sejakTeks(r.lulus_terakhir)) : "belum pernah lulus sub level"}</span>`, "posisi"],
+  ["mandiri", "Latihan mandiri<br>(periode)", (r) => r.m_hari ? `<span class="pos-nm">${r.m_hari} hari · ${r.m_hasil} kegiatan</span><span class="pos-lv">${r.m_rata != null ? `rata ${r.m_rata}% · ` : ""}${lamaTeks(r.m_detik)}${r.m_lulus ? ` · ${r.m_lulus} sub level lulus` : ""}</span>` : '<span class="redup">–</span>', "posisi"],
 ];
+// Kolom khusus satu jenis peringkat (hanya tampil saat jenis itu dipilih)
+const KOLOM_KHUSUS_RK = new Set(["perhatian", "mandiri"]);
 const dalamCakupanRk = (c) => (r) => !c || (c.startsWith("a:") ? r.angkatan === c.slice(2) : r.kelas === c.slice(2));
 function urutRk(L, j) {
   const A = L.filter(j.ikut).sort((a, b) => j.banding(a, b) || a.nama.localeCompare(b.nama)), H = [];
@@ -1817,10 +1824,14 @@ function gambarPeringkat() {
     [L.length, "siswa", "siswa"], [L.filter((r) => r.hari > 0).length, `berlatih · ${PRK.periode.nama.toLowerCase()}`, "aktif", "baik"],
     [angkaId(mulai.length ? mulai.reduce((t, r) => t + lengkapi(r).levelTuntas, 0) / mulai.length : 0), "rata-rata level tuntas", "level", "emas"],
     [L.reduce((t, r) => t + r.lulus, 0), "sub level lulus dalam periode", "ulang"],
-    [nS ? Math.round(jS / nS) + "%" : "–", "rata-rata nilai dalam periode", "akurasi"],
+    j.kolom === "mandiri" ? [L.filter((r) => r.m_hari > 0).length, "berlatih mandiri dalam periode", "aktif"]
+      : [nS ? Math.round(jS / nS) + "%" : "–", "rata-rata nilai dalam periode", "akurasi"],
   ]);
   const H = urutRk(L, j), T = n ? H.filter((x) => x.no <= n) : H;
-  const K = KOLOM_RK.filter(([k]) => k !== "perhatian" || j.kolom === "perhatian"), semua = !c.startsWith("k:");
+  const K = KOLOM_RK.filter(([k]) => !KOLOM_KHUSUS_RK.has(k) || j.kolom === k), semua = !c.startsWith("k:");
+  $("rk-kaki").textContent = (j.kolom === "mandiri"
+    ? "Hanya latihan mandiri (di luar sesi kelas); tidak menaikkan kemajuan resmi. Kolom lain tetap kemajuan resmi."
+    : "Hanya kemajuan resmi (sesi kelas yang diawasi); latihan mandiri tidak ikut.") + " Level tuntas mengikuti tahapan yang berlaku bagi siswa. Nilai yang sama mendapat peringkat yang sama. Ketuk nama untuk melihat analisisnya.";
   $("rk-judul").textContent = `${j.nama} · ${labelPilihan("rk-cakupan")}`;
   $("rk-ket").innerHTML = `${esc(j.ket(periodeRk()))} ${H.length} dari ${L.length} siswa masuk peringkat ini.` + (PRK.periode.kasar ? ` <b>${KASAR_RK}</b>` : "");
   $("t-peringkat").innerHTML = `<thead><tr><th>No</th><th>Nama</th>${semua ? "<th>Rombel</th>" : ""}`
@@ -1853,7 +1864,9 @@ $("rk-unduh").onclick = (ev) => jalankanUnduh(ev.currentTarget, async () => {
   if (!PRK) throw new Error("Belum ada data. Muat ulang dulu.");
   const c = $("rk-cakupan").value, j = JENIS_RK[$("rk-jenis").value] || JENIS_RK.tinggi, cak = labelPilihan("rk-cakupan");
   const L = PRK.siswa.filter(dalamCakupanRk(c)), H = urutRk(L, j), B = bandingRk(c, L);
-  const catatan = j.ket(periodeRk()) + " Hanya kemajuan resmi (sesi kelas); latihan mandiri tidak ikut. Level tuntas mengikuti tahapan yang berlaku bagi siswa. Nilai yang sama mendapat peringkat yang sama."
+  const catatan = j.ket(periodeRk()) + (j.kolom === "mandiri"
+      ? " Peringkat dari latihan mandiri (di luar sesi kelas); kolom selain \"mandiri\" tetap kemajuan resmi."
+      : " Hanya kemajuan resmi (sesi kelas); kolom \"mandiri\" hanya sebagai keterangan.") + " Level tuntas mengikuti tahapan yang berlaku bagi siswa. Nilai yang sama mendapat peringkat yang sama."
     + (PRK.periode.kasar ? " " + KASAR_RK : "");
   const nama = `Peringkat_English_Reading_${potongNama(j.nama)}_${potongNama(cak)}_${tglBerkas()}.xlsx`;
   const lembar = [{ nama: "Peringkat", judul: `Peringkat: ${j.nama}`, sub: `${cak} · ${PRK.periode.nama}`,
@@ -1864,10 +1877,14 @@ $("rk-unduh").onclick = (ev) => jalankanUnduh(ev.currentTarget, async () => {
       { t: "Sub level per hari berlatih", w: 11, rata: "center", fmt: "0.00" }, { t: "Hari berlatih", w: 9, rata: "center" },
       { t: "Sub level dikerjakan", w: 10, rata: "center" }, { t: "Rata-rata nilai", w: 9, rata: "center", fmt: '0"%"', cf: CF_PERSEN },
       { t: "Menit latihan", w: 9, rata: "center" }, { t: "Sub level macet", w: 9, rata: "center" },
-      { t: "Lulus terakhir", w: 16, rata: "center", fmt: "dd/mm/yyyy hh:mm", size: 9 }, { t: "Terakhir aktif", w: 16, rata: "center", fmt: "dd/mm/yyyy hh:mm", size: 9 }],
+      { t: "Lulus terakhir", w: 16, rata: "center", fmt: "dd/mm/yyyy hh:mm", size: 9 }, { t: "Terakhir aktif", w: 16, rata: "center", fmt: "dd/mm/yyyy hh:mm", size: 9 },
+      { t: "Hari berlatih mandiri", w: 10, rata: "center" }, { t: "Kegiatan mandiri", w: 9, rata: "center" },
+      { t: "Rata-rata nilai mandiri", w: 9, rata: "center", fmt: '0"%"', cf: CF_PERSEN }, { t: "Menit mandiri", w: 9, rata: "center" },
+      { t: "Sub level lulus mandiri", w: 10, rata: "center" }, { t: "Terakhir mandiri", w: 16, rata: "center", fmt: "dd/mm/yyyy hh:mm", size: 9 }],
     baris: H.map(({ r, no }) => { const k = lengkapi(r);
       return [no, r.nama, r.nisn, r.kelas, posisiRk(r), k.levelTuntas, k.level, k.subLulus, r.lulus, r.hari ? Math.round(100 * lajuRk(r)) / 100 : "",
-        r.hari, r.n_sub, r.rata != null ? r.rata : "", Math.round(r.detik / 60), r.macet, waktuXL(r.lulus_terakhir), waktuXL(r.terakhir)]; }),
+        r.hari, r.n_sub, r.rata != null ? r.rata : "", Math.round(r.detik / 60), r.macet, waktuXL(r.lulus_terakhir), waktuXL(r.terakhir),
+        r.m_hari || 0, r.m_hasil || 0, r.m_rata != null ? r.m_rata : "", Math.round((r.m_detik || 0) / 60), r.m_lulus || 0, waktuXL(r.m_terakhir)]; }),
     catatan: [catatan] }];
   if (B) lembar.push({ nama: "Perbandingan", judul: B.judul, sub: `${cak} · ${PRK.periode.nama}`, beku: 1,
     kolom: [{ t: B.kolom, w: 16, tebal: true }, { t: "Siswa", w: 8, rata: "center" }, { t: "Berlatih dalam periode", w: 11, rata: "center" },
