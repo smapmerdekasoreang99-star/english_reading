@@ -480,3 +480,19 @@ Kalimat Pola selalu dirakit baru oleh `pola.js`, jadi jumlah soal berapa pun tet
   Bentuk kompleks dan tabel hanya tampil di Latihan bertahap (bagian *Soal pemahaman* lama melewatinya).
 - Di sub level 4 Tahap 4–5 ada **📄 Lihat teks bacaan**, seperti ujian sungguhan yang menyertakan teksnya.
 
+## Rekapitulasi perkembangan kelas (22 Okt 2026)
+
+Sub-tab Per Rombel digabung ke Rekapitulasi (22 Okt 2026, keputusan user): kotak ringkasan, sebaran posisi, dan tabel
+perbandingan kini di bagian bawah Rekapitulasi dengan judul "Ringkasan keseluruhan" (angka sejak awal, tidak mengikuti periode;
+id `pk-kelompok` tetap). Sub-tab yang tersisa: Rekapitulasi, Per Siswa, Peringkat.
+
+Sub-tab pertama di Perkembangan Siswa, pola sama dengan Matdas (RENCANA_REKAP_PERKEMBANGAN.md di folder induk).
+
+- Angka per periode dari `er_rekap_periode(p_pin, p_kelas, p_dari, p_sampai)` (migrasi `database_tryout/.../20261022100000_english_reading_rekap_periode.sql`):
+  rentang dikunci di dalam semester berjalan, pembanding = rentang sama panjang tepat sebelumnya; sesi kelompok saja.
+  Satuan = sub-kegiatan lulus (nilai >= 80, sama dengan `lulus7` di er_rekap); "akurasi" = rata-rata nilai sub-kegiatan
+  (`n_benar` = jumlah nilai / 100). Macet = rumus er_rekap (3 kali atau lebih dalam 30 hari tanpa mencapai 80).
+- Posisi siswa pada jalur bacaan dihitung di halaman dengan `lengkapi()` dari `er_rekap` (sama dengan Per Siswa); lintasan = tahap,
+  urutan = `bacaan.js`. Bila siswa hanya menempati sebagian kecil tahap, peta diperbesar dan diberi nomor level.
+- Grafik digambar `assets/rekap.js` (salinan dari Matematika_Dasar/assets/rekap.js; ubah di sana lalu salin).
+- "Semua rombel": rombel yang tidak berlatih pada periode itu disebut terpisah dan tidak ikut dibandingkan.

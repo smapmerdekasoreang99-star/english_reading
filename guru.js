@@ -137,7 +137,8 @@ function bukaTab(v) {
   if (v === "atur") muatAtur();
   if (v === "admin") muatAdmin();
   if (v === "tingkat") gambarTingkat();
-  if (v === "kelas" && SUB_TAB === "kelompok") muatPerKelompok();
+  if (v === "kelas" && SUB_TAB === "rekap") muatPerKelompok();
+  if (v === "kelas" && SUB_TAB === "rekap") muatRekap(true);
   if (v === "kelas" && SUB_TAB === "peringkat" && !PRK) muatPeringkat();
   if (v === "daftar") { muatDaftar(); muatSesi(); daftarT = setInterval(() => { if (!document.hidden) { muatDaftar(true); muatSesi(); } }, 30000); }
 }
@@ -212,9 +213,9 @@ async function muatKelas() {
   $("pil-siswa").innerHTML = '<option value="">— pilih siswa —</option>' + REKAP.map((r) => `<option value="${esc(r.nisn)}">${esc(r.nama)} (${esc(r.kelas)})</option>`).join("");
   gambarKelas();
 }
-$("pil-kelas").onchange = muatKelas;
+$("pil-kelas").onchange = () => { muatKelas(); if (SUB_TAB === "rekap") muatRekap(); };
 $("pil-urut").onchange = () => gambarKelas();
-$("btn-muat").onclick = muatKelas;
+$("btn-muat").onclick = () => { muatKelas(); if (SUB_TAB === "rekap") muatRekap(); };
 
 function gambarKelas() {
   const R = REKAP.slice(), mulai = R.filter(pernahMulai);
@@ -1656,17 +1657,98 @@ function gambarAtur() {
   });
 }
 
+/* ----------------------------------------------------------- Rekapitulasi perkembangan kelas (22 Okt 2026)
+   Pola sama dengan Matdas (RENCANA_REKAP_PERKEMBANGAN.md). Angka per periode dari er_rekap_periode (server mengunci
+   rentang di dalam semester berjalan); posisi siswa pada jalur bacaan dihitung di sini dengan lengkapi() dari er_rekap,
+   supaya sama dengan Per Siswa. Lintasan = tahap (semua bacaan, urutan bacaan.js). */
+const isoTgl = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+let RK_PER = { kunci: "7" }, RK_SMT = null, RK_PADA = 0, RK_KUNCI = "";
+try { const v = JSON.parse(localStorage.getItem("er_rekap_periode") || "null"); if (v && v.kunci) RK_PER = v; } catch (e) { /* bawaan 7 hari */ }
+function rkRentang() {
+  const kini = new Date(), mundur = (n) => { const d = new Date(kini); d.setDate(d.getDate() - n); return isoTgl(d); };
+  if (RK_PER.kunci === "7") return { dari: mundur(6), sampai: isoTgl(kini), label: "7 hari terakhir" };
+  if (RK_PER.kunci === "30") return { dari: mundur(29), sampai: isoTgl(kini), label: "30 hari terakhir" };
+  if (RK_PER.kunci === "smt") return { dari: "1900-01-01", sampai: isoTgl(kini), label: "semester ini" };
+  return { dari: RK_PER.dari, sampai: RK_PER.sampai, label: "" };
+}
+function rkTombol() { document.querySelectorAll("[data-rkper]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.rkper === RK_PER.kunci))); }
+function rkSimpan() { try { localStorage.setItem("er_rekap_periode", JSON.stringify(RK_PER)); } catch (e) { /* tidak diingat */ } }
+// jalur bacaan: tahap sebagai lintasan; posisi = urutan bacaan
+function rkJalur() {
+  const B = window.BACAAN;
+  return window.TAHAP.map((t) => { const L = B.filter((b) => b.tahap === t.no); return L.length ? { kode: "T" + t.no, nama: `Tahap ${t.no} · ${t.nama}`, n_level: L.length, awal: B.indexOf(L[0]) + 1 } : null; }).filter(Boolean);
+}
+function rkPosisi(D, rows) {
+  const B = window.BACAAN, peta = new Map(rows.map((r) => [r.nisn, r]));
+  D.total = B.length; D.jalur = rkJalur();
+  D.siswa.forEach((s) => {
+    const r = peta.get(s.nisn); if (!r || !pernahMulai(r)) return;
+    const k = lengkapi(r);
+    if (k.selesai) { s.selesai = true; s.tingkat = "selesai"; s.lewat = B.length; return; }
+    if (!k.posisi) return;
+    s.tingkat = "T" + k.posisi.tahap; s.lewat = B.indexOf(k.posisi); s.level = nomorLevel(k.posisi);
+    s.nama_tingkat = `Tahap ${k.posisi.tahap}`; s.posisi_teks = `Tahap ${k.posisi.tahap} · Level ${nomorLevel(k.posisi)}: ${k.posisi.judul}`;
+  });
+  D.macet = (D.macet || []).map((m) => { const b = B.find((x) => x.id === m.level); return { ...m, label: `${b ? b.judul : m.level} · sub ${m.sub}` }; });
+}
+async function muatRekap(bilaLama) {
+  const k = $("pil-kelas").value, r = rkRentang(), kunci = [k, r.dari, r.sampai].join("|"), isi = $("rk-isi");
+  if (bilaLama === true && kunci === RK_KUNCI && Date.now() - RK_PADA < 60000) return;
+  if (isi.querySelector(".rk")) isi.style.opacity = ".5"; else isi.innerHTML = '<p class="redup">Memuat…</p>';
+  try {
+    const [D, rows] = await Promise.all([rpc("er_rekap_periode", { p_pin: PIN, p_kelas: k || null, p_dari: r.dari, p_sampai: r.sampai }), k ? rpc("er_rekap", { p_pin: PIN, p_kelas: k }) : null]);
+    if ($("pil-kelas").value !== k) return;   // rombel sudah diganti selama memuat
+    RK_SMT = D.semester; RK_PADA = Date.now(); RK_KUNCI = kunci; D.label = r.label;
+    const tg = (x, thn) => new Date(x + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "short", ...(thn ? { year: "numeric" } : {}) });
+    $("rk-periode").innerHTML = `Periode: <b>${tg(D.dari)} – ${tg(D.sampai, true)}</b> (${D.hari} hari)` +
+      (D.dipotong && RK_PER.kunci !== "smt" ? " · <b>dipotong di awal semester</b>" : "") +
+      (RK_PER.kunci === "smt" ? ` · semester ${esc(D.semester.nama)}` : D.lalu ? ` · dibandingkan dengan ${tg(D.lalu.dari)} – ${tg(D.lalu.sampai)}${D.lalu.hari < D.hari ? " (dipotong di awal semester)" : ""}` : " · belum ada pembanding (awal semester)");
+    const opsi = { satuan: "kegiatan", kelompokLbl: "rombel", target: TUNTAS, nilaiRata: true,
+      macetKet: "Sub-kegiatan yang dicoba 3 kali atau lebih dalam 30 hari tanpa pernah mencapai nilai 80 (sama dengan label Macet di Per Siswa)." };
+    if (k) { rkPosisi(D, rows || []); REKAP_KELAS.rapor(isi, D, { ...opsi, bukaSiswa: (n) => bukaSiswa(n) }); }
+    else REKAP_KELAS.banding(isi, D, { ...opsi, bukaKelompok: (g) => { $("pil-kelas").value = g; muatKelas(); muatRekap(); } });
+  } catch (e) { isi.innerHTML = `<p class="buruk-teks">Gagal memuat rekapitulasi: ${esc(e.message)}</p>`; }
+  finally { isi.style.opacity = ""; }
+}
+document.querySelectorAll("[data-rkper]").forEach((b) => b.onclick = () => {
+  const k = b.dataset.rkper, form = $("rk-tgl");
+  if (k === "pilih") {
+    const buka = form.classList.contains("hidden"); form.classList.toggle("hidden", !buka); b.setAttribute("aria-expanded", String(buka));
+    if (buka) { const r = rkRentang(), dr = RK_SMT && r.dari < RK_SMT.dari ? RK_SMT.dari : r.dari;
+      $("rk-dari").value = dr; $("rk-sampai").value = r.sampai;
+      if (RK_SMT) ["rk-dari", "rk-sampai"].forEach((id) => { $(id).min = RK_SMT.dari; $(id).max = RK_SMT.sampai; });
+      $("rk-tgl-pesan").textContent = "Tanggal terisi periode yang sedang tampil; ubah salah satunya lalu tekan Terapkan."; $("rk-dari").focus(); }
+    return;
+  }
+  form.classList.add("hidden"); document.querySelector('[data-rkper="pilih"]').setAttribute("aria-expanded", "false");
+  RK_PER = { kunci: k }; rkTombol(); rkSimpan(); muatRekap();
+});
+$("rk-tgl").onsubmit = (e) => {
+  e.preventDefault(); const d = $("rk-dari").value, z = $("rk-sampai").value, pesan = $("rk-tgl-pesan");
+  if (!d || !z) { pesan.textContent = "Isi tanggal Dari dan Sampai."; return; }
+  if (z < d) { pesan.textContent = "Tanggal Sampai harus sesudah tanggal Dari."; $("rk-sampai").focus(); return; }
+  if (RK_SMT && (d < RK_SMT.dari || z > RK_SMT.sampai)) {
+    const tg = (x) => new Date(x + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+    pesan.textContent = `Pilih tanggal di dalam semester ${RK_SMT.nama} (${tg(RK_SMT.dari)} – ${tg(RK_SMT.sampai)}). Semester lalu ada di halaman Arsip; semester berikutnya belum dimulai.`; return;
+  }
+  RK_PER = { kunci: "pilih", dari: d, sampai: z }; rkTombol(); rkSimpan();
+  $("rk-tgl").classList.add("hidden"); document.querySelector('[data-rkper="pilih"]').setAttribute("aria-expanded", "false"); muatRekap();
+};
+rkTombol();
+
 /* ----------------------------------------------------------- Perkembangan Siswa: Per Siswa / Per Rombel */
-let SUB_TAB = "siswa";
+let SUB_TAB = "rekap";
 document.querySelectorAll(".subtab [data-sub]").forEach((b) => b.onclick = () => bukaSub(b.dataset.sub));
 function bukaSub(v) {
   SUB_TAB = v;
   document.querySelectorAll(".subtab [data-sub]").forEach((b) => { b.classList.toggle("on", b.dataset.sub === v); b.setAttribute("aria-selected", String(b.dataset.sub === v)); });
-  $("pk-siswa").classList.toggle("hidden", v !== "siswa"); $("pk-kelompok").classList.toggle("hidden", v !== "kelompok");
+  $("pk-rekap").classList.toggle("hidden", v !== "rekap");
+  $("pk-siswa").classList.toggle("hidden", v !== "siswa");
   $("pk-peringkat").classList.toggle("hidden", v !== "peringkat"); $("baris-kelas").classList.toggle("hidden", v === "peringkat");
   $("pil-urut").classList.toggle("hidden", v !== "siswa");
-  if (v === "kelompok") { if (REKAP.length) gambarKelas(); muatPerKelompok(); }
+  if (v === "rekap") { if (REKAP.length) gambarKelas(); muatPerKelompok(); }   // ringkasan keseluruhan di bawah Rekapitulasi
   if (v === "peringkat" && !PRK) muatPeringkat();
+  if (v === "rekap") muatRekap(true);
 }
 const selPosisi = (r, L) => !r ? '<td class="posisi"><span class="redup">–</span></td>'
   : `<td class="posisi" title="${esc(L.map((x) => x.nama).join(", "))}"><span class="pos-nm">${esc(lengkapi(r).selesai ? "Tamat" : `Tahap ${lengkapi(r).posisi.tahap}`)}</span>`
@@ -1696,7 +1778,7 @@ async function muatPerKelompok() {
     <tbody>${baris.join("") || '<tr><td colspan="11" class="kosong-data">Tidak ada siswa.</td></tr>'}</tbody>`;
   $("t-perkelompok").querySelectorAll("[data-kel]").forEach((tr) => tr.onclick = () => {
     if ([...$("pil-kelas").options].some((o) => o.value === tr.dataset.kel)) $("pil-kelas").value = tr.dataset.kel;
-    muatKelas();
+    muatKelas(); if (SUB_TAB === "rekap") { muatRekap(); $("rk-isi").scrollIntoView({ behavior: "smooth" }); }
   });
 }
 

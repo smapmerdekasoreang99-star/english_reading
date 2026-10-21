@@ -870,7 +870,7 @@ select.jl-bagian.diisi { border-color: var(--emas); background: var(--emas-kabut
         <p>Posisi, kemajuan, dan siswa yang perlu perhatian. Ketuk nama siswa untuk melihat analisisnya.</p></div></div>
       <div class="baris" id="baris-kelas">
         <select id="pil-kelas" style="max-width:220px" aria-label="Pilih rombel"></select>
-        <select id="pil-urut" style="max-width:240px" aria-label="Urutkan">
+        <select id="pil-urut" class="hidden" style="max-width:240px" aria-label="Urutkan">
           <option value="perhatian">Urut: perlu perhatian dulu</option>
           <option value="nama">Urut: nama</option>
           <option value="maju">Urut: kemajuan tertinggi</option>
@@ -881,17 +881,32 @@ select.jl-bagian.diisi { border-color: var(--emas); background: var(--emas-kabut
         <button class="btn-unduh utama" data-fmt="xlsx" id="btn-unduh-rekap" title="Rekap kemajuan dan sebaran per tahap dalam satu buku kerja Excel berformat">Unduh rekap</button>
       </div>
       <div class="subtab" role="tablist" aria-label="Tampilan perkembangan">
-        <button role="tab" data-sub="siswa" class="on" aria-selected="true">Per Siswa</button>
-        <button role="tab" data-sub="kelompok" aria-selected="false">Per Rombel</button>
+        <button role="tab" data-sub="rekap" class="on" aria-selected="true">Rekapitulasi</button>
+        <button role="tab" data-sub="siswa" aria-selected="false">Per Siswa</button>
         <button role="tab" data-sub="peringkat" aria-selected="false">Peringkat</button>
       </div>
-      <div id="pk-siswa">
-      <div class="kartu">
-        <div class="gulir"><table class="tabel" id="t-kelas" data-beku="2"></table></div>
-        <p class="redup kecil">Macet: satu sub level dicoba 3 kali atau lebih dalam 30 hari tanpa mencapai 80%. Tidak aktif: tidak berlatih dalam 7 hari terakhir. Nilai rendah: rata-rata sub level di bawah 70% (paling sedikit 10 hasil). <b>Kemajuan, nilai, dan posisi hanya dari sesi kelas yang diawasi.</b> Kolom <b>Latihan mandiri</b> = latihan di luar sesi (kemajuan terpisah, untuk menilai ketekunan); <b>Mandiri jauh di atas sesi</b> = rata-rata nilai mandiri 25 poin atau lebih di atas nilai sesi. Ketuk nama untuk melihat analisisnya.</p>
-      </div>
-      </div>
-      <div id="pk-kelompok" class="hidden">
+      <!-- Rekapitulasi (22 Okt 2026): rapor rombel terpilih, atau perbandingan bila "Semua rombel" -->
+      <div id="pk-rekap">
+        <div class="baris rk-periode">
+          <div class="rk-seg" role="group" aria-label="Periode">
+            <button type="button" data-rkper="7" aria-pressed="true">7 hari</button>
+            <button type="button" data-rkper="30" aria-pressed="false">30 hari</button>
+            <button type="button" data-rkper="smt" aria-pressed="false">Semester ini</button>
+            <button type="button" data-rkper="pilih" aria-pressed="false" aria-expanded="false" aria-controls="rk-tgl">Pilih tanggal…</button>
+          </div>
+        </div>
+        <form id="rk-tgl" class="rk-tgl hidden" novalidate>
+          <label for="rk-dari">Dari<input type="date" id="rk-dari"></label>
+          <label for="rk-sampai">Sampai<input type="date" id="rk-sampai"></label>
+          <button type="submit" class="kecil">Terapkan</button>
+          <p class="kecil redup" id="rk-tgl-pesan" role="status" style="margin:0;flex-basis:100%"></p>
+        </form>
+        <p class="kecil redup" id="rk-periode" aria-live="polite" style="margin:4px 0 10px"></p>
+        <div id="rk-isi"><p class="redup">Memuat…</p></div>
+        <!-- Ringkasan keseluruhan (dulu sub-tab Per Rombel, digabung 22 Okt 2026): angka sejak awal, tidak mengikuti periode -->
+        <div id="pk-kelompok" class="rk-keseluruhan">
+        <h2 style="margin:28px 0 2px">Ringkasan keseluruhan</h2>
+        <p class="redup kecil" style="margin:0 0 6px">Angka sejak awal latihan (tidak mengikuti pilihan periode di atas): ringkasan rombel terpilih, sebaran posisi siswa, dan perbandingan rombel.</p>
       <div class="ubin" id="k-ubin"></div>
       <div class="kartu">
         <h2>Sebaran posisi siswa</h2>
@@ -900,6 +915,13 @@ select.jl-bagian.diisi { border-color: var(--emas); background: var(--emas-kabut
       </div>
       <div class="kartu"><h2>Perbandingan rombel</h2><div class="gulir"><table class="tabel" id="t-perkelompok" data-beku="1"></table></div>
         <p class="redup kecil">Ketuk baris rombel untuk menampilkan ringkasan dan sebarannya di atas. Macet: satu sub level dicoba 3 kali atau lebih dalam 30 hari tanpa mencapai 80%. Tidak aktif: tidak berlatih dalam 7 hari terakhir.</p></div>
+      </div>
+      </div>
+      <div id="pk-siswa" class="hidden">
+      <div class="kartu">
+        <div class="gulir"><table class="tabel" id="t-kelas" data-beku="2"></table></div>
+        <p class="redup kecil">Macet: satu sub level dicoba 3 kali atau lebih dalam 30 hari tanpa mencapai 80%. Tidak aktif: tidak berlatih dalam 7 hari terakhir. Nilai rendah: rata-rata sub level di bawah 70% (paling sedikit 10 hasil). <b>Kemajuan, nilai, dan posisi hanya dari sesi kelas yang diawasi.</b> Kolom <b>Latihan mandiri</b> = latihan di luar sesi (kemajuan terpisah, untuk menilai ketekunan); <b>Mandiri jauh di atas sesi</b> = rata-rata nilai mandiri 25 poin atau lebih di atas nilai sesi. Ketuk nama untuk melihat analisisnya.</p>
+      </div>
       </div>
       <!-- Peringkat: sekolah / angkatan / rombel, menurut periode -->
       <div id="pk-peringkat" class="hidden">
@@ -1128,7 +1150,8 @@ select.jl-bagian.diisi { border-color: var(--emas); background: var(--emas-kabut
 <script src="assets/kepala-excel.js?v=1"></script>
 <script src="assets/excel.js?v=5"></script>
 <script src="assets/arsip.js?v=2"></script>
-<script src="guru.js?v=25"></script>
+<script src="assets/rekap.js?v=1"></script>
+<script src="guru.js?v=26"></script>
 <script>
 /* Tombol mata di kotak PIN (13 Okt 2026): ketuk untuk melihat PIN yang diketik, ketuk lagi untuk menyembunyikan.
    Berdiri sendiri (gaya disisipkan di sini) supaya sama di semua aplikasi. Kotak PIN ditandai data-lihat. */
