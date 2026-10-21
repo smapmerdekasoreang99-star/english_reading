@@ -227,9 +227,12 @@ function gambarKelas() {
     [macet, "macet", "macet", macet ? "buruk" : "redup-ubin"], [diam, "tidak berlatih 7 hari terakhir", "diam", diam ? "emas" : "redup-ubin"],
   ]);
   const baris = window.TAHAP.map((t) => ({ label: `Tahap ${t.no} · ${t.nama}`, n: R.filter((r) => { const k = lengkapi(r); return pernahMulai(r) && !k.selesai && k.posisi && k.posisi.tahap === t.no; }).length }));
+  // 22 Okt 2026: hanya rentang tahap yang berisi siswa (± satu tahap di kiri/kanan), sisanya disebut di catatan
+  const isi = baris.map((b, i) => (b.n ? i : -1)).filter((i) => i >= 0);
+  const tampil = isi.length ? baris.slice(Math.max(0, isi[0] - 1), Math.min(baris.length, isi[isi.length - 1] + 2)) : baris, sembunyi = baris.length - tampil.length;
   const tamat = R.filter((r) => lengkapi(r).selesai).length, belum = R.length - mulai.length;
-  if (tamat) baris.push({ label: "Tamat semua tahap", n: tamat });
-  batangMendatar($("g-sebaran"), baris, "siswa", belum ? `${belum} siswa belum mulai.` : "");
+  if (tamat) tampil.push({ label: "Tamat semua tahap", n: tamat });
+  batangMendatar($("g-sebaran"), tampil, "siswa", [belum ? `${belum} siswa belum mulai.` : "", sembunyi ? `${sembunyi} tahap lain tanpa siswa tidak ditampilkan.` : ""].filter(Boolean).join(" "));
 
   const u = $("pil-urut").value;
   R.sort((a, b) => u === "nama" ? a.nama.localeCompare(b.nama)
