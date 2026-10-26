@@ -759,6 +759,7 @@ const teksRingkas = (r) => `${r.tahap} tahap · ${r.level} level · ${r.sub} sub
 const aturanRombel = (kelas) => ((G.rombel.find((x) => x.kelas === kelas) || {}).aturan) || null;
 
 /* ---- Kotak "Aturan dan tahapan yang berlaku" di Sesi Kegiatan */
+let IK_BUKA = false;
 function gambarInfoKelompok() {
   if (!G) return;
   const pilih = $("dl-kelompok").value, kel = pilih ? [pilih] : G.rombel.map((r) => r.kelas);
@@ -785,7 +786,10 @@ function gambarInfoKelompok() {
         ${lainT ? `<div class="ik-lain"><span class="ik-judul">Diatur per siswa</span>${lainT}</div>` : ""}</div>
     </div>`;
   });
-  $("info-kel-isi").innerHTML = kel.length > 3 ? `<details class="ik-lipat"><summary>Tampilkan aturan dan tahapan ${kel.length} rombel</summary>${baris.join("")}</details>` : baris.join("");
+  $("info-kel-isi").innerHTML = kel.length > 3 ? `<details class="ik-lipat"${IK_BUKA ? " open" : ""}><summary>Tampilkan aturan dan tahapan ${kel.length} rombel</summary>${baris.join("")}</details>` : baris.join("");
+  // Ingat kotak lipat terbuka/tertutup: isi digambar ulang tiap muat ulang data (30 detik), 27 Okt 2026
+  const ikD = $("info-kel-isi").querySelector(".ik-lipat");
+  if (ikD) ikD.ontoggle = () => { IK_BUKA = ikD.open; };
 }
 
 /* ----------------------------------------------------------- profil aturan & tahapan khusus (seperti Matdas) */
