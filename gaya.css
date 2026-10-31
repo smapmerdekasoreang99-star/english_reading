@@ -791,3 +791,24 @@ a.tombol.utama { color: var(--utama-teks); }
 .er-mandiri-pilih { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; color: var(--tinta-2); }
 .er-mandiri-pilih label { display: flex; align-items: center; gap: 6px; }
 .er-mandiri-pilih select { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--garis-2); background: var(--kertas-2); font-size: 14px; }
+
+/* Penjelasan gagal merekam (31 Okt 2026) */
+.gagal-rekam { margin-top: 16px; padding: 14px 18px; border-radius: var(--r2); background: var(--merah-muda); color: var(--merah-tua); border: 1px solid #EBC3B9; font-size: 15px; line-height: 1.55; }
+.gagal-rekam p { margin: 0 0 8px; }
+.gagal-rekam .gagal-judul { font-weight: 800; font-size: 16px; }
+.gagal-rekam .gagal-sub { font-weight: 700; margin: 10px 0 4px; }
+.gagal-rekam ol, .gagal-rekam ul { margin: 0 0 8px; padding-left: 22px; }
+.gagal-rekam li { margin: 3px 0; }
+.gagal-rekam .gagal-bukan { margin: 10px 0 0; padding: 10px 12px; border-radius: var(--r1); background: rgba(255,255,255,.65); color: var(--tinta-2); font-size: 13.5px; }
+.gagal-rekam details { margin: 6px 0 0; }
+.gagal-rekam summary, .gagal-lipat summary, .tips-rekam summary { cursor: pointer; font-weight: 700; }
+.gagal-ringkas { display: block; color: var(--merah-tua); font-size: 14.5px; }
+.gagal-lipat { display: inline; }
+.gagal-lipat summary { display: inline; text-decoration: underline; color: var(--biru-tua); font-weight: 600; }
+.gagal-lipat[open] summary { display: block; margin-top: 4px; }
+.gagal-lipat .gagal-rekam { margin-top: 8px; }
+.tips-rekam { margin: 6px 0 4px; font-size: 14px; color: var(--tinta-2); }
+.tips-rekam summary { color: var(--biru-tua); font-weight: 600; }
+.tips-rekam ul { margin: 8px 0; padding-left: 22px; }
+.tips-rekam li { margin: 3px 0; }
+.tips-rekam .gagal-bukan { padding: 10px 12px; border-radius: var(--r1); background: var(--biru-muda); color: var(--biru-tua); font-size: 13.5px; margin: 0; }

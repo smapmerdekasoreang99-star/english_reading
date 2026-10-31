@@ -571,7 +571,7 @@
 
   async function mulaiRekam() {
     if (!SR) {
-      $('#hasil').innerHTML = `<div class="pesan">Koreksi bacaan membutuhkan pengenal suara. Buka tautan ini di <b>${browserSaran}</b> dan pastikan tersambung ke internet.</div>`;
+      $('#hasil').innerHTML = jelasGagal('tanpa-sr');
       return;
     }
     hentikanSuara();
@@ -658,16 +658,60 @@
     tombolRekam(false);
   }
 
-  const PESAN_GALAT = {
-    'not-allowed': 'Izin mikrofon ditolak. Izinkan mikrofon untuk halaman ini (ikon gembok di samping alamat), lalu coba lagi.',
-    'service-not-allowed': ios
-      ? 'Pengenal suara tidak aktif. Di iPhone: Pengaturan → Umum → Papan Ketik → nyalakan Aktifkan Dikte, lalu buka halaman ini di Safari.'
-      : 'Pengenal suara tidak diizinkan di browser ini. Gunakan Google Chrome.',
-    'audio-capture': 'Mikrofon tidak ditemukan. Periksa mikrofon atau headset.',
-    'network': 'Pengenal suara membutuhkan internet. Periksa sambungan (atau matikan VPN), lalu coba lagi.',
-    'language-not-supported': 'Bahasa Inggris tidak didukung pengenal suara di perangkat ini.',
-    'gagal-mulai': 'Pengenal suara gagal dinyalakan. Muat ulang halaman, lalu coba lagi.'
+
+  /* ---------- Penjelasan bila perekaman gagal (31 Okt 2026) ----------
+     Pengenal suara adalah layanan Google di browser: suara dikirim lewat internet, Google mengembalikan teks, aplikasi
+     hanya menilai teks itu. Bila browser/HP/internet tidak mengembalikan teks, aplikasi tidak bisa menilai. Penjelasan ini
+     menyebut penyebab dan langkahnya dengan bahasa siswa, supaya siswa & guru tahu apa yang harus diperbaiki. */
+  const ANDROID_GOOGLE = android ? 'Perbarui aplikasi <b>Google</b> dan <b>Chrome</b> di Play Store. Di sebagian HP (Xiaomi, Oppo, Vivo, Realme), pastikan aplikasi Google tidak dinonaktifkan.' : '';
+  const PENJELASAN = {
+    'tanpa-sr': { judul: 'Browser ini tidak bisa merekam bacaan', apa: 'Browser yang kamu pakai tidak punya pengenal suara, jadi suaramu tidak bisa diubah menjadi tulisan untuk dinilai.',
+      langkah: [ios ? 'Buka tautan ini di <b>Safari</b>.' : 'Buka tautan ini di <b>Google Chrome</b>.', 'Jangan membuka dari dalam WhatsApp, Instagram, atau aplikasi lain: ketuk ⋮ lalu <b>Buka di Chrome</b>' + (ios ? ' (iPhone: <b>Buka di Safari</b>)' : '') + '.', 'Firefox, Brave, dan sebagian browser bawaan HP memang tidak mendukung fitur ini.'] },
+    'not-allowed': { judul: 'Izin mikrofon belum diberikan', apa: 'Browser menolak memakai mikrofon untuk halaman ini, biasanya karena pernah memilih <b>Blokir</b> atau <b>Jangan izinkan</b>.',
+      langkah: ['Ketuk ikon <b>gembok</b> (atau ⓘ) di samping alamat halaman.', 'Pilih <b>Izin</b> / <b>Setelan situs</b> → <b>Mikrofon</b> → <b>Izinkan</b>.', 'Muat ulang halaman, lalu tekan 🎤 lagi.', android ? 'Bila tetap ditolak: Setelan HP → Aplikasi → Chrome → Izin → Mikrofon → <b>Izinkan</b>.' : ios ? 'Bila tetap ditolak: Pengaturan iPhone → Safari → Mikrofon → <b>Izinkan</b>.' : 'Bila tetap ditolak: periksa izin mikrofon untuk browser di pengaturan komputer.'] },
+    'service-not-allowed': { judul: 'Pengenal suara tidak aktif di perangkat ini', apa: 'Browser atau HP mematikan layanan pengubah suara menjadi tulisan.',
+      langkah: ios ? ['Pengaturan → Umum → Papan Ketik → nyalakan <b>Aktifkan Dikte</b>.', 'Buka halaman ini di <b>Safari</b>, lalu coba lagi.'] : ['Pakai <b>Google Chrome</b>, bukan browser lain.', ANDROID_GOOGLE || 'Perbarui Chrome ke versi terbaru.', 'Tutup Chrome sepenuhnya, buka lagi, lalu coba lagi.'] },
+    'audio-capture': { judul: 'Mikrofon tidak bisa dipakai', apa: 'HP atau laptop tidak memberikan suara dari mikrofon ke browser.',
+      langkah: ['Tutup aplikasi lain yang sedang memakai mikrofon: telepon/video call, perekam suara, Zoom/Meet, perekam layar.', 'Lepas headset/earphone Bluetooth, atau pastikan mikrofonnya menyala.', 'Pastikan lubang mikrofon tidak tertutup jari atau casing.', 'Muat ulang halaman, lalu coba lagi.'] },
+    'network': { judul: 'Internet tidak sampai ke pengenal suara', apa: 'Suaramu harus dikirim ke server Google untuk diubah menjadi tulisan, tetapi sambungannya terputus atau terlalu lambat.',
+      langkah: ['Matikan <b>VPN</b> dan aplikasi penghemat data/pemblokir iklan.', 'Pindah ke sinyal yang lebih kuat, atau ganti Wi-Fi ↔ data seluler.', 'Bila banyak siswa memakai Wi-Fi yang sama, coba data seluler.', 'Tunggu sebentar, lalu tekan 🎤 lagi.'] },
+    'language-not-supported': { judul: 'Bahasa Inggris belum tersedia di pengenal suara HP ini', apa: 'Layanan suara di HP belum punya bahasa Inggris (en-US).',
+      langkah: [ANDROID_GOOGLE || 'Perbarui browser ke versi terbaru.', 'Bila tetap muncul, pakai HP lain atau laptop dengan Chrome, dan sampaikan ke guru.'] },
+    'gagal-mulai': { judul: 'Pengenal suara belum siap', apa: 'Browser belum berhasil menyalakan pengenal suara, biasanya karena rekaman sebelumnya belum benar-benar selesai.',
+      langkah: ['Tunggu 2–3 detik, lalu tekan 🎤 lagi.', 'Bila tetap gagal, muat ulang halaman (tarik ke bawah atau tekan ⟳).'] },
+    'tak-dikenali': { judul: 'Suaramu terdengar, tetapi belum dikenali sebagai kata', apa: 'Mikrofon menangkap suara, tetapi pengenal suara Google tidak mengembalikan kata apa pun.',
+      langkah: ['Pastikan internet lancar dan <b>VPN mati</b> — ini penyebab paling sering.', 'Bacalah teks <b>bahasa Inggris</b>-nya (bukan terjemahannya), dengan suara jelas dan tidak terlalu cepat.', 'Jangan terlalu dekat ke mikrofon (± 15–30 cm) dan hindari ruangan yang sangat bising.', 'Tekan 🎤 lalu langsung mulai membaca.'] },
+    'senyap': { judul: 'Tidak ada suara yang terdengar', apa: 'Pengenal suara tidak mendengar apa pun selama rekaman.',
+      langkah: ['Mulai membaca <b>segera</b> setelah menekan 🎤 — pengenal berhenti sendiri bila lama tidak ada suara.', 'Bacalah lebih keras dan dekatkan HP (± 15–30 cm).', 'Pastikan lubang mikrofon tidak tertutup jari atau casing, dan headset Bluetooth tidak tersambung.', 'Bila grafik suara sama sekali tidak bergerak, periksa izin mikrofon (ikon gembok di samping alamat).'] },
+    'lain': { judul: 'Pengenal suara berhenti tiba-tiba', apa: 'Browser menghentikan pengenal suara karena gangguan sementara.',
+      langkah: ['Tekan 🎤 lagi.', 'Bila berulang, muat ulang halaman, matikan VPN, dan pastikan memakai ' + (ios ? 'Safari' : 'Google Chrome') + '.'] },
   };
+  const SEMUA_PENYEBAB = [
+    '<b>Browser</b> — harus ' + (ios ? 'Safari' : 'Google Chrome') + ', dibuka langsung (bukan dari dalam WhatsApp/Instagram).',
+    '<b>Izin mikrofon</b> — harus diizinkan untuk halaman ini (ikon gembok di samping alamat).',
+    '<b>Internet</b> — suaramu dikirim ke server Google; sinyal lemah, Wi-Fi yang penuh, atau <b>VPN</b> membuatnya gagal.',
+    '<b>Layanan suara di HP</b> — aplikasi Google/Chrome yang lama atau dinonaktifkan' + (ios ? ' (iPhone: Dikte harus aktif)' : '') + '.',
+    '<b>Mikrofon sedang dipakai</b> — telepon, video call, perekam suara/layar, atau headset Bluetooth.',
+    '<b>Cara membaca</b> — terlalu pelan, terlalu jauh, mikrofon tertutup, ruangan bising, atau membaca terjemahannya.',
+    '<b>Terlalu lama diam</b> — pengenal suara berhenti sendiri bila beberapa detik tidak ada suara.',
+    '<b>Belum sampai akhir</b> — nilai Baca &amp; Koreksi hanya dicatat bila paragraf dibaca sampai (hampir) akhir.',
+  ];
+  const BUKAN_APLIKASI = '<b>Kenapa ini bukan kerusakan aplikasi?</b> Aplikasi ini tidak mengubah suara menjadi tulisan sendiri. Tugas itu dikerjakan pengenal suara Google di browser, lewat internet. Aplikasi hanya menilai tulisan yang dikirim Google. Bila browser, HP, mikrofon, atau internet tidak mengirim tulisan, tidak ada yang bisa dinilai. Langkah di atas memperbaiki penyebabnya. Bila sudah dicoba semua dan tetap gagal, sampaikan ke guru: guru dapat memasang <b>Tanpa Baca</b> untukmu.';
+  const kodeGagal = (g, adaSuara) => PENJELASAN[g] ? g : g ? 'lain' : adaSuara ? 'tak-dikenali' : 'senyap';
+  const isiPenjelasan = (kode) => {
+    const p = PENJELASAN[kode] || PENJELASAN.lain;
+    return '<p class="gagal-apa">' + p.apa + '</p><p class="gagal-sub">Coba langkah ini:</p><ol>' + p.langkah.filter(Boolean).map(l => '<li>' + l + '</li>').join('') + '</ol>'
+      + '<details class="gagal-semua"><summary>Semua kemungkinan penyebab</summary><ul>' + SEMUA_PENYEBAB.map(l => '<li>' + l + '</li>').join('') + '</ul></details>'
+      + '<p class="gagal-bukan">' + BUKAN_APLIKASI + '</p>';
+  };
+  // Kotak lengkap (Baca & Koreksi) atau ringkas dengan lipatan (soal Ucapkan, latihan per kata).
+  const jelasGagal = (kode, ringkas) => {
+    const p = PENJELASAN[kode] || PENJELASAN.lain;
+    return ringkas
+      ? '<span class="gagal-ringkas"><b>' + p.judul + '.</b> <details class="gagal-lipat"><summary>Kenapa? Lihat cara mengatasinya</summary><div class="gagal-rekam">' + isiPenjelasan(kode) + '</div></details></span>'
+      : '<div class="gagal-rekam"><p class="gagal-judul">🎤 ' + p.judul + '</p>' + isiPenjelasan(kode) + '</div>';
+  };
+  const tipsRekam = () => '<details class="tips-rekam"><summary>🎤 Tips agar rekaman berhasil (baca bila gagal)</summary><ul>' + SEMUA_PENYEBAB.map(l => '<li>' + l + '</li>').join('') + '</ul><p class="gagal-bukan">' + BUKAN_APLIKASI + '</p></details>';
 
   // Syarat tuntas: kosakata & pola = pelafalan; bacaan Tahap 1–2 = pelafalan + pemahaman;
   // bacaan Tahap 3–4 = pemahaman saja (fokus TKA), pelafalan menjadi latihan tambahan.
@@ -934,7 +978,7 @@
       aturTombolUlang(baris, false);
       if (bentrok && !alternatif) { ulangKata(baris); return; }   // mikrofon bentrok dengan grafik: ulangi dengan grafik cadangan
       if (!alternatif || !alternatif.length) {
-        keluaran.innerHTML = `<small class="latih-pesan">${esc(PESAN_GALAT[galat] || 'Tidak terdengar. Tekan 🎤 lalu ucapkan katanya dengan jelas.')}</small>`;
+        keluaran.innerHTML = jelasGagal(kodeGagal(galat, false), true);
         return;
       }
       const n = nilaiSatuKata(target, alternatif);
@@ -970,9 +1014,7 @@
     const ucap = kataUcapan(segmen);
     if (!ucap.length) {
       kini.kata.forEach(w => w.el.classList.remove('benar'));
-      hasilEl.innerHTML = `<div class="pesan">${esc(PESAN_GALAT[r.galat] || (r.galat ? 'Pengenal suara berhenti (' + r.galat + '). Coba lagi.'
-        : grafikDengar ? 'Mikrofon menangkap suaramu, tetapi pengenal suara belum mengenali kata apa pun. Pastikan internet lancar (matikan VPN), bacalah teks bahasa Inggrisnya dengan jelas, lalu tekan Baca & Koreksi lagi.'
-        : 'Tidak ada suara yang terdengar. Dekatkan mikrofon dan bacalah lebih keras.'))}</div>`;
+      hasilEl.innerHTML = jelasGagal(kodeGagal(r.galat, grafikDengar));
       return;
     }
 
@@ -1037,7 +1079,7 @@
         })).join('')}</div>`
         : (dibaca ? '<p>Semua kata yang kamu baca terdengar tepat. 👏</p>' : '')}
       ${pesanSyarat}
-      ${lengkap ? (baruTerbuka ? '' : statusLevelHTML()) : '<p class="lanjut">Baca sampai akhir agar skormu tercatat.</p>'}
+      ${lengkap ? (baruTerbuka ? '' : statusLevelHTML()) : `<p class="lanjut">Rekamanmu berhasil, tetapi <b>${sisa} kata terakhir belum terdengar</b>, jadi skornya belum dicatat. Skor Baca &amp; Koreksi hanya dicatat bila paragraf dibaca sampai (hampir) akhir. Tekan 🎤 lagi dan bacalah sampai kalimat terakhir tanpa berhenti lama.</p>`}
       <details><summary>Yang terdengar oleh aplikasi</summary><p>${esc(teksUcap)}</p></details>
       <p class="catatan">Angka di bawah tiap kata adalah perkiraan dari pengenal suara otomatis: kata yang dikenali memakai
         tingkat keyakinan pengenal, kata yang tidak dikenali memakai kemiripan dengan kata yang terdengar. Belum menilai tekanan
@@ -1805,7 +1847,7 @@
       tombol.classList.remove('aktif'); tombol.textContent = '🎤 Ucapkan lagi';
       if (!alternatif || !alternatif.length) {
         // Tidak terdengar: belum dihitung, boleh mencoba lagi.
-        $('#lt-dengar').textContent = PESAN_GALAT[galat] || 'Tidak terdengar. Tekan 🎤 lalu ucapkan dengan jelas.';
+        $('#lt-dengar').innerHTML = jelasGagal(kodeGagal(galat, false), true);
         return;
       }
       tombol.hidden = true;
@@ -2547,6 +2589,7 @@
         <button id="t-arti" class="tautan"></button>
       </div>
       <p class="petunjuk" id="petunjuk">${petunjuk}</p>
+      ${tipsRekam()}
       <div class="kotak-grafik" id="kotak-grafik" hidden>
         <canvas id="grafik" aria-label="Grafik suara yang tertangkap mikrofon"></canvas>
         <div class="status-grafik" id="status-grafik"></div>
