@@ -295,7 +295,17 @@ Kemajuan yang sudah ada saat fitur ini dipasang disalin ke kedua jalur.
   **Mandiri jauh di atas sesi** (rata-rata nilai mandiri ≥ 25 poin di atas nilai sesi).
 - Sub-tab **Peringkat → Paling rajin latihan mandiri** (17 Okt 2026): urut hari berlatih mandiri, lalu kegiatan, lalu waktu,
   untuk periode 7/30 hari, semester, atau sejak awal (`er_peringkat` kolom `m_*`); jenis peringkat lain tetap resmi. Guru hanya melihat rombel miliknya, admin semua.
-- Latihan mandiri tidak harus sama dengan sesi. Guru bisa memasang **aturan latihan mandiri** (profil aturan
+- **Tiga pilihan (4 Nov 2026, seperti Matdas):** kolom **Latihan mandiri** di Pengaturan & Tahapan bagian 3, bilah siswa
+  terpilih, dan Analisis Siswa (`er_mandiri_pilihan`; pilihan siswa mengalahkan rombel). **Lanjut dari sesi kegiatan**
+  (bawaan, tanpa baris pengaturan): tahapan dan aturan sesi, siswa melihat gabungan kemajuan resmi + mandiri (`er_paket`),
+  perangkat mengirim yang berubah saja ke `er_kemajuan.mandiri`, tanda perangkat `mandiri:sesi`. **Siswa bebas memilih
+  materi**, aturan Pengaturan Umum. **Tahapan khusus** buatan guru, dengan aturan dasar + aturan per bagian tahapan itu
+  (`er_atur_tahapan_mandiri`). Pada jalur dari guru siswa tidak memilih jumlah soal; sesudah tahapan selesai tombol
+  "Berlatih materi lain" melepasnya di perangkat itu. Mengganti pilihan menutup latihan mandiri yang berjalan. Aturan atau
+  saran lama tetap berjalan dan tampil "Aturan lama" sampai guru memilih. Kemajuan resmi tidak pernah ditulis dari mandiri.
+- **Pantauan:** Perkembangan Siswa → sub-tab **Latihan Mandiri** (`er_pantau_mandiri`, satu rombel). Sesi Kegiatan punya saringan
+  **Sedang latihan mandiri**, kolom Posisi menampilkan posisi mandiri + resmi, dan hanya menampilkan NISN.
+- Sebelum 4 Nov 2026: latihan mandiri tidak harus sama dengan sesi. Guru bisa memasang **aturan latihan mandiri** (profil aturan
   tersendiri, mis. Harus Dengar/Baca menyala untuk latihan pengucapan di rumah walau mati di sekolah) dan
   **saran latihan mandiri** (tahapan khusus sebagai anjuran) per rombel atau per siswa (`er_mandiri_kelas`,
   `er_mandiri_siswa`). Siswa bebas memilih tahap dan level; saran tampil sebagai "Saran latihan dari guru" dan bisa dilepas.

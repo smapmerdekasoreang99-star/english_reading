@@ -383,6 +383,13 @@ span.ab-asal.a-umum { background: var(--kertas-3); color: var(--tinta-2); box-sh
 .ck-kepala { display: flex; justify-content: space-between; align-items: center; gap: var(--j3); flex-wrap: wrap; margin-top: var(--j4); padding-top: var(--j3); border-top: 1px solid var(--garis); }
 .ck-kepala > div { display: grid; }
 .kel-tabel select { min-width: 190px; padding: var(--j2); font-size: var(--h-m); }
+.kel-mandiri-berlaku { margin-top: var(--j2); padding-top: var(--j2); border-top: 1px solid var(--garis); }
+#pm-tabel td.pm-sel { white-space: nowrap; }
+#pm-tabel td.angka { white-space: nowrap; }
+#pm-tabel td.pm-tahap { min-width: 190px; }
+#pm-tabel td.pm-tahap small { display: block; color: var(--tinta-2); font-size: var(--h-s); }
+.subtab { max-width: 100%; overflow-x: auto; }
+.subtab button { flex: none; }
 /* Lencana ringkas di tabel: satu baris, nama panjang dipotong (lengkap di judul) */
 .lencana.ringkas { display: inline-block; margin: 0; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
 .lencana-daftar { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; min-width: 210px; max-width: 260px; }   /* cukup lebar: 2–3 lencana sebaris, baris tabel tetap pendek */
@@ -487,6 +494,7 @@ body.ct-terkunci { overflow: hidden; }
 /* ---- Daftar siswa ---- */
 .daftar-alat { display: grid; grid-template-columns: 190px 150px minmax(0, 1fr) 190px auto auto; gap: var(--j2); align-items: center; }
 #dl-tingkat:disabled { opacity: .5; cursor: not-allowed; }   /* tingkat hanya untuk pilihan "Semua" */
+#dl-status { font-size: var(--h-s); }   /* "Sedang latihan mandiri" muat di kotak 190px */
 @media (max-width: 960px) { .daftar-alat { grid-template-columns: 1fr 1fr; } .daftar-alat #dl-cari { grid-column: 1 / -1; grid-row: 1; } }
 /* Bilah aksi massal: muncul saat ada siswa dicentang, menempel di bawah layar */
 .massal { display: none; position: sticky; bottom: var(--j3); z-index: var(--lapis-bar); align-items: center; gap: var(--j2) var(--j3); flex-wrap: wrap;
@@ -884,6 +892,7 @@ select.jl-bagian.diisi { border-color: var(--emas); background: var(--emas-kabut
         <button role="tab" data-sub="rekap" class="on" aria-selected="true">Rekapitulasi</button>
         <button role="tab" data-sub="siswa" aria-selected="false">Per Siswa</button>
         <button role="tab" data-sub="peringkat" aria-selected="false">Peringkat</button>
+        <button role="tab" data-sub="mandiri" aria-selected="false">Latihan Mandiri</button>
       </div>
       <!-- Rekapitulasi (22 Okt 2026): rapor rombel terpilih, atau perbandingan bila "Semua rombel" -->
       <div id="pk-rekap">
@@ -923,6 +932,36 @@ select.jl-bagian.diisi { border-color: var(--emas); background: var(--emas-kabut
         <p class="redup kecil">Macet: satu sub level dicoba 3 kali atau lebih dalam 30 hari tanpa mencapai 80%. Tidak aktif: tidak berlatih dalam 7 hari terakhir. Nilai rendah: rata-rata sub level di bawah 70% (paling sedikit 10 hasil). <b>Kemajuan, nilai, dan posisi hanya dari sesi kelas yang diawasi.</b> Kolom <b>Latihan mandiri</b> = latihan di luar sesi (kemajuan terpisah, untuk menilai ketekunan); <b>Mandiri jauh di atas sesi</b> = rata-rata nilai mandiri 25 poin atau lebih di atas nilai sesi. Ketuk nama untuk melihat analisisnya.</p>
       </div>
       </div>
+      <!-- Pantau Latihan Mandiri per rombel (4 Nov 2026, seperti Matdas) -->
+      <div id="pk-mandiri" class="hidden">
+        <div class="baris rk-periode">
+          <div class="rk-seg" role="group" aria-label="Periode latihan mandiri">
+            <button type="button" data-pmper="7" aria-pressed="true">7 hari</button>
+            <button type="button" data-pmper="30" aria-pressed="false">30 hari</button>
+            <button type="button" data-pmper="smt" aria-pressed="false">Semester ini</button>
+            <button type="button" data-pmper="pilih" aria-pressed="false" aria-expanded="false" aria-controls="pm-tgl">Pilih tanggal…</button>
+          </div>
+          <select id="pm-saring" style="max-width:220px" aria-label="Saring siswa">
+            <option value="">Semua siswa</option>
+            <option value="online">Sedang berlatih</option>
+            <option value="belum">Belum mulai tahapan khusus</option>
+            <option value="jalan">Sedang di tahapan</option>
+            <option value="selesai">Tahapan selesai</option>
+            <option value="diam">Tidak berlatih dalam periode</option>
+          </select>
+          <span class="tumbuh"></span>
+          <button class="btn-unduh utama" data-fmt="xlsx" id="pm-unduh" title="Pantauan latihan mandiri dalam buku kerja Excel berformat">Unduh pantauan</button>
+        </div>
+        <form id="pm-tgl" class="rk-tgl hidden" novalidate>
+          <label for="pm-dari">Dari<input type="date" id="pm-dari"></label>
+          <label for="pm-sampai">Sampai<input type="date" id="pm-sampai"></label>
+          <button type="submit" class="kecil">Terapkan</button>
+        </form>
+        <p class="kecil redup" id="pm-periode" aria-live="polite" style="margin:4px 0 10px"></p>
+        <div class="ubin" id="pm-ubin"></div>
+        <div class="gulir seksi-tabel"><table class="tabel" id="pm-tabel"></table></div>
+        <p class="redup kecil">Latihan tanpa pengawasan guru, terpisah dari kemajuan resmi. Ketuk nama untuk melihat analisisnya.</p>
+      </div>
       <!-- Peringkat: sekolah / angkatan / rombel, menurut periode -->
       <div id="pk-peringkat" class="hidden">
       <div class="baris">
@@ -959,6 +998,7 @@ select.jl-bagian.diisi { border-color: var(--emas); background: var(--emas-kabut
         <select id="dl-status" aria-label="Saring status">
           <option value="">Semua status</option>
           <option value="online">Sedang berlatih</option>
+          <option value="mandiri">Sedang latihan mandiri</option>
           <option value="kunci">Terkunci</option>
           <option value="belum">Belum pernah masuk</option>
           <option value="mulai">Sudah pernah masuk</option>
@@ -987,10 +1027,8 @@ select.jl-bagian.diisi { border-color: var(--emas); background: var(--emas-kabut
           <div class="m-kendali"><select id="dl-aturan" aria-label="Profil aturan sesi untuk siswa terpilih"><option value="">Ikut rombel</option></select></div></div>
         <div class="m-baris"><span class="m-label">Tahapan sesi</span>
           <div class="m-kendali"><select id="dl-profil" aria-label="Tahapan sesi untuk siswa terpilih"><option value="">Ikut rombel</option></select></div></div>
-        <div class="m-baris"><span class="m-label">Aturan mandiri</span>
-          <div class="m-kendali"><select id="dl-aturan-m" aria-label="Profil aturan latihan mandiri untuk siswa terpilih"><option value="">Ikut rombel</option></select></div></div>
-        <div class="m-baris"><span class="m-label">Saran mandiri</span>
-          <div class="m-kendali"><select id="dl-saran-m" aria-label="Saran tahapan latihan mandiri untuk siswa terpilih"><option value="">Ikut rombel</option></select></div></div>
+        <div class="m-baris"><span class="m-label">Latihan mandiri</span>
+          <div class="m-kendali"><select id="dl-latih-m" aria-label="Latihan mandiri untuk siswa terpilih"></select></div></div>
         </div>
       </div>
       <div class="kartu">
@@ -1151,7 +1189,7 @@ select.jl-bagian.diisi { border-color: var(--emas); background: var(--emas-kabut
 <script src="assets/excel.js?v=5"></script>
 <script src="assets/arsip.js?v=2"></script>
 <script src="assets/rekap.js?v=1"></script>
-<script src="guru.js?v=26"></script>
+<script src="guru.js?v=27"></script>
 <script>
 /* Tombol mata di kotak PIN (13 Okt 2026): ketuk untuk melihat PIN yang diketik, ketuk lagi untuk menyembunyikan.
    Berdiri sendiri (gaya disisipkan di sini) supaya sama di semua aplikasi. Kotak PIN ditandai data-lihat. */

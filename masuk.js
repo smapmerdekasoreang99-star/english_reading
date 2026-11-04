@@ -141,7 +141,8 @@
   function pasangKepala() {
     const s = akun.siswa || {};
     $('hd-sub').textContent = akun.coba ? 'Uji coba guru · tidak masuk rekap' : [s.nama, s.kelas, akun.mode === 'kelas' ? 'Sesi kelas' : 'Latihan mandiri'].filter(Boolean).join(' · ');
-    if (!akun.coba && akun.mode === 'mandiri') $('uji-pita-wadah').innerHTML = '<div class="uji-pita" role="note"><b>Latihan mandiri</b> · kemajuan di sini terpisah dari kemajuan resmi. Kemajuan resmi hanya bertambah saat sesi kelas bersama guru.</div>';
+    if (!akun.coba && akun.mode === 'mandiri') { const pl = (akun.atur || {}).pilihan || '', tp = (akun.atur || {}).profil, ket = pl === 'sesi' ? 'melanjutkan latihan sesi kegiatan dari gurumu. Kemajuan' : pl.startsWith('t:') && tp ? `mengikuti tahapan "${esc(tp.nama)}" dari gurumu. Kemajuan` : 'kemajuan';
+      $('uji-pita-wadah').innerHTML = `<div class="uji-pita" role="note"><b>Latihan mandiri</b> · ${ket} di sini terpisah dari kemajuan resmi. Kemajuan resmi hanya bertambah saat sesi kelas bersama guru.</div>`; }
     $('btn-keluar').hidden = false;
     clearInterval(jamT);
     const jam = $('jam');
@@ -326,14 +327,17 @@
   function siapkan(p, pertama) {
     const nisn = p.siswa.nisn, milik = baca('er_milik', null), modeLokal = baca('er_mode_lokal', null);
     let lokal = dataLokal(), pindah = false;
-    const sama = milik === nisn && (modeLokal || 'kelas') === p.mode;
-    if (milik && !sama) { lokal = {}; antre = []; tulis('er_antre', antre); }          // siswa lain, atau mode lain
+    // "Lanjut dari sesi" memuat gabungan resmi + mandiri: tandanya berbeda supaya gabungan itu tidak terkirim ke catatan mandiri bila guru mengganti pilihan.
+    const tanda = p.mode === 'mandiri' && p.atur && p.atur.pilihan === 'sesi' ? 'mandiri:sesi' : p.mode;
+    const sama = milik === nisn && (modeLokal || 'kelas') === tanda;
+    const modeSama = milik === nisn && String(modeLokal || 'kelas').split(':')[0] === p.mode;
+    if (milik && !sama) { lokal = {}; if (!modeSama) { antre = []; tulis('er_antre', antre); } }          // siswa lain, atau mode lain; nilai antrean tetap bila hanya pilihan mandiri yang berubah
     else if (!milik && adaIsi(lokal)) pindah = true;                                     // kemajuan sebelum ada login
     const gab = gabung(p.kemajuan, sama || pindah ? lokal : {});
     tulisLokal(gab);
     dasar = sidik(p.kemajuan);          // yang sudah ada di server: tidak perlu dikirim lagi
     tulis('er_milik', nisn);
-    tulis('er_mode_lokal', p.mode);
+    tulis('er_mode_lokal', tanda);
     tulis('er_token', p.token);
     akun = p;
     window.ER_AKUN = { siswa: p.siswa, mode: p.mode, berakhir: p.berakhir, atur: p.atur || {}, pindah, pertama };
@@ -410,7 +414,8 @@
         layar.innerHTML = '';
         siapkan(p, true);
       } catch (er) {
-        salah(galat, er.message);
+        // NISN ikut ditampilkan supaya salah ketik langsung terlihat.
+        salah(galat, /tidak terdaftar/i.test(er.message) ? `${er.message} NISN yang terbaca: ${nisn}.` : er.message);
         if (/kode akses/i.test(er.message)) bukaKode();
       } finally { tombol.disabled = false; }
     };
