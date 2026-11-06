@@ -120,6 +120,29 @@
   window.addEventListener('pagehide', () => { if (akun && !akun.coba && (jadwal || antre.length)) { clearTimeout(jadwal); kirim(true); } });
   window.addEventListener('online', () => { if (akun) kirim(); });
 
+  // ---------- Catatan perekaman gagal (6 Nov 2026) ----------
+  // Jenis galat, yang terdengar oleh pengenal suara, dan perangkat → er_lapor_rekam. Hanya catatan untuk guru/admin:
+  // tidak menahan apa pun; bila server menolak (mis. sesi berakhir) catatan dibuang, bila internet putus dicoba lagi.
+  let antreRekam = baca('er_antre_rekam', []), jadwalRekam = null, kirimRekamJalan = false;
+  async function kirimRekam(keepalive) {
+    if (!akun || akun.coba || kirimRekamJalan || !antreRekam.length) return;
+    kirimRekamJalan = true;
+    const isi = antreRekam.slice(0, 20);
+    let lanjut = false;
+    try {
+      await rpc('er_lapor_rekam', { p_token: akun.token, p_data: isi }, { keepalive });
+      lanjut = true;
+    } catch (e) {
+      if (e.jaringan) { clearTimeout(jadwalRekam); jadwalRekam = setTimeout(kirimRekam, 30000); return; }
+    } finally {
+      kirimRekamJalan = false;
+    }
+    antreRekam = antreRekam.slice(isi.length); tulis('er_antre_rekam', antreRekam);
+    if (lanjut && antreRekam.length) setTimeout(kirimRekam, 500);
+  }
+  window.addEventListener('pagehide', () => { if (akun && !akun.coba && antreRekam.length) { clearTimeout(jadwalRekam); kirimRekam(true); } });
+  window.addEventListener('online', () => { if (akun) kirimRekam(); });
+
   // Antarmuka untuk app.js
   async function keluar() {
     clearTimeout(jadwal);
@@ -133,6 +156,11 @@
     kunci: KUNCI,
     jadwal: jadwalKirim,
     catat(h) { if (!akun || akun.coba || !h || !h.level) return; antre.push(h); tulis('er_antre', antre.slice(-200)); jadwalKirim(); },
+    rekam(d) {
+      if (!akun || akun.coba || !d) return;
+      antreRekam.push(d); antreRekam = antreRekam.slice(-40); tulis('er_antre_rekam', antreRekam);
+      clearTimeout(jadwalRekam); jadwalRekam = setTimeout(kirimRekam, 2000);
+    },
     keluar
   };
 
@@ -262,7 +290,8 @@
   }
   ['pointerdown', 'keydown', 'touchstart'].forEach(ev => document.addEventListener(ev, siapAlarm, { passive: true }));
   document.addEventListener('visibilitychange', () => (document.hidden ? pergi() : kembali()));
-  window.addEventListener('blur', pergi);
+  // Blur saat mikrofon disiapkan/merekam = kotak izin mikrofon, bukan pergi (6 Nov 2026); pindah aplikasi tetap terhitung.
+  window.addEventListener('blur', () => { try { if (window.ER_SEDANG_REKAM && window.ER_SEDANG_REKAM()) return; } catch (e) { /* abaikan */ } pergi(); });
   window.addEventListener('focus', kembali);
   window.addEventListener('pagehide', pergi);
   document.addEventListener('contextmenu', e => { if (diawasi()) e.preventDefault(); });

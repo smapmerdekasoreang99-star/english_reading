@@ -36,6 +36,21 @@
   }
   // Catat hasil untuk perkembangan siswa di halaman guru (masuk.js mengirimnya ke er_hasil).
   const catatHasil = h => { if (window.ER_SINKRON) window.ER_SINKRON.catat(h); };
+  // Catatan perekaman gagal (6 Nov 2026): jenis galat + yang terdengar + perangkat ke er_rekam_gagal, agar penyebab tiap HP
+  // bisa dilacak (pengenal suara tidak berbahasa Inggris, bising, lafal, izin). Tidak memengaruhi nilai.
+  function laporRekam(o) {
+    try {
+      if (!window.ER_SINKRON || !window.ER_SINKRON.rekam) return;
+      const alt = (o.alternatif || []).slice(0, 5).map(a => String(a.teks || '').trim().slice(0, 120));
+      window.ER_SINKRON.rekam({
+        tempat: o.tempat, level: o.level || '', target: o.target || '', kode: o.kode || '',
+        terdengar: String(o.terdengar != null ? o.terdengar : alt[0] || '').slice(0, 500),
+        rincian: Object.assign({}, o.rincian || {}, alt.length > 1 ? { alternatif: alt } : {}),
+        perangkat: { ua: ua.slice(0, 240), bahasa: (navigator.languages || [navigator.language]).filter(Boolean).slice(0, 4).join(','),
+          grafikCadangan: !!setelan.tanpaGrafik, dalamAplikasi }
+      });
+    } catch (e) { /* catatan saja */ }
+  }
   const setelan = Object.assign({ suara: '', laju: 0.9, tampilArti: false, tanpaGrafik: false, syaratBaca: 75, harusBaca: true, harusDengar: true,
     tampilJawaban: true, bilaSalah: 'akhir', batasSalah: 0 },
     baca('er_setelan', {}));
@@ -219,7 +234,31 @@
   }
   // Bentuk yang setara bagi pengenal suara (mis. "cannot" kadang ditulis "can't").
   const SETARA = { cannot: "can't" };
-  const kanon = w => (SETARA[w] || w).replace(/'/g, '');
+  // Kata yang bunyinya sama: pengenal suara tidak bisa membedakannya, jadi "two" yang ditulis "to" tetap benar.
+  // Dipakai soal (terimaUcap) dan, sejak 6 Nov 2026, juga Baca & Koreksi, latihan per kata, dan kalimat (lewat kanon).
+  const HOMOFON = {
+    'i': ['eye', 'aye'], 'to': ['two', 'too'], 'two': ['to', 'too'], 'four': ['for'], 'one': ['won'], 'eight': ['ate'],
+    'our': ['hour', 'are'], 'hour': ['our'], 'right': ['write'], 'write': ['right'], 'see': ['sea'], 'know': ['no'],
+    'son': ['sun'], 'in': ['inn'], 'or': ['oar', 'ore'], 'so': ['sew', 'sow'], 'we': ['wee'], 'you': ['u'], 'tea': ['tee'],
+    'new': ['knew'], 'week': ['weak'], 'whose': ["who's"], 'which': ['witch'], 'where': ['wear'], 'hear': ['here'],
+    'red': ['read'], 'read': ['red', 'reed'], 'night': ['knight'], 'aunt': ['ant'], 'cannot': ['can not'], 'then': ['than'],
+    'bread': ['bred'], 'do': ['due', 'dew']
+  };
+  // Satu wakil per kelompok bunyi (to/two/too → satu bentuk), tanpa tanda petik; frasa ("can not") tidak dipakai di sini.
+  const BUNYI = (() => {
+    const induk = {};
+    const akar = x => { while (induk[x] && induk[x] !== x) x = induk[x]; return x; };
+    const satu = w => w.replace(/'/g, '');
+    Object.entries(HOMOFON).forEach(([k, daftar]) => daftar.forEach(v => {
+      if (/\s/.test(v)) return;
+      const a = akar(satu(k)), b = akar(satu(v));
+      induk[a] = induk[a] || a; induk[b] = a;
+    }));
+    const h = {};
+    Object.keys(induk).forEach(x => { h[x] = akar(x); });
+    return h;
+  })();
+  const kanon = w => { const x = (SETARA[w] || w).replace(/'/g, ''); return BUNYI[x] || x; };
   function sama(a, b) {
     return a === b || kanon(a) === kanon(b);
   }
@@ -422,8 +461,21 @@
     statusGrafik('Menyiapkan mikrofon…', kotak);
     const AC = window.AudioContext || window.webkitAudioContext;
     if (setelan.tanpaGrafik || !AC || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { semu(); return; }
+    mikSejak = Date.now();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      // Batas waktu (6 Nov 2026): di sebagian HP Android (dilaporkan Samsung A13 dan Infinix) permintaan mikrofon
+      // tidak pernah selesai, sehingga tombol 🎤 tampak macet. Lewat 5 detik: pakai grafik cadangan, lanjut ke
+      // pengenal suara, dan ingat di perangkat ini; mikrofon yang terlambat diberikan langsung dilepas.
+      const minta = navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      const stream = await Promise.race([minta, new Promise(res => setTimeout(() => res(null), 5000))]);
+      if (!stream) {
+        minta.then(s => s.getTracks().forEach(t => t.stop()), () => {});
+        setelan.tanpaGrafik = true;
+        simpanSetelan();
+        laporRekam({ tempat: 'mikrofon', level: kini && kini.b ? kini.b.id : '', kode: 'mikrofon-macet', rincian: { detik: 5 } });
+        if (kotak.isConnected) semu();
+        return;
+      }
       if (!kotak.isConnected) { stream.getTracks().forEach(t => t.stop()); return; }
       const ac = new AC();
       if (ac.state === 'suspended') ac.resume().catch(() => {});
@@ -433,8 +485,16 @@
       grafik = { kotak, stream, ac, an, buf: new Float32Array(an.fftSize), raf: 0, level: [], waktu: 0,
                  nyaring: 0, pengenal: false, padaSenyap: null };
       langkahGrafik();
-    } catch (e) { semu(); }
+    } catch (e) {
+      laporRekam({ tempat: 'mikrofon', level: kini && kini.b ? kini.b.id : '', kode: 'mikrofon-' + String(e && e.name || 'galat').slice(0, 30) });
+      semu();
+    }
   }
+  // Selama mikrofon disiapkan atau merekam, kotak izin mikrofon dari browser/HP membuat halaman kehilangan fokus (blur)
+  // walau siswa tidak pergi. masuk.js memakai ini agar blur saat itu tidak dihitung keluar halaman; berpindah
+  // aplikasi/tab (visibilitychange) tetap dihitung.
+  let mikSejak = 0;
+  window.ER_SEDANG_REKAM = () => !!(rekam || ulang || (latih && latih.rec)) || Date.now() - mikSejak < 10000;
   /* Bentrok SENYAP (16 Okt 2026): di sebagian perangkat, selama grafik memegang mikrofon, pengenal suara
      hanya menerima hening tanpa galat apa pun — grafik bergerak, tetapi hasilnya "tidak ada suara yang
      terdengar". Grafik nyata menghitung bingkai bersuara (nyaring) dan mencatat apakah pengenal suara pernah
@@ -574,9 +634,14 @@
     }
   }
 
+  // Pesan gagal ada di bawah paragraf; di HP tidak terlihat tanpa menggulir, sehingga tombol 🎤 tampak tidak berbuat apa-apa.
+  const tampakkan = el => { try { if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* abaikan */ } };
+
   async function mulaiRekam() {
     if (!SR) {
       $('#hasil').innerHTML = jelasGagal('tanpa-sr');
+      laporRekam({ tempat: 'baca', level: kini && kini.b ? kini.b.id : '', kode: 'tanpa-sr' });
+      tampakkan($('#hasil'));
       return;
     }
     hentikanSuara();
@@ -852,7 +917,8 @@
 
   // ---------- Latihan ulang per kata ----------
   // Penilaian satu kata dari beberapa alternatif pengenal suara: cocok di alternatif
-  // pertama = keyakinan pengenal (paling rendah 60); cocok di alternatif lain = 70
+  // pertama = keyakinan pengenal, paling rendah 85 (6 Nov 2026: keyakinan Google untuk kata pendek sering 60-an
+  // padahal kata yang ditulisnya tepat, sehingga ucapan yang benar dinilai salah); cocok di alternatif lain = 70
   // (pengenal lebih condong ke kata lain); tidak cocok = kemiripan (paling tinggi 84).
   // Target boleh frasa ("good morning"): harus muncul berurutan di ucapan.
   function nilaiSatuKata(target, alternatif) {
@@ -865,7 +931,7 @@
       for (let j = 0; j + t.length <= kata.length && !cocok; j++) cocok = t.every((x, k) => sama(x, kata[j + k]));
       if (cocok) {
         const y = alternatif[a].yakin;
-        return a === 0 ? (y > 0 ? Math.max(60, Math.round(y * 100)) : 100) : 70;
+        return a === 0 ? (y > 0 ? Math.max(85, Math.round(y * 100)) : 100) : 70;
       }
       // Kemiripan dengan rangkaian kata yang panjangnya mendekati target.
       for (let j = 0; j < kata.length; j++) {
@@ -915,7 +981,8 @@
 
   // Satu baris latihan kata: dengar contoh, ucapkan, dinilai ulang.
   function barisLatih(o) {
-    return `<div class="latih-baris" data-norm="${esc(o.norm)}"${o.dek ? ' data-dek="1"' : ''}>
+    // data-kalimat (6 Nov 2026): kalimat contoh untuk "Ucapkan dalam kalimat" bila kata sendirian sulit dikenali.
+    return `<div class="latih-baris" data-norm="${esc(o.norm)}"${o.dek ? ' data-dek="1"' : ''}${o.kalimat ? ` data-kalimat="${esc(o.kalimat)}"` : ''}${o.level ? ` data-level="${esc(o.level)}"` : ''}>
       <span class="latih-kata">${esc(o.kata)}</span>
       <span class="latih-awal ${o.kelas || ''}">${esc(o.label)}</span>
       <button class="tombol kecil" data-ucap="${esc(o.kata)}" aria-label="Dengarkan contoh">🔊</button>
@@ -927,15 +994,27 @@
   function klikLatih(e) {
     const c = e.target.closest('[data-ucap]');
     if (c) { batalUlang(); ucapKata(c.dataset.ucap); return; }
+    const k = e.target.closest('[data-ulang-kalimat]');
+    if (k) { ulangKata(k.closest('.latih-baris'), true); return; }
     const u = e.target.closest('[data-ulang]');
     if (u) ulangKata(u.closest('.latih-baris'));
   }
 
-  let ulang = null;           // { rec, baris, batas }
-  function aturTombolUlang(baris, aktif) {
+  let ulang = null;           // { rec, baris, batas, kalimat }
+  function aturTombolUlang(baris, aktif, kalimat) {
     const t = baris.querySelector('[data-ulang]');
     t.classList.toggle('aktif', aktif);
-    t.textContent = aktif ? '● Ucapkan sekarang…' : '🎤 Ucapkan lagi';
+    t.textContent = aktif ? (kalimat ? '● Ucapkan kalimatnya…' : '● Ucapkan sekarang…') : '🎤 Ucapkan lagi';
+  }
+  // Kata pendek (she, he, it) sendirian sering ditebak Google sebagai kata lain ("TV"); di dalam kalimat jauh lebih tepat.
+  const tombolKalimat = baris => baris.dataset.kalimat
+    ? `<span class="latih-kalimat">Sulit dikenali sendirian? <button class="tombol kecil rekam" data-ulang-kalimat>🎤 Ucapkan dalam kalimat</button> <i>“${esc(baris.dataset.kalimat)}”</i></span>`
+    : '';
+  // Kalimat dianggap terdengar bila paling sedikit separuh katanya dikenali.
+  function liputanKalimat(kalimat, alternatif) {
+    const tt = kataUcapan([{ teks: kalimat }]).map(x => x.w);
+    if (!tt.length) return 0;
+    return Math.max(0, ...alternatif.map(a => cocokkan(tt, kataUcapan([a]).map(x => x.w)).filter(j => j >= 0).length / tt.length));
   }
   function batalUlang() {
     if (!ulang) return;
@@ -947,13 +1026,16 @@
     if (u.baris.isConnected) { aturTombolUlang(u.baris, false); const k = u.baris.querySelector('.latih-baru .kotak-grafik'); if (k) k.remove(); }
   }
 
-  function ulangKata(baris) {
+  function ulangKata(baris, pakaiKalimat) {
     if (!SR || rekam) return;
     const sebelumnya = ulang && ulang.baris;
     batalUlang();
     if (sebelumnya === baris) return;   // tekan lagi = batal
     hentikanSuara();
     const target = baris.dataset.norm;
+    const kalimat = pakaiKalimat ? baris.dataset.kalimat || '' : '';
+    const tempat = kalimat ? 'kalimat' : 'kata';
+    const level = baris.dataset.level || '';
     const keluaran = baris.querySelector('.latih-baru');
     const r = new SR();
     r.lang = 'en-US';
@@ -961,10 +1043,10 @@
     r.interimResults = false;
     r.maxAlternatives = 5;
     r.interimResults = true;   // hasil sementara menggerakkan grafik cadangan; nilai tetap dari hasil akhir
-    const u = { rec: r, baris, batas: 0 };
+    const u = { rec: r, baris, batas: 0, kalimat };
     ulang = u;
-    aturTombolUlang(baris, true);
-    keluaran.innerHTML = htmlGrafik(true);
+    aturTombolUlang(baris, true, kalimat);
+    keluaran.innerHTML = (kalimat ? `<small class="latih-kal-teks">Ucapkan: <b>“${esc(kalimat)}”</b></small>` : '') + htmlGrafik(true);
     let alternatif = null, galat = '', akhir = false, bentrok = false;
     sambungGrafik(r);
     r.onresult = e => {
@@ -981,28 +1063,51 @@
       clearTimeout(u.batas);
       hentikanGrafik();
       aturTombolUlang(baris, false);
-      if (bentrok && !alternatif) { ulangKata(baris); return; }   // mikrofon bentrok dengan grafik: ulangi dengan grafik cadangan
+      if (bentrok && !alternatif) { ulangKata(baris, pakaiKalimat); return; }   // mikrofon bentrok dengan grafik: ulangi dengan grafik cadangan
+      const lapor = (kode, rincian) => laporRekam({ tempat, level, target: kalimat ? target + ' | ' + kalimat : target, kode, alternatif: alternatif || [], rincian });
       if (!alternatif || !alternatif.length) {
-        keluaran.innerHTML = jelasGagal(kodeGagal(galat, false), true);
+        const kode = kodeGagal(galat, false);
+        lapor(kode, { galat });
+        keluaran.innerHTML = jelasGagal(kode, true) + (kalimat ? '' : tombolKalimat(baris));
         return;
       }
+      if (kalimat) {
+        const liput = liputanKalimat(kalimat, alternatif);
+        if (liput < 0.5) {
+          lapor('kalimat-belum-utuh', { liputan: Math.round(liput * 100) });
+          keluaran.innerHTML = `<span class="gagal-ringkas"><b>Kalimatnya belum terdengar utuh.</b> Bacalah seluruh kalimat dengan jelas, lalu coba lagi.</span>
+            <small>terdengar: “${esc(alternatif[0].teks.trim())}”</small>${tombolKalimat(baris)}`;
+          return;
+        }
+      }
       const n = nilaiSatuKata(target, alternatif);
+      if (n < 60) lapor('beda-kata', { nilai: n });
       const terbaik = Math.max(n, +(baris.dataset.terbaik || 0));
       baris.dataset.terbaik = terbaik;
       baris.classList.toggle('lulus', terbaik >= 85);
       const infoDek = baris.dataset.dek ? perbaruiDek(target, n) : '';
-      keluaran.innerHTML = `<b class="latih-nilai ${kelasNilai(n)}">${n}%</b>${n >= 85 ? ' ✓ Bagus!' : ''}
+      keluaran.innerHTML = `<b class="latih-nilai ${kelasNilai(n)}">${n}%</b>${n >= 85 ? ' ✓ Bagus!' : ''}${kalimat ? ' <small>(dalam kalimat)</small>' : ''}
         <small>terdengar: “${esc(alternatif[0].teks.trim())}”${terbaik > n ? ` · terbaik ${terbaik}%` : ''}</small>
-        ${infoDek ? `<small class="latih-dek">${esc(infoDek)}</small>` : ''}`;
+        ${infoDek ? `<small class="latih-dek">${esc(infoDek)}</small>` : ''}${n < 85 ? tombolKalimat(baris) : ''}`;
     };
     // Grafik dulu, baru pengenal suara (urutan yang sama dengan Baca & Koreksi).
     mulaiGrafik(keluaran.querySelector('.kotak-grafik')).then(() => {
       if (ulang !== u) { hentikanGrafik(); return; }
       saatSenyap(() => { try { r.abort(); } catch (e) { /* abaikan */ } });
-      // Pengaman: hentikan bila tidak ada suara dalam beberapa detik.
-      u.batas = setTimeout(() => { try { r.stop(); } catch (e) { /* abaikan */ } }, 6000);
+      // Pengaman: hentikan bila tidak ada suara dalam beberapa detik (kalimat diberi waktu lebih lama).
+      u.batas = setTimeout(() => { try { r.stop(); } catch (e) { /* abaikan */ } }, kalimat ? 10000 : 6000);
       try { r.start(); } catch (e) { batalUlang(); }
     });
+  }
+
+  // Kalimat untuk "Ucapkan dalam kalimat": contoh kosakata level (pendek, mis. "She is my teacher.") bila kata itu
+  // kosakata level; selain itu kalimat paragraf tempat kata itu berada, asal tidak lebih dari 14 kata.
+  function kalimatContoh(b, w) {
+    const kos = (b.kosakata || []).find(([k, , c]) => c && normFrasa(k) === w.norm);
+    if (kos) return kos[2];
+    const s = kini && kini.kalimat[w.k] ? kini.kalimat[w.k].teks.replace(/\s+/g, ' ').trim() : '';
+    const n = s ? s.split(' ').length : 0;
+    return n >= 2 && n <= 14 ? s : '';
   }
 
   function selesaiRekam() {
@@ -1019,7 +1124,10 @@
     const ucap = kataUcapan(segmen);
     if (!ucap.length) {
       kini.kata.forEach(w => w.el.classList.remove('benar'));
-      hasilEl.innerHTML = jelasGagal(kodeGagal(r.galat, grafikDengar));
+      const kode = kodeGagal(r.galat, grafikDengar);
+      laporRekam({ tempat: 'baca', level: kini.b.id, kode, terdengar: teksUcap, rincian: { galat: r.galat || '', grafikDengar } });
+      hasilEl.innerHTML = jelasGagal(kode);
+      tampakkan(hasilEl);
       return;
     }
 
@@ -1051,6 +1159,10 @@
     let rekor = false;
     const bacaSebelum = sudahBaca(kini.b);
     if (lengkap) catatHasil({ level: kini.b.id, jenis: 'baca', nilai: persen, rincian: { tepat, dibaca } });
+    if (!lengkap || persen < syaratBaca(kini.b)) {
+      laporRekam({ tempat: 'baca', level: kini.b.id, kode: lengkap ? 'akurasi-rendah' : 'belum-akhir', terdengar: teksUcap,
+        rincian: { total, dibaca, tepat, persen, syarat: syaratBaca(kini.b), galat: r.galat || '' } });
+    }
     if (lengkap && (skorTerbaik[kini.b.id] == null || persen > skorTerbaik[kini.b.id])) {
       skorTerbaik[kini.b.id] = persen;
       tulis('er_skor', skorTerbaik);
@@ -1080,7 +1192,8 @@
       <p>${tepat} dari ${dibaca} kata yang kamu baca dikenali dengan tepat.${sisa > 0 ? ` <b>${sisa} kata di akhir belum dibaca.</b>` : ''}${rekor ? ' 🏅 Skor terbaik baru!' : ''}</p>
       ${latih.length ? `<p>Latih kata berikut: tekan 🔊 untuk mendengar contoh, lalu 🎤 untuk mengucapkannya dan dinilai ulang.</p>
         <div class="latih-daftar">${latih.map(x => barisLatih({
-          norm: x.w.norm, kata: bersihKata(x.w.asli), label: x.n + '%', kelas: kelasNilai(x.n)
+          norm: x.w.norm, kata: bersihKata(x.w.asli), label: x.n + '%', kelas: kelasNilai(x.n),
+          kalimat: kalimatContoh(kini.b, x.w), level: kini.b.id
         })).join('')}</div>`
         : (dibaca ? '<p>Semua kata yang kamu baca terdengar tepat. 👏</p>' : '')}
       ${pesanSyarat}
@@ -1224,14 +1337,7 @@
   })();
 
   // Kata sebunyi: pengenal suara bisa menuliskan salah satunya (mis. "to" → "two").
-  const HOMOFON = {
-    'i': ['eye', 'aye'], 'to': ['two', 'too'], 'two': ['to', 'too'], 'four': ['for'], 'one': ['won'], 'eight': ['ate'],
-    'our': ['hour', 'are'], 'hour': ['our'], 'right': ['write'], 'write': ['right'], 'see': ['sea'], 'know': ['no'],
-    'son': ['sun'], 'in': ['inn'], 'or': ['oar', 'ore'], 'so': ['sew', 'sow'], 'we': ['wee'], 'you': ['u'], 'tea': ['tee'],
-    'new': ['knew'], 'week': ['weak'], 'whose': ["who's"], 'which': ['witch'], 'where': ['wear'], 'hear': ['here'],
-    'red': ['read'], 'read': ['red', 'reed'], 'night': ['knight'], 'aunt': ['ant'], 'cannot': ['can not'], 'then': ['than'],
-    'bread': ['bred'], 'do': ['due', 'dew']
-  };
+  // HOMOFON dipindah ke atas (dekat SETARA) sejak 6 Nov 2026 agar ikut dipakai Baca & Koreksi dan latihan per kata.
   const terimaUcap = daftar => [...new Set(daftar.flatMap(t => [t, ...(HOMOFON[normFrasa(t)] || [])]))];
   // Kata yang terjemahannya sama (mis. he/she = "dia") tidak saling menjadi pengecoh kalimat rumpang.
   const miripDengan = (b, k) => ((b.mirip || []).find(m => m.includes(k)) || []).filter(x => x !== k);
@@ -1852,12 +1958,20 @@
       tombol.classList.remove('aktif'); tombol.textContent = '🎤 Ucapkan lagi';
       if (!alternatif || !alternatif.length) {
         // Tidak terdengar: belum dihitung, boleh mencoba lagi.
-        $('#lt-dengar').innerHTML = jelasGagal(kodeGagal(galat, false), true);
+        const kode = kodeGagal(galat, false);
+        laporRekam({ tempat: 'soal', level: L.b && L.b.id, target: q.target, kode, rincian: { galat, sub: L.n } });
+        $('#lt-dengar').innerHTML = jelasGagal(kode, true);
         return;
       }
       tombol.hidden = true;
-      if (q.jenis === 'ucapK') { nilaiUcapKalimat(q, alternatif); return; }
+      if (q.jenis === 'ucapK') {
+        const h = nilaiKalimat(q, alternatif);
+        if (!h.ok) laporRekam({ tempat: 'soal', level: L.b && L.b.id, target: q.target, kode: 'beda-kalimat', alternatif, rincian: { persen: h.persen, sub: L.n } });
+        nilaiUcapKalimat(q, alternatif);
+        return;
+      }
       const nilai = Math.max(...q.terima.map(t => nilaiSatuKata(normFrasa(t), alternatif)));
+      if (nilai < 70) laporRekam({ tempat: 'soal', level: L.b && L.b.id, target: q.target, kode: 'beda-kata', alternatif, rincian: { nilai, sub: L.n } });
       $('#lt-dengar').innerHTML = `Terdengar: “${esc(alternatif[0].teks.trim())}” · <b class="latih-nilai ${kelasNilai(nilai)}">${nilai}%</b>`;
       nilaiSoal(nilai >= 70, nilai >= 70 ? '' : `Yang tepat: <b>${esc(huruf1(q.target))}</b>`);
     };

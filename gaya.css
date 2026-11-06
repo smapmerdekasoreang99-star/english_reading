@@ -124,6 +124,10 @@ button { cursor: pointer; border: 0; background: none; }
 .latih-baru { flex-basis: 100%; font-size: 15px; }
 .latih-baru:empty { display: none; }
 .latih-baru small { color: var(--tinta-2); margin-left: 6px; }
+/* Ucapkan dalam kalimat (6 Nov 2026) */
+.latih-kalimat { display: block; margin-top: 6px; font-size: 14px; color: var(--tinta-2); }
+.latih-kalimat .tombol { margin: 2px 4px; }
+.latih-baru small.latih-kal-teks { display: block; margin: 0 0 4px; }
 .latih-nilai { font-family: var(--huruf-judul); font-size: 20px; }
 .latih-nilai.benar { color: var(--hijau); } .latih-nilai.sedang { color: var(--emas-tua); } .latih-nilai.salah { color: var(--merah); }
 .latih-pesan { color: var(--merah-tua) !important; margin: 0 !important; }
