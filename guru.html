@@ -78,6 +78,7 @@
 .ubin > div { background: var(--kertas-2); border: 1px solid var(--garis); border-radius: var(--r3); padding: var(--j3) var(--j4); }
 .ubin .n { font-family: "Fraunces", Georgia, serif; font-size: 28px; font-weight: 700; color: var(--gelap); line-height: 1.1; font-variant-numeric: tabular-nums; }
 .ubin .l { font-size: var(--h-s); color: var(--tinta-2); }
+.ubin .l .dari { color: var(--tinta-3); white-space: nowrap; }
 
 .maju { display: flex; align-items: center; gap: var(--j2); min-width: 150px; }
 .maju .batang { flex: 1; }
@@ -910,7 +911,7 @@ select.jl-bagian.diisi { border-color: var(--emas); background: var(--emas-kabut
           <button type="submit" class="kecil">Terapkan</button>
           <p class="kecil redup" id="rk-tgl-pesan" role="status" style="margin:0;flex-basis:100%"></p>
         </form>
-        <p class="kecil redup" id="rk-periode" aria-live="polite" style="margin:4px 0 10px"></p>
+        <p class="kecil redup" id="rk-ket-periode" aria-live="polite" style="margin:4px 0 10px"></p>
         <div id="rk-isi"><p class="redup">Memuat…</p></div>
         <!-- Ringkasan keseluruhan (dulu sub-tab Per Rombel, digabung 22 Okt 2026): angka sejak awal, tidak mengikuti periode -->
         <div id="pk-kelompok" class="rk-keseluruhan">
@@ -1189,7 +1190,7 @@ select.jl-bagian.diisi { border-color: var(--emas); background: var(--emas-kabut
 <script src="assets/excel.js?v=5"></script>
 <script src="assets/arsip.js?v=2"></script>
 <script src="assets/rekap.js?v=1"></script>
-<script src="guru.js?v=27"></script>
+<script src="guru.js?v=28"></script>
 <script>
 /* Tombol mata di kotak PIN (13 Okt 2026): ketuk untuk melihat PIN yang diketik, ketuk lagi untuk menyembunyikan.
    Berdiri sendiri (gaya disisipkan di sini) supaya sama di semua aplikasi. Kotak PIN ditandai data-lihat. */

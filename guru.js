@@ -108,11 +108,14 @@ async function masuk(pin, diam) {
 function isiPilihanRombel() {
   const opsi = G.rombel.map((r) => `<option value="${esc(r.kelas)}">${esc(r.kelas)}</option>`).join("");
   const semua = G.rombel.length > 1 ? `<option value="">${PERAN === "admin" ? "Semua rombel" : "Semua rombel saya"}</option>` : "";
-  const k1 = $("pil-kelas").value || ssGet("er_kelas", null), k2 = $("dl-kelompok").value;
-  $("pil-kelas").innerHTML = opsi;
-  if (k1 && G.rombel.some((r) => r.kelas === k1)) $("pil-kelas").value = k1;
+  const k1 = $("pil-kelas").options.length ? $("pil-kelas").value : ssGet("er_kelas", null), k2 = $("dl-kelompok").value;
+  // 9 Nov 2026 (seperti Matdas): Perkembangan Siswa juga bisa "Semua rombel" dan "Semua tingkat 10/11/12".
+  const tk = G.rombel.length > 1 ? [...new Set(G.rombel.map(tingkatSiswa).filter(Boolean))].sort((a, b) => a - b) : [];
+  $("pil-kelas").innerHTML = opsi + semua + tk.map((t) => `<option value="t:${t}">Semua tingkat ${t}</option>`).join("");
+  if (k1 !== null && [...$("pil-kelas").options].some((o) => o.value === k1)) $("pil-kelas").value = k1;
   $("dl-kelompok").innerHTML = opsi + semua;
-  $("dl-kelompok").value = k2 && [...$("dl-kelompok").options].some((o) => o.value === k2) ? k2 : $("pil-kelas").value;
+  const ada2 = (v) => [...$("dl-kelompok").options].some((o) => o.value === v);
+  $("dl-kelompok").value = k2 && ada2(k2) ? k2 : ada2($("pil-kelas").value) ? $("pil-kelas").value : $("dl-kelompok").options[0] ? $("dl-kelompok").options[0].value : "";
   aturTingkat();
 }
 function gambarSinkron() {
@@ -224,14 +227,25 @@ async function rekapBanyak(kelas) {
 async function muatKelas() {
   const k = $("pil-kelas").value;
   ssSet("er_kelas", k);
-  if (!k) { $("t-kelas").innerHTML = '<tr><td class="kosong-data">Belum ada rombel.</td></tr>'; return; }
+  if (!G.rombel.length) { $("t-kelas").innerHTML = '<tr><td class="kosong-data">Belum ada rombel.</td></tr>'; return; }
   $("t-kelas").innerHTML = '<tr><td class="kosong-data">Memuat…</td></tr>';
-  try { REKAP = await rpc("er_rekap", { p_pin: PIN, p_kelas: k }); }
+  try { const tk = pilTingkat(); let R = pilKel() ? await rpc("er_rekap", { p_pin: PIN, p_kelas: k }) : await rekapBanyak(null);
+    if (tk) R = R.filter((r) => tingkatSiswa(r) === tk);
+    if ($("pil-kelas").value !== k) return;   // pilihan sudah diganti selama memuat
+    REKAP = R; }
   catch (e) { $("t-kelas").innerHTML = `<tr><td class="kosong-data">${esc(e.message)}</td></tr>`; return; }
   $("pil-siswa").innerHTML = '<option value="">— pilih siswa —</option>' + REKAP.map((r) => `<option value="${esc(r.nisn)}">${esc(r.nama)} (${esc(r.kelas)})</option>`).join("");
   gambarKelas();
 }
-$("pil-kelas").onchange = () => { muatKelas(); if (SUB_TAB === "rekap") muatRekap(); if (SUB_TAB === "mandiri") muatPantau(); };
+// Pilihan "Semua tingkat 12" (t:12): server diminta semua rombel, halaman menyaring rombel tingkat itu (9 Nov 2026).
+const pilTingkat = () => { const v = $("pil-kelas").value; return v.startsWith("t:") ? v.slice(2) : ""; };
+const pilKel = () => pilTingkat() ? "" : $("pil-kelas").value;
+// Baris rombel terpilih di "Perbandingan rombel" disorot; bila satu tingkat dipilih, hanya rombel tingkat itu.
+const tandaiKelompok = () => $("t-perkelompok").querySelectorAll("tr[data-kel]").forEach((tr) => {
+  tr.classList.toggle("dipilih", tr.dataset.kel === $("pil-kelas").value);
+  tr.hidden = !!pilTingkat() && tingkatSiswa({ kelas: tr.dataset.kel }) !== pilTingkat();
+});
+$("pil-kelas").onchange = () => { tandaiKelompok(); muatKelas(); if (SUB_TAB === "rekap") muatRekap(); if (SUB_TAB === "mandiri") muatPantau(); };
 $("pil-urut").onchange = () => gambarKelas();
 $("btn-muat").onclick = () => { muatKelas(); if (SUB_TAB === "rekap") muatRekap(); if (SUB_TAB === "mandiri") muatPantau(); };
 
@@ -257,16 +271,17 @@ function gambarKelas() {
     : u === "maju" ? lengkapi(b).levelTuntas - lengkapi(a).levelTuntas || a.nama.localeCompare(b.nama)
     : u === "aktif" ? hariSejak(a.terakhir) - hariSejak(b.terakhir)
     : bobot(b) - bobot(a) || lengkapi(a).levelTuntas - lengkapi(b).levelTuntas || a.nama.localeCompare(b.nama));
-  $("t-kelas").innerHTML = `<thead><tr><th>No</th><th>Nama</th><th>Posisi sekarang</th><th>Kemajuan</th>
+  const semua = !pilKel();
+  $("t-kelas").innerHTML = `<thead><tr><th>No</th><th>Nama</th>${semua ? "<th>Rombel</th>" : ""}<th>Posisi sekarang</th><th>Kemajuan</th>
     <th class="angka" title="Sub level yang lulus (≥ 80%) dalam 7 hari terakhir">Lulus 7 hari</th><th class="angka">Rata-rata nilai</th><th class="angka">Waktu latihan</th><th>Terakhir</th><th title="Latihan di luar sesi, 7 hari terakhir; tidak menaikkan kemajuan resmi">Latihan mandiri (7 hari)</th><th>Catatan</th></tr></thead><tbody>` +
     (R.length ? R.map((r, i) => {
       const k = lengkapi(r);
-      return `<tr class="klik" data-n="${esc(r.nisn)}"><td>${i + 1}</td><td><b>${esc(r.nama)}</b></td>
+      return `<tr class="klik" data-n="${esc(r.nisn)}"><td>${i + 1}</td><td><b>${esc(r.nama)}</b></td>${semua ? `<td>${esc(r.kelas)}</td>` : ""}
         <td class="posisi">${posisiHtml(r)}</td>
         <td><div class="maju"><div class="batang"><i style="width:${100 * k.levelTuntas / Math.max(1, k.level)}%"></i></div><span>${k.levelTuntas}/${k.level}</span></div></td>
         <td class="angka">${r.lulus7 || '<span class="redup">0</span>'}</td><td class="angka">${r.rata != null ? r.rata + "%" : "–"}</td><td class="angka">${r.detik ? lamaTeks(r.detik) : "–"}</td>
         <td>${sejakTeks(r.terakhir)}</td><td class="posisi">${mandiriHtml(r)}</td><td><span class="lencana-daftar">${status(r).map((s) => `<span class="lencana ringkas ${s.c}" title="${esc(s.t)}">${esc(s.t)}</span>`).join("")}</span></td></tr>`;
-    }).join("") : '<tr><td colspan="10" class="kosong-data">Tidak ada siswa.</td></tr>') + "</tbody>";
+    }).join("") : `<tr><td colspan="${semua ? 11 : 10}" class="kosong-data">Tidak ada siswa.</td></tr>`) + "</tbody>";
   $("t-kelas").querySelectorAll("tr[data-n]").forEach((tr) => tr.onclick = () => bukaSiswa(tr.dataset.n));
 }
 
@@ -345,14 +360,16 @@ function saringDaftar() {
       && (!st || (st === "online" ? ss.online : st === "mandiri" ? ss.online && ss.mode === "mandiri" : st === "kunci" ? ss.terkunci : st === "belum" ? !pernahMasuk(r) : st === "selesai" ? k.selesai : pernahMasuk(r))); });
 }
 function gambarDaftar() {
-  const D = DAFTAR, semua = !$("dl-kelompok").value;
+  // Kotak ringkasan mengikuti saringan tingkat, pencarian, dan status (9 Nov 2026, seperti Matdas).
+  const R = saringDaftar(), D = R, semua = !$("dl-kelompok").value;
+  const disaring = !!($("dl-tingkat").value || $("dl-status").value || $("dl-cari").value.trim());
   const n = (f) => D.filter(f).length, kunci = n((r) => (r.sesi || {}).terkunci), keluar7 = D.reduce((a, r) => a + (r.keluar7 || 0), 0), tamat = n((r) => lengkapi(r).selesai);
   $("dl-ubin").innerHTML = ubinHtml([
-    [D.length, "siswa di daftar", "siswa"], [n((r) => (r.sesi || {}).online), "sedang berlatih sekarang", "aktif", "baik"],
+    [D.length, disaring ? `siswa sesuai saringan <span class="dari">dari ${DAFTAR.length}</span>` : "siswa di daftar", "siswa"], [n((r) => (r.sesi || {}).online), "sedang berlatih sekarang", "aktif", "baik"],
     [n((r) => !pernahMasuk(r)), "belum pernah masuk", "diam", "emas"], [tamat, "tamat semua level", "level", tamat ? "baik" : "redup-ubin"],
     [kunci, "terkunci (keluar halaman)", "kunci", kunci ? "buruk" : "redup-ubin"], [keluar7, "keluar halaman, 7 hari terakhir", "keluar", keluar7 ? "emas" : "redup-ubin"],
   ]);
-  const R = saringDaftar(), ada = new Set(DAFTAR.map((r) => r.nisn));
+  const ada = new Set(DAFTAR.map((r) => r.nisn));
   [...PILIH].forEach((x) => { if (!ada.has(x)) PILIH.delete(x); });
   const semuaDipilih = R.length > 0 && R.every((r) => PILIH.has(r.nisn));
   $("t-daftar").innerHTML = `<thead><tr><th class="pilih ubah"><input type="checkbox" id="dl-semua" ${semuaDipilih ? "checked" : ""} title="Pilih semua yang tampil" aria-label="Pilih semua siswa yang tampil"></th><th>No</th><th>Nama</th><th>NISN</th>${semua ? "<th>Rombel</th>" : ""}
@@ -1732,17 +1749,19 @@ async function muatRekap(bilaLama) {
   if (bilaLama === true && kunci === RK_KUNCI && Date.now() - RK_PADA < 60000) return;
   if (isi.querySelector(".rk")) isi.style.opacity = ".5"; else isi.innerHTML = '<p class="redup">Memuat…</p>';
   try {
-    const [D, rows] = await Promise.all([rpc("er_rekap_periode", { p_pin: PIN, p_kelas: k || null, p_dari: r.dari, p_sampai: r.sampai }), k ? rpc("er_rekap", { p_pin: PIN, p_kelas: k }) : null]);
+    const [D, rows] = await Promise.all([rpc("er_rekap_periode", { p_pin: PIN, p_kelas: pilKel() || null, p_dari: r.dari, p_sampai: r.sampai }), pilKel() ? rpc("er_rekap", { p_pin: PIN, p_kelas: k }) : null]);
     if ($("pil-kelas").value !== k) return;   // rombel sudah diganti selama memuat
     RK_SMT = D.semester; RK_PADA = Date.now(); RK_KUNCI = kunci; D.label = r.label;
+    const tk = pilTingkat();   // satu tingkat: perbandingan rombel tingkat itu saja
+    if (tk) D.kelompok = (D.kelompok || []).filter((x) => tingkatSiswa({ kelas: x.kelompok }) === tk);
     const tg = (x, thn) => new Date(x + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "short", ...(thn ? { year: "numeric" } : {}) });
-    $("rk-periode").innerHTML = `Periode: <b>${tg(D.dari)} – ${tg(D.sampai, true)}</b> (${D.hari} hari)` +
+    $("rk-ket-periode").innerHTML = `Periode: <b>${tg(D.dari)} – ${tg(D.sampai, true)}</b> (${D.hari} hari)` +
       (D.dipotong && RK_PER.kunci !== "smt" ? " · <b>dipotong di awal semester</b>" : "") +
       (RK_PER.kunci === "smt" ? ` · semester ${esc(D.semester.nama)}` : D.lalu ? ` · dibandingkan dengan ${tg(D.lalu.dari)} – ${tg(D.lalu.sampai)}${D.lalu.hari < D.hari ? " (dipotong di awal semester)" : ""}` : " · belum ada pembanding (awal semester)");
     const opsi = { satuan: "kegiatan", kelompokLbl: "rombel", target: TUNTAS, nilaiRata: true,
       macetKet: "Sub-kegiatan yang dicoba 3 kali atau lebih dalam 30 hari tanpa pernah mencapai nilai 80 (sama dengan label Macet di Per Siswa)." };
-    if (k) { rkPosisi(D, rows || []); REKAP_KELAS.rapor(isi, D, { ...opsi, bukaSiswa: (n) => bukaSiswa(n) }); }
-    else REKAP_KELAS.banding(isi, D, { ...opsi, bukaKelompok: (g) => { $("pil-kelas").value = g; muatKelas(); muatRekap(); } });
+    if (pilKel()) { rkPosisi(D, rows || []); REKAP_KELAS.rapor(isi, D, { ...opsi, bukaSiswa: (n) => bukaSiswa(n) }); }
+    else REKAP_KELAS.banding(isi, D, { ...opsi, bukaKelompok: (g) => { $("pil-kelas").value = g; tandaiKelompok(); muatKelas(); muatRekap(); } });
   } catch (e) { isi.innerHTML = `<p class="buruk-teks">Gagal memuat rekapitulasi: ${esc(e.message)}</p>`; }
   finally { isi.style.opacity = ""; }
 }
@@ -1787,7 +1806,7 @@ function pmRentang() {
 }
 async function muatPantau(diam) {
   const k = $("pil-kelas").value, t = $("pm-tabel"), r = pmRentang();
-  if (!k) { PM = null; $("pm-ubin").innerHTML = ""; $("pm-periode").textContent = "";
+  if (!pilKel()) { PM = null; $("pm-ubin").innerHTML = ""; $("pm-periode").textContent = "";
     t.innerHTML = '<tbody><tr><td class="kosong-data">Pilih satu rombel untuk melihat latihan mandirinya.</td></tr></tbody>'; return; }
   if (diam !== true) t.innerHTML = '<tbody><tr><td class="kosong-data">Memuat…</td></tr></tbody>';
   try { const D = await rpc("er_pantau_mandiri", { p_pin: PIN, p_kelas: k, p_dari: r.dari, p_sampai: r.sampai });
@@ -1808,15 +1827,17 @@ const pmSaring = (r, v) => !v || (v === "online" ? r.online : v === "belum" ? r.
 const pmPosisi = (r) => r.k.selesai ? "Semua tuntas" : r.k.posisi ? `Tahap ${r.k.posisi.tahap} · Level ${nomorLevel(r.k.posisi)}` : "";
 const pmJalur = (r) => r.khusus ? r.tahapan.nama : r.pilihan === "sesi" ? "Lanjut dari sesi" : "Bebas memilih";
 function gambarPantau() {
-  const D = PM, S = D.siswa, h = D.tahapan, ada = S.some((r) => r.khusus), n = (f) => S.filter(f).length;
+  // Kotak ringkasan mengikuti saringan siswa (9 Nov 2026), sama seperti tabel di bawahnya.
+  const D = PM, h = D.tahapan, ada = D.siswa.some((r) => r.khusus), sv = $("pm-saring").value;
+  const S = D.siswa.filter((r) => pmSaring(r, sv)), n = (f) => S.filter(f).length;
   const tg = (x, thn) => new Date(x + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "short", ...(thn ? { year: "numeric" } : {}) });
   $("pm-periode").innerHTML = `Periode: <b>${tg(D.dari)} – ${tg(D.sampai, true)}</b> (${D.hari} hari)` + (D.dipotong && PM_PER.kunci !== "smt" ? " · <b>dipotong di awal semester</b>" : "") +
     (h ? ` · tahapan mandiri: <b>${esc(h.nama)}</b>` : D.pilihan === "bebas" ? " · siswa bebas memilih materi" : D.pilihan === "lama" ? " · aturan lama; ganti di Pengaturan &amp; Tahapan, bagian 3" : " · lanjut dari sesi kegiatan");
   const selesai = n((r) => r.khusus && r.k.selesai), belum = n((r) => r.khusus && !r.k.mulai && !r.k.selesai), diam = n((r) => !r.n_hasil);
-  $("pm-ubin").innerHTML = ubinHtml([[S.length, "siswa", "siswa"], [n((r) => r.online), "sedang berlatih", "aktif", "baik"],
+  $("pm-ubin").innerHTML = ubinHtml([[S.length, sv ? `siswa sesuai saringan <span class="dari">dari ${D.siswa.length}</span>` : "siswa", "siswa"], [n((r) => r.online), "sedang berlatih", "aktif", "baik"],
     ...(ada ? [[n((r) => r.khusus && r.k.mulai && !r.k.selesai), "sedang di tahapan", "mulai"], [selesai, "tahapan selesai", "level", selesai ? "baik" : "redup-ubin"], [belum, "belum mulai tahapan", "diam", belum ? "emas" : "redup-ubin"]] : []),
     [diam, "tidak berlatih dalam periode", "diam", diam ? "emas" : "redup-ubin"]]);
-  const L = S.filter((r) => pmSaring(r, $("pm-saring").value));
+  const L = S;
   $("pm-tabel").innerHTML = `<thead><tr><th>No</th><th>Nama</th><th>Status</th><th>Posisi mandiri</th><th>Jalur</th><th>Kegiatan</th><th class="angka">Rata-rata</th><th class="angka">Sub lulus</th><th class="angka">Waktu</th><th>Terakhir</th></tr></thead><tbody>` +
     (L.length ? L.map((r, i) => { const st = pmStatus(r);
       return `<tr class="klik" data-n="${esc(r.nisn)}"><td>${i + 1}</td><td><b>${esc(r.nama)}</b></td><td><span class="lencana ringkas ${st.c}">${esc(st.t)}</span></td>
@@ -1865,7 +1886,7 @@ function bukaSub(v) {
   $("pk-peringkat").classList.toggle("hidden", v !== "peringkat"); $("baris-kelas").classList.toggle("hidden", v === "peringkat");
   $("pil-urut").classList.toggle("hidden", v !== "siswa");
   if (v === "rekap") { if (REKAP.length) gambarKelas(); muatPerKelompok(); }   // ringkasan keseluruhan di bawah Rekapitulasi
-  if (v === "peringkat" && !PRK) muatPeringkat();
+  if (v === "peringkat") { if (!PRK) muatPeringkat(); else { samakanCakupanRk(); gambarPeringkat(); } }
   if (v === "rekap") muatRekap(true);
 }
 const selPosisi = (r, L) => !r ? '<td class="posisi"><span class="redup">–</span></td>'
@@ -1894,9 +1915,10 @@ async function muatPerKelompok() {
   $("t-perkelompok").innerHTML = `<thead><tr><th>Rombel</th><th class="angka">Siswa</th><th class="angka">Sudah<br>mulai</th><th class="angka">Berlatih<br>7 hari</th>
     <th class="angka">Rata-rata<br>level tuntas</th><th title="Siswa yang paling belakang (sudah mulai)">Posisi<br>terendah</th><th title="Siswa yang paling depan">Posisi<br>tertinggi</th><th class="angka">Rata-rata<br>nilai</th><th class="angka">Macet</th><th class="angka">Tidak<br>aktif</th><th>Sesi<br>latihan</th></tr></thead>
     <tbody>${baris.join("") || '<tr><td colspan="11" class="kosong-data">Tidak ada siswa.</td></tr>'}</tbody>`;
+  tandaiKelompok();
   $("t-perkelompok").querySelectorAll("[data-kel]").forEach((tr) => tr.onclick = () => {
     if ([...$("pil-kelas").options].some((o) => o.value === tr.dataset.kel)) $("pil-kelas").value = tr.dataset.kel;
-    muatKelas(); if (SUB_TAB === "rekap") { muatRekap(); $("rk-isi").scrollIntoView({ behavior: "smooth" }); }
+    tandaiKelompok(); muatKelas(); if (SUB_TAB === "rekap") { muatRekap(); $("rk-isi").scrollIntoView({ behavior: "smooth" }); }
   });
 }
 
@@ -1954,7 +1976,7 @@ const KOLOM_RK = [
 ];
 // Kolom khusus satu jenis peringkat (hanya tampil saat jenis itu dipilih)
 const KOLOM_KHUSUS_RK = new Set(["perhatian", "mandiri"]);
-const dalamCakupanRk = (c) => (r) => !c || (c.startsWith("a:") ? r.angkatan === c.slice(2) : r.kelas === c.slice(2));
+const dalamCakupanRk = (c) => (r) => !c || (c.startsWith("a:") ? r.angkatan === c.slice(2) : c.startsWith("t:") ? tingkatSiswa(r) === c.slice(2) : r.kelas === c.slice(2));
 function urutRk(L, j) {
   const A = L.filter(j.ikut).sort((a, b) => j.banding(a, b) || a.nama.localeCompare(b.nama)), H = [];
   A.forEach((r, i) => H.push({ r, no: i && !j.banding(A[i - 1], r) ? H[i - 1].no : i + 1 }));
@@ -1971,8 +1993,10 @@ function isiCakupanRk() {
   const el = $("rk-cakupan"), lama = el.value || ssGet("er_rk_cakupan", "");
   const ang = [...new Set(PRK.siswa.map((r) => r.angkatan).filter(Boolean))].sort((a, b) => a.localeCompare(b, "id", { numeric: true }));
   const kls = [...new Set(PRK.siswa.map((r) => r.kelas))].sort((a, b) => a.localeCompare(b, "id", { numeric: true }));
+  const tk = [...new Set(kls.map((k) => tingkatSiswa({ kelas: k })).filter(Boolean))].sort((a, b) => a - b);
   el.innerHTML = `<option value="">${PERAN === "admin" ? "Seluruh sekolah" : "Semua rombel saya"}</option>`
     + (ang.length > 1 ? `<optgroup label="Angkatan">${ang.map((a) => `<option value="a:${esc(a)}">Angkatan ${esc(a)}</option>`).join("")}</optgroup>` : "")
+    + (tk.length && kls.length > 1 ? `<optgroup label="Tingkat">${tk.map((t) => `<option value="t:${t}">Semua tingkat ${t}</option>`).join("")}</optgroup>` : "")
     + `<optgroup label="Rombel">${kls.map((k) => `<option value="k:${esc(k)}">${esc(k)}</option>`).join("")}</optgroup>`;
   el.value = [...el.options].some((o) => o.value === lama) ? lama : "";
 }
@@ -1985,10 +2009,22 @@ async function muatPeringkat() {
   $("t-peringkat").innerHTML = '<tr><td class="kosong-data">Memuat…</td></tr>';
   try { PRK = await rpc("er_peringkat", { p_pin: PIN, p_periode: $("rk-periode").value }); }
   catch (e) { $("t-peringkat").innerHTML = `<tr><td class="kosong-data">${esc(e.message)}</td></tr>`; return; }
-  isiPeriodeRk(); isiCakupanRk(); gambarPeringkat();
+  isiPeriodeRk(); isiCakupanRk(); samakanCakupanRk(); gambarPeringkat();
+}
+// Cakupan peringkat mengikuti pilihan rombel di atas (9 Nov 2026, seperti Matdas): rombel/tingkat tertentu → itu;
+// "Semua rombel" → semua, kecuali guru sedang memilih satu angkatan (angkatan tetap).
+function samakanCakupanRk() {
+  const k = $("pil-kelas").value, el = $("rk-cakupan");
+  const mau = k.startsWith("t:") ? k : k ? "k:" + k : /^[kt]:/.test(el.value) ? "" : el.value;
+  if ([...el.options].some((o) => o.value === mau)) el.value = mau;
 }
 $("rk-periode").onchange = () => { ssSet("er_rk_periode", $("rk-periode").value); muatPeringkat(); };
-$("rk-cakupan").onchange = () => { ssSet("er_rk_cakupan", $("rk-cakupan").value); gambarPeringkat(); };
+$("rk-cakupan").onchange = () => {
+  const c = $("rk-cakupan").value; ssSet("er_rk_cakupan", c); gambarPeringkat();
+  // Sebaliknya: memilih rombel/tingkat (atau semua) di peringkat ikut mengganti pilihan rombel tab lain.
+  const k = c.startsWith("k:") ? c.slice(2) : c.startsWith("t:") || c === "" ? c : null;
+  if (k !== null && k !== $("pil-kelas").value && [...$("pil-kelas").options].some((o) => o.value === k)) { $("pil-kelas").value = k; tandaiKelompok(); muatKelas(); }
+};
 $("rk-jenis").onchange = () => { ssSet("er_rk_jenis", $("rk-jenis").value); gambarPeringkat(); };
 $("rk-n").onchange = () => gambarPeringkat();
 $("rk-muat").onclick = () => muatPeringkat();
