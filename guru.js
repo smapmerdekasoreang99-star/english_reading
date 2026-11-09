@@ -800,7 +800,9 @@ const aturanRombel = (kelas) => ((G.rombel.find((x) => x.kelas === kelas) || {})
 let IK_BUKA = false;
 function gambarInfoKelompok() {
   if (!G) return;
-  const pilih = $("dl-kelompok").value, kel = pilih ? [pilih] : G.rombel.map((r) => r.kelas);
+  // Saringan tingkat ikut berlaku seperti di Matdas (XII-1 → 12), 9 Nov 2026
+  const pilih = $("dl-kelompok").value, tk = $("dl-tingkat").value;
+  const kel = pilih ? [pilih] : G.rombel.map((r) => r.kelas).filter((k) => !tk || tingkatSiswa({ kelas: k }) === tk);
   $("info-kel").classList.toggle("hidden", !kel.length);
   if (!kel.length) return;
   const chip = (x, v, kls) => `<span class="ik-chip ${kls || ""}"><small>${x.l}</small><b>${esc(nilaiAturTeks(x, v))}</b></span>`;
