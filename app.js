@@ -585,11 +585,30 @@
     r.onsoundstart = () => denyutSuara(0.5);
     r.onspeechstart = () => denyutSuara(0.7);
   }
+  /* Pengenal macet (10 Nov 2026, 10-6, iPhone 16): sesudah stop() sebagian browser (Safari iPhone) tidak pernah
+     memanggil onend, sehingga tombol tetap "Ucapkan sekarang…" tanpa akhir dan tidak ada catatan apa pun. Sesudah
+     stop()/abort(), bila onend tidak datang dalam 3 detik: abort, lalu onend dipanggil sendiri dengan galat
+     'pengenal-macet'. Perangkat ini lalu memakai grafik cadangan (mikrofon tidak dipegang dua pihak). */
+  function jagaAkhir(r, masihIni, tandai) {
+    clearTimeout(r._jaga);
+    r._jaga = setTimeout(() => {
+      if (!masihIni()) return;
+      tandai();
+      if (!setelan.tanpaGrafik) { setelan.tanpaGrafik = true; simpanSetelan(); }
+      try { r.abort(); } catch (e) { /* abaikan */ }
+      if (masihIni() && r.onend) r.onend();
+    }, 3000);
+  }
   // Pasang penanganan bentrok senyap pada grafik yang sedang menyala (grafik nyata saja).
   function saatSenyap(f) { if (grafik && !grafik.semu) grafik.padaSenyap = f; }
   // Bentrok senyap ketahuan saat pengenal suara selesai: ingat di perangkat ini, rekaman berikutnya memakai grafik cadangan.
+  // 10 Nov 2026 (10-6, Android 10): satu kata diucapkan < 1 detik, sehingga ambang 3 detik di atas tidak pernah
+  // tercapai dan siswa "senyap" terus (Tiffany 20×, 0 berhasil). Saat pengenal selesai tanpa hasil dan tanpa satu
+  // tanda pun, cukup ±0,3 detik suara di grafik untuk dianggap bentrok. Salah duga (kelas bising) hanya membuat
+  // perangkat ini memakai grafik cadangan, yang di HP lain berjalan baik.
+  const BINGKAI_SENYAP_AKHIR = 6;
   function catatSenyap() {
-    if (!bentrokSenyap()) return false;
+    if (!grafik || grafik.semu || grafik.pengenal || grafik.nyaring < BINGKAI_SENYAP_AKHIR) return false;
     setelan.tanpaGrafik = true;
     simpanSetelan();
     return true;
@@ -657,7 +676,9 @@
     // (onend menyalakannya lagi karena rekaman masih aktif dan tidak ada galat).
     saatSenyap(() => {
       if (rekam !== r || !r.aktif || !r.rec || !grafikBentrok()) return;
-      try { r.rec.abort(); } catch (e) { /* abaikan */ }
+      const rec = r.rec;
+      try { rec.abort(); } catch (e) { /* abaikan */ }
+      jagaAkhir(rec, () => rekam === r && r.rec === rec, () => {});
     });
     jalankanPengenal();
   }
@@ -694,6 +715,7 @@
       rekam.galat = e.error;
     };
     r.onend = () => {
+      clearTimeout(r._jaga);
       if (!rekam || rekam.rec !== r) return;
       if (bentrokSenyap()) grafikBentrok();   // sesi berakhir hening padahal grafik mendengar suara
       rekam.sesiLalu.push(...rekam.sesiIni);
@@ -717,7 +739,9 @@
     if (!rekam) return;
     rekam.aktif = false;
     if (!rekam.rec) return;   // grafik masih disiapkan; mulaiRekam yang menutup
-    try { rekam.rec.stop(); } catch (e) { selesaiRekam(); }
+    const r = rekam, rec = r.rec;
+    try { rec.stop(); } catch (e) { selesaiRekam(); return; }
+    jagaAkhir(rec, () => rekam === r && r.rec === rec, () => { r.galat = r.galat || 'pengenal-macet'; });
   }
   function batalkanRekam() {
     hentikanGrafik();
@@ -753,6 +777,9 @@
       langkah: ['Pastikan internet lancar dan <b>VPN mati</b> — ini penyebab paling sering.', 'Bacalah teks <b>bahasa Inggris</b>-nya (bukan terjemahannya), dengan suara jelas dan tidak terlalu cepat.', 'Jangan terlalu dekat ke mikrofon (± 15–30 cm) dan hindari ruangan yang sangat bising.', 'Tekan 🎤 lalu langsung mulai membaca.'] },
     'senyap': { judul: 'Tidak ada suara yang terdengar', apa: 'Pengenal suara tidak mendengar apa pun selama rekaman.',
       langkah: ['Mulai membaca <b>segera</b> setelah menekan 🎤 — pengenal berhenti sendiri bila lama tidak ada suara.', 'Bacalah lebih keras dan dekatkan HP (± 15–30 cm).', 'Pastikan lubang mikrofon tidak tertutup jari atau casing, dan headset Bluetooth tidak tersambung.', 'Bila grafik suara sama sekali tidak bergerak, periksa izin mikrofon (ikon gembok di samping alamat).'] },
+    'pengenal-macet': { judul: 'Pengenal suara macet', apa: 'Browser terus "mendengarkan" tetapi tidak pernah mengirim hasil. Aplikasi sudah menghentikannya dan mengganti cara memakai mikrofon di perangkat ini.',
+      langkah: ['Tekan 🎤 lagi, lalu langsung ucapkan.', ios ? 'Bila tetap macet: tutup Safari sepenuhnya (geser ke atas dari daftar aplikasi), buka lagi, lalu coba lagi.' : 'Bila tetap macet: tutup browser sepenuhnya, buka lagi, lalu coba lagi.',
+        ios ? 'Pastikan <b>Pengaturan → Umum → Papan Ketik → Aktifkan Dikte</b> menyala, dan <b>Pengaturan → Safari → Mikrofon → Izinkan</b>.' : 'Pastikan memakai <b>Google Chrome</b> versi terbaru.'] },
     'lain': { judul: 'Pengenal suara berhenti tiba-tiba', apa: 'Browser menghentikan pengenal suara karena gangguan sementara.',
       langkah: ['Tekan 🎤 lagi.', 'Bila berulang, muat ulang halaman, matikan VPN, dan pastikan memakai ' + (ios ? 'Safari' : 'Google Chrome') + '.'] },
   };
@@ -1047,7 +1074,8 @@
     ulang = u;
     aturTombolUlang(baris, true, kalimat);
     keluaran.innerHTML = (kalimat ? `<small class="latih-kal-teks">Ucapkan: <b>“${esc(kalimat)}”</b></small>` : '') + htmlGrafik(true);
-    let alternatif = null, galat = '', akhir = false, bentrok = false;
+    let alternatif = null, galat = '', akhir = false, bentrok = false, macet = false;
+    const masihIni = () => ulang === u;
     sambungGrafik(r);
     r.onresult = e => {
       denyutSuara(1);
@@ -1057,8 +1085,9 @@
     };
     r.onerror = e => { if (e.error === 'audio-capture' && grafikBentrok()) { bentrok = true; return; } galat = e.error; };
     r.onend = () => {
+      clearTimeout(r._jaga);
       if (ulang !== u) return;
-      if (!alternatif && catatSenyap()) bentrok = true;   // bentrok senyap: ulangi dengan grafik cadangan
+      if (!alternatif && !macet && catatSenyap()) bentrok = true;   // bentrok senyap: ulangi dengan grafik cadangan
       ulang = null;
       clearTimeout(u.batas);
       hentikanGrafik();
@@ -1093,9 +1122,9 @@
     // Grafik dulu, baru pengenal suara (urutan yang sama dengan Baca & Koreksi).
     mulaiGrafik(keluaran.querySelector('.kotak-grafik')).then(() => {
       if (ulang !== u) { hentikanGrafik(); return; }
-      saatSenyap(() => { try { r.abort(); } catch (e) { /* abaikan */ } });
+      saatSenyap(() => { try { r.abort(); } catch (e) { /* abaikan */ } jagaAkhir(r, masihIni, () => {}); });
       // Pengaman: hentikan bila tidak ada suara dalam beberapa detik (kalimat diberi waktu lebih lama).
-      u.batas = setTimeout(() => { try { r.stop(); } catch (e) { /* abaikan */ } }, kalimat ? 10000 : 6000);
+      u.batas = setTimeout(() => { try { r.stop(); } catch (e) { /* abaikan */ } jagaAkhir(r, masihIni, () => { macet = true; galat = 'pengenal-macet'; }); }, kalimat ? 10000 : 6000);
       try { r.start(); } catch (e) { batalUlang(); }
     });
   }
@@ -1930,7 +1959,7 @@
   function rekamLatih() {
     const L = latih, q = L.antre[L.i];
     const tombol = $('#lt-rekam');
-    if (L.rec) { try { L.rec.stop(); } catch (e) { /* abaikan */ } return; }
+    if (L.rec) { if (L.henti) L.henti(); else { try { L.rec.stop(); } catch (e) { /* abaikan */ } } return; }
     if (bisaSuara) speechSynthesis.cancel();
     const r = new SR();
     r.lang = 'en-US'; r.continuous = false; r.interimResults = true; r.maxAlternatives = 5;
@@ -1939,7 +1968,10 @@
     // Grafik suara di bawah tombol (15 Okt 2026); tetap tampil beku sesudahnya sampai soal berikutnya.
     let kotak = tombol.parentNode.querySelector('.kotak-grafik.lt-grafik');
     if (!kotak) { tombol.insertAdjacentHTML('afterend', htmlGrafik(true)); kotak = tombol.nextElementSibling; kotak.classList.add('lt-grafik'); }
-    let alternatif = null, galat = '', akhir = false, bentrok = false, batas = 0;
+    let alternatif = null, galat = '', akhir = false, bentrok = false, batas = 0, macet = false;
+    const masihIni = () => latih === L && L.rec === r;
+    const henti = () => { try { r.stop(); } catch (e) { /* abaikan */ } jagaAkhir(r, masihIni, () => { macet = true; galat = 'pengenal-macet'; }); };
+    L.henti = henti;
     sambungGrafik(r);
     r.onresult = e => {
       denyutSuara(1);
@@ -1950,9 +1982,10 @@
     r.onerror = e => { if (e.error === 'audio-capture' && grafikBentrok()) { bentrok = true; return; } galat = e.error; };
     r.onend = () => {
       clearTimeout(batas);
+      clearTimeout(r._jaga);
       if (latih !== L || L.rec !== r) return;
-      if (!alternatif && catatSenyap()) bentrok = true;   // bentrok senyap: ulangi dengan grafik cadangan
-      L.rec = null;
+      if (!alternatif && !macet && catatSenyap()) bentrok = true;   // bentrok senyap: ulangi dengan grafik cadangan
+      L.rec = null; L.henti = null;
       hentikanGrafik();
       if (bentrok && !alternatif) { tombol.classList.remove('aktif'); rekamLatih(); return; }   // ulangi dengan grafik cadangan
       tombol.classList.remove('aktif'); tombol.textContent = '🎤 Ucapkan lagi';
@@ -1977,9 +2010,9 @@
     };
     mulaiGrafik(kotak).then(() => {
       if (latih !== L || L.rec !== r) { hentikanGrafik(); return; }
-      saatSenyap(() => { try { r.abort(); } catch (e) { /* abaikan */ } });
-      batas = setTimeout(() => { try { r.stop(); } catch (e) { /* abaikan */ } }, q.jenis === 'ucapK' ? 12000 : 6000);
-      try { r.start(); } catch (e) { hentikanGrafik(); L.rec = null; tombol.classList.remove('aktif'); tombol.textContent = '🎤 Ucapkan'; }
+      saatSenyap(() => { try { r.abort(); } catch (e) { /* abaikan */ } jagaAkhir(r, masihIni, () => {}); });
+      batas = setTimeout(henti, q.jenis === 'ucapK' ? 12000 : 6000);
+      try { r.start(); } catch (e) { hentikanGrafik(); L.rec = null; L.henti = null; tombol.classList.remove('aktif'); tombol.textContent = '🎤 Ucapkan'; }
     });
   }
   function nilaiUcapKalimat(q, alternatif) {
