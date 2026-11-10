@@ -1806,12 +1806,29 @@ function pmRentang() {
   if (PM_PER.kunci === "smt") return { dari: "1900-01-01", sampai: isoTgl(kini) };
   return { dari: PM_PER.dari, sampai: PM_PER.sampai };
 }
+/* 10 Nov 2026 (seperti Matdas): "Semua rombel" dan "Semua tingkat …" juga bisa (dulu hanya satu rombel, sehingga saringan tampak
+   tidak bekerja). Server tetap dipanggil per rombel (er_pantau_mandiri, hak rombel diperiksa di server), paling banyak 4 sekaligus,
+   lalu digabung dengan kolom Rombel. */
+const pmRombelDipilih = () => { const k = $("pil-kelas").value, t = pilTingkat();
+  if (t) return G.rombel.filter((x) => String(tingkatSiswa(x)) === t).map((x) => x.kelas);
+  return k ? [k] : G.rombel.map((x) => x.kelas); };
+async function pmAmbilSemua(daftar, r) {
+  const hasil = new Array(daftar.length); let i = 0;
+  const kerja = async () => { while (i < daftar.length) { const n = i++;
+    hasil[n] = await rpc("er_pantau_mandiri", { p_pin: PIN, p_kelas: daftar[n], p_dari: r.dari, p_sampai: r.sampai }); } };
+  await Promise.all(Array.from({ length: Math.min(4, daftar.length) }, kerja));
+  if (hasil.length === 1) return hasil[0];
+  const sama = (f) => hasil.every((d) => f(d) === f(hasil[0]));
+  return { ...hasil[0], gabungan: true, kelas: pilTingkat() ? `Semua tingkat ${pilTingkat()}` : "Semua rombel", n_rombel: hasil.length,
+    tahapan: sama((d) => d.tahapan && d.tahapan.id) ? hasil[0].tahapan : null, pilihan: sama((d) => d.pilihan) ? hasil[0].pilihan : "campur",
+    siswa: hasil.flatMap((d, n) => d.siswa.map((x) => ({ ...x, rombel: daftar[n] }))) };
+}
 async function muatPantau(diam) {
-  const k = $("pil-kelas").value, t = $("pm-tabel"), r = pmRentang();
-  if (!pilKel()) { PM = null; $("pm-ubin").innerHTML = ""; $("pm-periode").textContent = "";
-    t.innerHTML = '<tbody><tr><td class="kosong-data">Pilih satu rombel untuk melihat latihan mandirinya.</td></tr></tbody>'; return; }
-  if (diam !== true) t.innerHTML = '<tbody><tr><td class="kosong-data">Memuat…</td></tr></tbody>';
-  try { const D = await rpc("er_pantau_mandiri", { p_pin: PIN, p_kelas: k, p_dari: r.dari, p_sampai: r.sampai });
+  const k = $("pil-kelas").value, t = $("pm-tabel"), r = pmRentang(), daftar = pmRombelDipilih();
+  if (!daftar.length) { PM = null; $("pm-ubin").innerHTML = ""; $("pm-periode").textContent = "";
+    t.innerHTML = '<tbody><tr><td class="kosong-data">Belum ada rombel untuk dipantau.</td></tr></tbody>'; return; }
+  if (diam !== true) t.innerHTML = `<tbody><tr><td class="kosong-data">Memuat${daftar.length > 1 ? ` ${daftar.length} rombel` : ""}…</td></tr></tbody>`;
+  try { const D = await pmAmbilSemua(daftar, r);
     if ($("pil-kelas").value !== k) return;   // rombel sudah diganti selama memuat
     D.siswa.forEach((s) => { const m = s.tahapan ? { mati: s.tahapan.mati, akhir: s.tahapan.akhir } : { mati: s.pilihan === "sesi" ? matiUmum() : null };
       s.k = mandiriHitung(s.pilihan, s.kemajuan, s.kemajuan_mandiri, m); s.khusus = (s.pilihan || "").startsWith("t:"); s.resmi = s.pilihan === "sesi" ? ringkasKemajuan(s.kemajuan, m.mati, m.akhir) : null; });
@@ -1834,20 +1851,23 @@ function gambarPantau() {
   const S = D.siswa.filter((r) => pmSaring(r, sv)), n = (f) => S.filter(f).length;
   const tg = (x, thn) => new Date(x + "T00:00:00").toLocaleDateString("id-ID", { day: "numeric", month: "short", ...(thn ? { year: "numeric" } : {}) });
   $("pm-periode").innerHTML = `Periode: <b>${tg(D.dari)} – ${tg(D.sampai, true)}</b> (${D.hari} hari)` + (D.dipotong && PM_PER.kunci !== "smt" ? " · <b>dipotong di awal semester</b>" : "") +
-    (h ? ` · tahapan mandiri: <b>${esc(h.nama)}</b>` : D.pilihan === "bebas" ? " · siswa bebas memilih materi" : D.pilihan === "lama" ? " · aturan lama; ganti di Pengaturan &amp; Tahapan, bagian 3" : " · lanjut dari sesi kegiatan");
+    (D.gabungan ? ` · <b>${D.n_rombel} rombel</b>` : "") +
+    (h ? ` · tahapan mandiri: <b>${esc(h.nama)}</b>` : D.pilihan === "campur" ? " · aturan latihan mandiri berbeda per rombel" : D.pilihan === "bebas" ? " · siswa bebas memilih materi" : D.pilihan === "lama" ? " · aturan lama; ganti di Pengaturan &amp; Tahapan, bagian 3" : " · lanjut dari sesi kegiatan");
   const selesai = n((r) => r.khusus && r.k.selesai), belum = n((r) => r.khusus && !r.k.mulai && !r.k.selesai), diam = n((r) => !r.n_hasil);
   $("pm-ubin").innerHTML = ubinHtml([[S.length, sv ? `siswa sesuai saringan <span class="dari">dari ${D.siswa.length}</span>` : "siswa", "siswa"], [n((r) => r.online), "sedang berlatih", "aktif", "baik"],
     ...(ada ? [[n((r) => r.khusus && r.k.mulai && !r.k.selesai), "sedang di tahapan", "mulai"], [selesai, "tahapan selesai", "level", selesai ? "baik" : "redup-ubin"], [belum, "belum mulai tahapan", "diam", belum ? "emas" : "redup-ubin"]] : []),
     [diam, "tidak berlatih dalam periode", "diam", diam ? "emas" : "redup-ubin"]]);
   const L = S;
-  $("pm-tabel").innerHTML = `<thead><tr><th>No</th><th>Nama</th><th>Status</th><th>Posisi mandiri</th><th>Jalur</th><th>Kegiatan</th><th class="angka">Rata-rata</th><th class="angka">Sub lulus</th><th class="angka">Waktu</th><th>Terakhir</th></tr></thead><tbody>` +
+  // Tabel bergulir dua arah (10 Nov 2026): judul tetap di atas; No, Nama (dan Rombel bila gabungan) tetap di kiri.
+  $("pm-tabel").dataset.beku = D.gabungan ? "3" : "2";
+  $("pm-tabel").innerHTML = `<thead><tr><th>No</th><th>Nama</th>${D.gabungan ? "<th>Rombel</th>" : ""}<th>Status</th><th>Posisi mandiri</th><th>Jalur</th><th>Kegiatan</th><th class="angka">Rata-rata</th><th class="angka">Sub lulus</th><th class="angka">Waktu</th><th>Terakhir</th></tr></thead><tbody>` +
     (L.length ? L.map((r, i) => { const st = pmStatus(r);
-      return `<tr class="klik" data-n="${esc(r.nisn)}"><td>${i + 1}</td><td><b>${esc(r.nama)}</b></td><td><span class="lencana ringkas ${st.c}">${esc(st.t)}</span></td>
+      return `<tr class="klik" data-n="${esc(r.nisn)}"><td>${i + 1}</td><td><b>${esc(r.nama)}</b></td>${D.gabungan ? `<td>${esc(r.rombel)}</td>` : ""}<td><span class="lencana ringkas ${st.c}">${esc(st.t)}</span></td>
         <td class="posisi">${r.k.selesai ? '<span class="pos-nm">Semua tuntas</span>' : r.k.posisi && (r.k.mulai || r.pilihan === "sesi") ? `<span class="pos-nm">Tahap ${r.k.posisi.tahap}</span><span class="pos-lv">Level ${nomorLevel(r.k.posisi)}</span>` : '<span class="redup">–</span>'}</td>
         <td class="pm-tahap">${r.khusus ? `<div class="maju"><div class="batang"><i style="width:${100 * r.k.levelTuntas / Math.max(1, r.k.level)}%"></i></div><span>${r.k.levelTuntas}/${r.k.level}</span></div>${!h || r.tahapan.id !== h.id ? `<small>${esc(r.tahapan.nama)}</small>` : ""}`
           : r.pilihan === "sesi" ? `Lanjut dari sesi<small>resmi: ${r.resmi.selesai ? "semua tuntas" : r.resmi.posisi && r.resmi.mulai ? `Tahap ${r.resmi.posisi.tahap} · Level ${nomorLevel(r.resmi.posisi)}` : "belum mulai"}</small>` : "Bebas memilih"}</td>
         <td class="pm-sel">${r.hari} hari · ${r.n_hasil} kegiatan</td><td class="angka">${r.rata == null ? "–" : r.rata + "%"}</td><td class="angka">${r.lulus}</td><td class="angka">${r.detik ? lamaTeks(r.detik) : "–"}</td><td>${r.terakhir ? sejakTeks(r.terakhir) : "–"}</td></tr>`; }).join("")
-      : '<tr><td colspan="10" class="kosong-data">Tidak ada siswa.</td></tr>') + "</tbody>";
+      : `<tr><td colspan="${D.gabungan ? 11 : 10}" class="kosong-data">Tidak ada siswa.</td></tr>`) + "</tbody>";
   $("pm-tabel").querySelectorAll("tr[data-n]").forEach((tr) => tr.onclick = () => bukaSiswa(tr.dataset.n));
 }
 $("pm-saring").onchange = () => { if (PM) gambarPantau(); };
@@ -1866,15 +1886,15 @@ $("pm-tgl").onsubmit = (e) => {
   PM_PER = { kunci: "pilih", dari: d, sampai: z }; document.querySelectorAll("[data-pmper]").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.pmper === "pilih")));
   $("pm-tgl").classList.add("hidden"); document.querySelector('[data-pmper="pilih"]').setAttribute("aria-expanded", "false"); muatPantau();
 };
-setInterval(() => { if (SUB_TAB === "mandiri" && PM && !document.hidden && $("pk-mandiri").offsetParent) muatPantau(true); }, 60000);
+setInterval(() => { if (SUB_TAB === "mandiri" && PM && !PM.gabungan && !document.hidden && $("pk-mandiri").offsetParent) muatPantau(true); }, 60000);
 $("pm-unduh").onclick = (ev) => jalankanUnduh(ev.currentTarget, async () => {
-  if (!PM) throw new Error("Pilih satu rombel dulu.");
+  if (!PM) throw new Error("Pilih rombel dulu.");
   const D = PM, h = D.tahapan, nama = `Pantau_Mandiri_ER_${potongNama(D.kelas)}_${tglBerkas()}.xlsx`;
-  await unduhBukuXLSX({ namaBerkas: nama, judulBuku: "Pantau Latihan Mandiri", lembar: [{ nama: "Latihan Mandiri", judul: "Pantau Latihan Mandiri", sub: `Rombel ${D.kelas}`,
-    info: [["Periode", `${D.dari} s.d. ${D.sampai}`], ["Latihan mandiri", h ? `Tahapan ${h.nama}` : D.pilihan === "bebas" ? "Bebas memilih materi" : D.pilihan === "lama" ? "Aturan lama" : "Lanjut dari sesi kegiatan"], ["Jumlah siswa", `${D.siswa.length} siswa`]],
-    kolom: [{ t: "No", w: 5, rata: "center" }, { t: "Nama", w: 30, tebal: true }, { t: "NISN", w: 13, rata: "center" }, { t: "Status", w: 24 }, { t: "Posisi mandiri", w: 22 }, { t: "Jalur", w: 24 }, { t: "Tuntas tahapan", w: 10, rata: "center" },
+  await unduhBukuXLSX({ namaBerkas: nama, judulBuku: "Pantau Latihan Mandiri", lembar: [{ nama: "Latihan Mandiri", judul: "Pantau Latihan Mandiri", sub: D.gabungan ? `${D.kelas} (${D.n_rombel} rombel)` : `Rombel ${D.kelas}`,
+    info: [["Periode", `${D.dari} s.d. ${D.sampai}`], ["Latihan mandiri", h ? `Tahapan ${h.nama}` : D.pilihan === "campur" ? "Berbeda per rombel" : D.pilihan === "bebas" ? "Bebas memilih materi" : D.pilihan === "lama" ? "Aturan lama" : "Lanjut dari sesi kegiatan"], ["Jumlah siswa", `${D.siswa.length} siswa`]],
+    kolom: [{ t: "No", w: 5, rata: "center" }, { t: "Nama", w: 30, tebal: true }, { t: "NISN", w: 13, rata: "center" }, ...(D.gabungan ? [{ t: "Rombel", w: 10, rata: "center" }] : []), { t: "Status", w: 24 }, { t: "Posisi mandiri", w: 22 }, { t: "Jalur", w: 24 }, { t: "Tuntas tahapan", w: 10, rata: "center" },
       { t: "Hari", w: 7, rata: "center" }, { t: "Kegiatan", w: 9, rata: "center" }, { t: "Rata-rata", w: 9, rata: "center", fmt: '0"%"', cf: CF_PERSEN }, { t: "Sub lulus", w: 8, rata: "center" }, { t: "Menit", w: 8, rata: "center" }, { t: "Terakhir aktif", w: 16, rata: "center", fmt: "dd/mm/yyyy hh:mm", size: 9 }],
-    baris: D.siswa.map((r, i) => [i + 1, r.nama, r.nisn, pmStatus(r).t, pmPosisi(r), pmJalur(r), r.khusus ? `${r.k.levelTuntas}/${r.k.level}` : "", r.hari, r.n_hasil, r.rata == null ? "" : +r.rata, r.lulus, Math.round(r.detik / 60), waktuXL(r.terakhir)]),
+    baris: D.siswa.map((r, i) => [i + 1, r.nama, r.nisn, ...(D.gabungan ? [r.rombel] : []), pmStatus(r).t, pmPosisi(r), pmJalur(r), r.khusus ? `${r.k.levelTuntas}/${r.k.level}` : "", r.hari, r.n_hasil, r.rata == null ? "" : +r.rata, r.lulus, Math.round(r.detik / 60), waktuXL(r.terakhir)]),
     catatan: ["Latihan tanpa pengawasan guru, terpisah dari kemajuan resmi."] }] });
   return nama;
 });
