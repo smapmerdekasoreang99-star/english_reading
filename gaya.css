@@ -313,6 +313,8 @@ a.sub-kartu:hover { border-color: var(--biru); }
 .sub-syarat ol { margin: 6px 0 0; padding-left: 22px; }
 .sub-syarat li { margin: 2px 0; }
 .sub-syarat li.ok { color: var(--hijau-tua); }
+.sub-syarat .lw-minta { display: block; margin: 10px 0 0; padding: 6px 0; background: none; border: 0; color: var(--gelap); font: inherit; font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; text-align: left; min-height: 0; }
+.sub-syarat .lw-minta:hover { color: var(--emas-teks); }
 .lt-opsi.dipilih:not(.kunci):not(.keliru) { border-color: var(--biru); background: var(--biru-muda); }
 .lt-opsi.dipilih:not(.kunci):not(.keliru) .opsi-huruf { background: var(--biru); color: #fff; }
 .lt-tabel { display: grid; gap: 8px; margin-top: 10px; }
@@ -780,6 +782,11 @@ a.tombol.utama { color: var(--utama-teks); }
 .er-tirai button:hover { background: var(--utama-tua); color: #fff; }
 .er-tirai .tautan-tirai { background: none; color: var(--tinta-2); font-weight: 600; font-size: var(--h-s); min-height: 0; padding: var(--j2); text-decoration: underline; }
 .er-tirai .tautan-tirai:hover { background: none; color: var(--gelap); }
+.er-tirai .lw-isi { display: grid; gap: var(--j2); margin-top: var(--j2); }
+.er-tirai .lw-pil { display: flex; align-items: center; gap: var(--j2); text-align: left; font-weight: 600; color: var(--gelap); }
+.er-tirai .lw-pil input { width: 22px; height: 22px; flex: none; margin: 0; padding: 0; }
+.er-tirai .lw-semua { font-weight: 500; color: var(--tinta-2); }
+.er-tirai #lw-kode { text-transform: none; margin-top: var(--j2); }
 .er-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--gelap); color: #fff; padding: var(--j3) var(--j4); border-radius: var(--r2);
   font-size: var(--h-m); z-index: var(--lapis-pesan); opacity: 0; transition: opacity .2s; pointer-events: none; max-width: 90vw; }
 .er-toast.show { opacity: 1; }

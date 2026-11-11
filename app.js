@@ -1306,8 +1306,11 @@
   const bulat = (v, min, maks, bawaan) => (Number.isInteger(v) && v >= min && v <= maks ? v : bawaan);
   const syaratBaca = (b = bAtur) => bulat(aturUntuk(b, 'syaratBaca'), 50, 100, 75);
   const sudahMulaiSub = b => !!(skorSub[b.id] && (skorSub[b.id].lama || skorSub[b.id].s.some(x => x != null)));
-  const sudahBaca = b => !SR || !aturUntuk(b, 'harusBaca') || skorTerbaik[b.id] >= syaratBaca(b) || sudahMulaiSub(b);
-  const sudahDengar = b => !bisaSuara || !aturUntuk(b, 'harusDengar') || !!dengarSelesai[b.id] || sudahMulaiSub(b);
+  // Dilewatkan guru di HP ini (11 Nov 2026, er_lewati_syarat): untuk level itu, atau semua level sampai batas 'sampai'.
+  const dilewati = (b, jenis) => ((AKUN && AKUN.lewat) || []).some(x => x[jenis] && (x.level == null || x.level === b.id)
+    && (!x.sampai || new Date(x.sampai) > new Date()));
+  const sudahBaca = b => !SR || !aturUntuk(b, 'harusBaca') || skorTerbaik[b.id] >= syaratBaca(b) || sudahMulaiSub(b) || dilewati(b, 'baca');
+  const sudahDengar = b => !bisaSuara || !aturUntuk(b, 'harusDengar') || !!dengarSelesai[b.id] || sudahMulaiSub(b) || dilewati(b, 'dengar');
   const siapSub = b => sudahDengar(b) && sudahBaca(b);
   // Tahapan khusus: m = { tahap: [nomor dimatikan], level: [id dimatikan], sub: { id: [nomor dimatikan] } }; null = Umum.
   // Tahap mati → levelnya mati; level mati → sub levelnya mati; level tanpa sub level yang dipakai dianggap tidak dipakai.
@@ -2147,7 +2150,9 @@
       daftar.push(`<li class="${sudahBaca(b) ? 'ok' : ''}">${sudahBaca(b) ? '✓' : '🎤'} Baca ${isi} dengan <b>🎤 Baca &amp; Koreksi</b> sampai selesai, akurasi minimal
         <b>${syaratBaca(b)}%</b>.${skorTerbaik[b.id] != null && !sudahBaca(b) ? ` Akurasi terbaikmu sekarang ${skorTerbaik[b.id]}%.` : ''}</li>`);
     }
-    return `<div class="sub-syarat">🔒 Sebelum ${teksSubPertama(b)} terbuka:<ol>${daftar.join('')}</ol></div>`;
+    // Bantuan guru untuk HP yang bermasalah (hanya bila masuk dengan akun; uji coba/tanpa login tidak).
+    const minta = AKUN && window.ER_LEWATI ? `<button type="button" class="lw-minta" data-level="${esc(b.id)}">🔑 Ada kendala di HP? Minta guru melewatkan syarat ini</button>` : '';
+    return `<div class="sub-syarat">🔒 Sebelum ${teksSubPertama(b)} terbuka:<ol>${daftar.join('')}</ol>${minta}</div>`;
   }
 
   // ---------- Saran browser ----------
@@ -3206,6 +3211,15 @@
     b.arti = b.kosakata.map(([, a, , ca]) => `${a}. ${ca}`).join(' ');
   });
   window.addEventListener('hashchange', rute);
+  // Tombol "Ada kendala di HP?" di kotak syarat sub level → kotak PIN guru (masuk.js), lalu halaman digambar ulang.
+  document.addEventListener('click', e => {
+    const t = e.target.closest && e.target.closest('.lw-minta');
+    if (!t || !window.ER_LEWATI) return;
+    const b = window.BACAAN.find(x => x.id === t.dataset.level);
+    if (!b) return;
+    window.ER_LEWATI({ id: b.id, nama: `${labelLevel(b)} · ${b.judul || b.nama || ''}`.replace(/ · $/, '') },
+      { dengar: !sudahDengar(b), baca: !sudahBaca(b) }, () => rute());
+  });
   saranBrowser();
   // Chrome kadang tetap bersuara setelah halaman ditinggalkan.
   window.addEventListener('pagehide', () => { if (bisaSuara) speechSynthesis.cancel(); });

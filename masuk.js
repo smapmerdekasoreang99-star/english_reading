@@ -343,6 +343,39 @@
     $('t-periksa').onclick = () => buka('er_lanjut', { p_token: akun.token });
     $('t-kode').addEventListener('keydown', e => { if (e.key === 'Enter') { e.stopPropagation(); $('t-buka').click(); } });
   }
+  /* Bantuan guru (11 Nov 2026): HP siswa bermasalah sehingga Listening (Dengarkan) atau Reading (Baca & Koreksi)
+     tidak bisa diselesaikan → guru mengetik PIN guru / kode buka kunci di HP ini untuk melewatkan syaratnya.
+     Bawaan untuk level ini saja; guru boleh mencentang "semua level sampai akhir hari ini". Dipanggil dari app.js. */
+  window.ER_LEWATI = (lv, perlu, selesai) => {
+    if (!akun || !akun.token) return;
+    const pil = (k, l) => perlu[k] ? `<label class="lw-pil"><input type="checkbox" id="lw-${k}" checked><span>${l}</span></label>` : '';
+    tirai(false, '🔑', 'Bantuan guru: lewati syarat',
+      `Hanya untuk HP yang bermasalah. <b>Guru</b> mengetik PIN guru atau kode buka kunci.<br>Level: <b>${esc(lv.nama)}</b>`,
+      `<div class="lw-isi">${pil('dengar', '🎧 Lewati Listening (Dengarkan)')}${pil('baca', '🎤 Lewati Reading (Baca &amp; Koreksi)')}
+        <label class="lw-pil lw-semua"><input type="checkbox" id="lw-semua"><span>Berlaku untuk <b>semua level</b> sampai akhir hari ini</span></label>
+        <input type="password" id="lw-kode" autocomplete="off" placeholder="PIN guru / kode buka kunci" aria-label="PIN guru atau kode buka kunci">
+        <button id="lw-ok">Lewati syarat</button><button class="tautan-tirai" id="lw-batal">Batal</button></div>`);
+    pasangMata($('lw-kode'));
+    $('lw-kode').focus();
+    $('lw-batal').onclick = tutupTirai;
+    $('lw-ok').onclick = async () => {
+      const dengar = !!($('lw-dengar') && $('lw-dengar').checked), bc = !!($('lw-baca') && $('lw-baca').checked);
+      if (!dengar && !bc) return toast('Pilih Listening, Reading, atau keduanya.');
+      if (!$('lw-kode').value.trim()) return toast('Guru: ketik PIN atau kode buka kunci.');
+      $('lw-ok').disabled = true;
+      try {
+        const r = await rpc('er_lewati_syarat', { p_token: akun.token, p_kode: $('lw-kode').value.trim(), p_level: lv.id,
+          p_dengar: dengar, p_baca: bc, p_semua: $('lw-semua').checked });
+        window.ER_AKUN.lewat = r.lewat || [];
+        tutupTirai(); toast('Syarat dilewati — sub level terbuka');
+        if (selesai) selesai();
+      } catch (e) {
+        if (/berakhir/i.test(e.message)) { tutupTirai(); return sesiHabisCek(); }
+        toast(e.message); $('lw-ok').disabled = false; $('lw-kode').select();
+      }
+    };
+    $('lw-kode').addEventListener('keydown', e => { if (e.key === 'Enter') { e.stopPropagation(); $('lw-ok').click(); } });
+  };
   function sesiHabis(pesan) {
     hapus('er_token');
     akun = null; clearInterval(jamT); hentiAlarm(); tutupTirai();
@@ -369,7 +402,7 @@
     tulis('er_mode_lokal', tanda);
     tulis('er_token', p.token);
     akun = p;
-    window.ER_AKUN = { siswa: p.siswa, mode: p.mode, berakhir: p.berakhir, atur: p.atur || {}, pindah, pertama };
+    window.ER_AKUN = { siswa: p.siswa, mode: p.mode, berakhir: p.berakhir, atur: p.atur || {}, pindah, pertama, lewat: p.lewat || [] };
     if (pindah || antre.length || sama) kirim();
     pasangKepala();
     if (p.terkunci) tampilKunci();

@@ -1399,6 +1399,12 @@ function gambarSiswa() {
       return `<details class="kartu atur-siswa" ${p || nA ? "open" : ""}><summary><h2 style="display:inline">Aturan dan tahapan yang berlaku</h2>
       <span class="lencana ${nA ? "emas" : ""}">${nA ? nA + " aturan khusus" : "Pengaturan Umum"}</span>${p ? ` <span class="lencana biru">Tahapan "${esc(p.nama)}"</span>` : ""}</summary>${aturanBerlakuHtml(D.atur)}</details>`; })() : ""}
     <div class="kartu"><h2>Catatan otomatis</h2><ul class="catatan">${catatanOtomatis(D, k, O, H, Om, km).map((x) => `<li>${x}</li>`).join("")}</ul></div>
+    ${(D.lewat || []).length ? `<div class="kartu"><h2>Syarat dilewati guru</h2>
+      <p class="redup kecil" style="margin-top:0">Listening/Reading sebelum sub level yang dilewatkan guru di HP siswa karena ada kendala (PIN guru atau kode buka kunci). Bila sering, periksa HP/browser siswa.</p>
+      <div class="gulir"><table class="tabel"><thead><tr><th>Waktu</th><th>Level</th><th>Dilewati</th><th>Oleh</th></tr></thead><tbody>${D.lewat.slice(0, 15).map((l) => { const b = l.level ? levelDari(l.level) : null;
+        return `<tr><td class="kecil">${tglTeks(l.waktu, true)}${l.mode === "mandiri" ? ' <span class="lencana">mandiri</span>' : ""}</td>
+          <td class="kecil">${l.level ? esc(b ? labelLevel(b) : l.level) : `<b>Semua level</b> hari itu`}</td>
+          <td>${[l.dengar ? "🎧 Listening" : "", l.baca ? "🎤 Reading" : ""].filter(Boolean).join(" + ")}</td><td class="kecil">${esc(l.oleh)}</td></tr>`; }).join("")}</tbody></table></div></div>` : ""}
     ${kartuRiwayat(RIWAYAT)}
     <div class="kartu"><h2>Latihan mandiri (di luar sesi)</h2>
       <p class="redup kecil" style="margin-top:0">Latihan tanpa pengawasan guru. Kemajuannya terpisah dan <b>tidak menaikkan kemajuan resmi</b>; dipakai untuk menilai ketekunan siswa.
