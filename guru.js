@@ -258,13 +258,15 @@ function gambarKelas() {
     [rata.toLocaleString("id-ID", { maximumFractionDigits: 1 }), "rata-rata level tuntas", "level", "emas"],
     [macet, "macet", "macet", macet ? "buruk" : "redup-ubin"], [diam, "tidak berlatih 7 hari terakhir", "diam", diam ? "emas" : "redup-ubin"],
   ]);
-  const baris = window.TAHAP.map((t) => ({ label: `Tahap ${t.no} · ${t.nama}`, n: R.filter((r) => { const k = lengkapi(r); return pernahMulai(r) && !k.selesai && k.posisi && k.posisi.tahap === t.no; }).length }));
+  const baris = window.TAHAP.map((t) => ({ label: `Tahap ${t.no} · ${t.nama}`, kode: t.no, n: R.filter((r) => { const k = lengkapi(r); return pernahMulai(r) && !k.selesai && k.posisi && k.posisi.tahap === t.no; }).length }));
   // 22 Okt 2026: hanya rentang tahap yang berisi siswa (± satu tahap di kiri/kanan), sisanya disebut di catatan
   const isi = baris.map((b, i) => (b.n ? i : -1)).filter((i) => i >= 0);
   const tampil = isi.length ? baris.slice(Math.max(0, isi[0] - 1), Math.min(baris.length, isi[isi.length - 1] + 2)) : baris, sembunyi = baris.length - tampil.length;
   const tamat = R.filter((r) => lengkapi(r).selesai).length, belum = R.length - mulai.length;
-  if (tamat) tampil.push({ label: "Tamat semua tahap", n: tamat });
-  batangMendatar($("g-sebaran"), tampil, "siswa", [belum ? `${belum} siswa belum mulai.` : "", sembunyi ? `${sembunyi} tahap lain tanpa siswa tidak ditampilkan.` : ""].filter(Boolean).join(" "));
+  if (tamat) tampil.push({ label: "Tamat semua tahap", n: tamat, kode: "~tamat" });
+  batangMendatar($("g-sebaran"), tampil, "siswa", [belum ? `${belum} siswa belum mulai.` : "", sembunyi ? `${sembunyi} tahap lain tanpa siswa tidak ditampilkan.` : "", "Ketuk batang untuk melihat daftar siswanya."].filter(Boolean).join(" "),
+    { pilih: SEBARAN_PILIH, onPilih: (d) => { SEBARAN_PILIH = SEBARAN_PILIH === d.kode ? null : d.kode; gambarKelas(); } });
+  gambarDaftarSebaran(R, tampil);
 
   const u = $("pil-urut").value;
   R.sort((a, b) => u === "nama" ? a.nama.localeCompare(b.nama)
@@ -283,6 +285,51 @@ function gambarKelas() {
         <td>${sejakTeks(r.terakhir)}</td><td class="posisi">${mandiriHtml(r)}</td><td><span class="lencana-daftar">${status(r).map((s) => `<span class="lencana ringkas ${s.c}" title="${esc(s.t)}">${esc(s.t)}</span>`).join("")}</span></td></tr>`;
     }).join("") : `<tr><td colspan="${semua ? 11 : 10}" class="kosong-data">Tidak ada siswa.</td></tr>`) + "</tbody>";
   $("t-kelas").querySelectorAll("tr[data-n]").forEach((tr) => tr.onclick = () => bukaSiswa(tr.dataset.n));
+}
+
+/* Daftar siswa pada batang sebaran yang dipilih (12 Nov 2026, sama dengan Matdas): Rombel, Nama,
+   NISN, Posisi terakhir, Rata-rata nilai; urut rombel lalu nama. Kepala panel meringkas tahap itu;
+   tiap rombel dipisah garis supaya mudah dipindai. Ketuk batang yang sama atau Tutup untuk menyembunyikan. */
+let SEBARAN_PILIH = null;
+const kelasNilai = (p) => p == null ? "" : p >= 80 ? "baik" : p >= 60 ? "emas" : "buruk";
+function gambarDaftarSebaran(R, tampil) {
+  const w = $("g-sebaran-daftar"), d = tampil.find((b) => b.kode === SEBARAN_PILIH);
+  if (!d || !d.n) { SEBARAN_PILIH = null; w.innerHTML = ""; return; }
+  const tamat = d.kode === "~tamat";
+  const sis = R.filter((r) => { const k = lengkapi(r); return tamat ? k.selesai : pernahMulai(r) && !k.selesai && k.posisi && k.posisi.tahap === d.kode; }).sort(urutRombel);
+  const nilai = sis.map((r) => r.rata).filter((v) => v != null), rata = nilai.length ? Math.round(nilai.reduce((a, v) => a + v, 0) / nilai.length) : null;
+  const lv = tamat ? [] : sis.map((r) => nomorLevel(lengkapi(r).posisi)).filter((x) => x != null);
+  const nRombel = new Set(sis.map((r) => r.kelas || "–")).size;
+  const chip = (isi, judul, c = "") => `<span class="sb-chip ${c}" title="${esc(judul)}">${isi}</span>`;
+  const lvMin = lv.length ? Math.min(...lv) : null, lvMaks = lv.length ? Math.max(...lv) : null;
+  let lalu = null;
+  const baris = sis.map((r, i) => {
+    const k = lengkapi(r), p = r.rata != null ? Math.round(r.rata) : null, awalGrup = i > 0 && (r.kelas || "–") !== lalu; lalu = r.kelas || "–";
+    const posisi = tamat
+      ? `<span class="sb-lv tamat">${profilSiswa(r) && !k.lanjut ? "Tahapan selesai" : "Tamat"}</span>`
+      : `<span class="sb-lv">Level ${esc(nomorLevel(k.posisi))}</span><small>${esc(k.posisi.judul || "")}</small>`;
+    const nl = p == null ? `<span class="redup kecil">belum ada nilai</span>`
+      : `<div class="sb-ak ${kelasNilai(p)}"><div class="batang"><i style="width:${Math.min(100, p)}%"></i></div><b>${p}%</b></div>`;
+    return `<tr class="klik${awalGrup ? " sb-grup" : ""}" data-n="${esc(r.nisn)}" title="Buka analisis ${esc(r.nama)}">
+      <td class="sb-no">${i + 1}</td><td><span class="sb-tag">${esc(r.kelas || "–")}</span></td>
+      <td class="sb-nama">${esc(r.nama)}</td><td class="sb-nisn">${esc(r.nisn || "–")}</td>
+      <td class="sb-level">${posisi}</td><td class="sb-akurasi">${nl}</td></tr>`;
+  }).join("");
+  w.innerHTML = `<section class="sb-panel" aria-label="Daftar siswa ${esc(d.label)}">
+    <header class="sb-kepala">
+      <div class="sb-judul"><span class="sb-eyebrow">Daftar siswa</span><h3>${esc(d.label)}</h3></div>
+      <button type="button" class="garis kecil" id="g-sebaran-tutup" aria-label="Tutup daftar siswa">Tutup ✕</button>
+      <div class="sb-chips">${chip(`<b>${sis.length}</b> siswa`, "Jumlah siswa")}${chip(`<b>${nRombel}</b> rombel`, "Banyak rombel")}${
+        lvMin != null ? chip(`Level <b>${lvMin === lvMaks ? lvMin : `${lvMin}–${lvMaks}`}</b>`, "Rentang level siswa di tahap ini") : ""}${
+        rata != null ? chip(`Rata-rata nilai <b>${rata}%</b>`, "Rata-rata nilai siswa di tahap ini", kelasNilai(rata)) : ""}</div>
+    </header>
+    <div class="gulir"><table class="tabel sb-tabel" data-beku="3"><thead><tr><th class="sb-no">No</th><th>Rombel</th><th>Nama siswa</th><th>NISN</th><th>Posisi terakhir</th><th>Rata-rata nilai</th></tr></thead>
+    <tbody>${baris}</tbody></table></div>
+    <p class="sb-catatan">Urut rombel lalu nama · ketuk baris untuk membuka analisis siswa · Rata-rata nilai sejak awal latihan
+      (<span class="sb-titik baik"></span>≥ 80% · <span class="sb-titik emas"></span>60–79% · <span class="sb-titik buruk"></span>&lt; 60%).</p>
+  </section>`;
+  w.querySelectorAll("tr[data-n]").forEach((tr) => tr.onclick = () => bukaSiswa(tr.dataset.n));
+  $("g-sebaran-tutup").onclick = () => { SEBARAN_PILIH = null; gambarKelas(); $("g-sebaran").scrollIntoView({ block: "nearest" }); };
 }
 
 const labelPilihan = (id) => { const s = $(id); return s.options[s.selectedIndex] ? s.options[s.selectedIndex].text : ""; };
@@ -1243,15 +1290,25 @@ function tipPasang(wadah) {
     hide() { t.classList.remove("show"); },
   };
 }
-function batangMendatar(wadah, data, satuan, catatan) {
+/* Grafik batang digambar selebar wadahnya. Bila digambar saat wadahnya belum tampil (lebar 0 →
+   cadangan 720) atau lebarnya berubah, gambar ulang dengan lebar sebenarnya — supaya ukuran huruf
+   dan batang selalu sama, sebelum maupun sesudah batang diketuk (12 Nov 2026, sama dengan Matdas). */
+const pantauLebarGrafik = "ResizeObserver" in window ? new ResizeObserver((es) => es.forEach((e) => {
+  const w = e.target, a = w._grafik;
+  if (a && w.clientWidth && Math.abs(Math.max(300, w.clientWidth) - a.W) > 2) batangMendatar(w, ...a.args);
+})) : null;
+function batangMendatar(wadah, data, satuan, catatan, opsi = {}) {
   const W = Math.max(300, wadah.clientWidth || 720), hp = W < 560, labelW = hp ? Math.round(W * 0.46) : Math.min(320, Math.round(W * 0.34)), fs = hp ? 11.5 : 13;
   const muat = Math.floor((labelW - 14) / (fs * 0.52)), pendek = (t) => t.length > muat ? t.slice(0, muat - 1).trimEnd() + "…" : t;
   const tinggi = 26, jarak = 8, maks = Math.max(1, ...data.map((d) => d.n));
   const H = data.length * (tinggi + jarak) + 4, lebar = W - labelW - 50;
+  wadah._grafik = { W, args: [data, satuan, catatan, opsi] };
+  if (pantauLebarGrafik && !wadah._dipantau) { wadah._dipantau = true; pantauLebarGrafik.observe(wadah); }
   let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sebaran siswa per tahap"><defs><linearGradient id="gb" x1="0" x2="1"><stop offset="0" stop-color="#2F5D7C"/><stop offset="1" stop-color="#3E7FA6"/></linearGradient></defs>`;
   data.forEach((d, i) => {
     const y = i * (tinggi + jarak), w = d.n ? Math.max(4, lebar * d.n / maks) : 0;
-    s += `<g class="bt" data-i="${i}"><rect x="0" y="${y - 2}" width="${W}" height="${tinggi + 4}" fill="transparent"/>
+    const dipilih = opsi.pilih != null && d.kode === opsi.pilih, bisa = opsi.onPilih && d.n;
+    s += `<g class="bt" data-i="${i}"${bisa ? ` role="button" tabindex="0" aria-pressed="${dipilih}" style="cursor:pointer"` : ""}><rect x="0" y="${y - 2}" width="${W}" height="${tinggi + 4}" rx="6" fill="${dipilih ? "#EAF1F6" : "transparent"}"${dipilih ? ` stroke="#3E7FA6" stroke-width="1.5"` : ""}/>
       <text x="${labelW - 10}" y="${y + tinggi / 2 + 5}" text-anchor="end" font-size="${fs}" fill="#5E5548"><title>${esc(d.label)}</title>${esc(pendek(d.label))}</text>
       <rect x="${labelW}" y="${y + 3}" width="${lebar}" height="${tinggi - 6}" rx="4" fill="#F6F2E8"/>
       ${w ? `<path d="M${labelW},${y + 3} h${w - 4} a4,4 0 0 1 4,4 v${tinggi - 14} a4,4 0 0 1 -4,4 h${-(w - 4)} z" fill="url(#gb)"/>` : ""}
@@ -1263,6 +1320,11 @@ function batangMendatar(wadah, data, satuan, catatan) {
   wadah.querySelectorAll(".bt").forEach((g) => {
     g.onmousemove = (e) => { const d = data[g.dataset.i], r = wadah.getBoundingClientRect(); tip.show(`${esc(d.label)}<br><b>${d.n} ${satuan}</b>`, e.clientX - r.left, e.clientY - r.top); };
     g.onmouseleave = () => tip.hide();
+    const d = data[g.dataset.i];
+    if (opsi.onPilih && d.n) {
+      g.onclick = () => { tip.hide(); opsi.onPilih(d); };
+      g.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); opsi.onPilih(d); } };
+    }
   });
 }
 /* Garis kumulatif sub level lulus per tanggal berlatih. */

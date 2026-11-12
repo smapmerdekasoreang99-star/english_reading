@@ -400,6 +400,44 @@ span.ab-asal.a-umum { background: var(--kertas-3); color: var(--tinta-2); box-sh
 .massal .m-panel.hidden { display: none; }
 /* Kolom posisi: nama tingkat lalu level di bawahnya */
 #t-perkelompok th { vertical-align: bottom; line-height: 1.45; } #t-perkelompok td.posisi { min-width: 160px; }
+/* Daftar siswa per batang sebaran (12 Nov 2026) */
+.sb-panel { margin-top: var(--j4); border: 1px solid var(--garis); border-radius: 14px; background: var(--kertas-2); box-shadow: inset 4px 0 0 var(--sakit); overflow: hidden; }
+.sb-kepala { display: grid; grid-template-columns: 1fr auto; gap: var(--j2) var(--j3); align-items: start; padding: var(--j3) var(--j4) var(--j3) calc(var(--j4) + 4px); border-bottom: 1px solid var(--garis); background: var(--kertas); }
+.sb-judul h3 { margin: 2px 0 0; font-size: 17px; line-height: 1.3; color: var(--tinta); overflow-wrap: anywhere; }
+.sb-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--sakit-tua); }
+.sb-chips { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+.sb-chip { display: inline-flex; align-items: baseline; gap: 4px; padding: 4px 10px; border-radius: var(--r-bulat); background: var(--kertas-3); border: 1px solid var(--garis); font-size: var(--h-s); color: var(--tinta-2); white-space: nowrap; }
+.sb-chip b { color: var(--tinta); font-variant-numeric: tabular-nums; }
+.sb-chip.baik { background: var(--hadir-muda); border-color: transparent; color: var(--hadir-tua); } .sb-chip.baik b { color: var(--hadir-tua); }
+.sb-chip.emas { background: var(--emas-muda); border-color: transparent; color: var(--emas-teks); } .sb-chip.emas b { color: var(--emas-teks); }
+.sb-chip.buruk { background: var(--absen-muda); border-color: transparent; color: var(--absen-tua); } .sb-chip.buruk b { color: var(--absen-tua); }
+.sb-panel .gulir { padding: 0; margin: var(--j2) var(--j3) 0; }
+.sb-tabel thead th { border-radius: 0 !important; box-shadow: 0 1px 0 var(--garis), 0 4px 6px -4px rgba(29, 42, 58, .18); }   /* kepala menutup penuh saat digulir */
+.sb-panel .fz-wadah { max-height: min(520px, calc(100vh - 180px)); }
+.sb-tabel { width: 100%; }
+.sb-tabel td { padding-top: 9px; padding-bottom: 9px; white-space: nowrap; }
+.sb-tabel tbody tr:nth-child(even) td { background-color: var(--kertas); }
+.sb-tabel tbody tr:hover td { background-color: var(--sakit-muda); }
+.sb-tabel tr.sb-grup td { border-top: 2px solid var(--garis-2); }
+.sb-tabel .sb-no { width: 1%; text-align: right; color: var(--tinta-3); font-variant-numeric: tabular-nums; }
+.sb-tag { display: inline-block; padding: 2px 8px; border-radius: 6px; background: var(--sakit-muda); color: var(--sakit-tua); font-size: var(--h-xs); font-weight: 700; letter-spacing: .02em; }
+.sb-rombel { color: var(--tinta-2); font-variant-numeric: tabular-nums; }
+.sb-tabel td.sb-nama { white-space: normal; min-width: 180px; max-width: 280px; font-weight: 600; color: var(--tinta); line-height: 1.35; }
+.sb-nisn { font-variant-numeric: tabular-nums; color: var(--tinta-2); letter-spacing: .02em; }
+.sb-lv { display: inline-block; padding: 2px 10px; border-radius: var(--r-bulat); background: var(--kertas-3); border: 1px solid var(--garis); font-size: var(--h-s); font-weight: 700; color: var(--tinta); font-variant-numeric: tabular-nums; }
+.sb-lv.tamat { background: var(--hadir-muda); border-color: transparent; color: var(--hadir-tua); }
+.sb-level small { display: block; margin-top: 2px; font-size: var(--h-xs); color: var(--tinta-3); }
+.sb-ak { display: flex; align-items: center; gap: var(--j2); min-width: 140px; }
+.sb-ak .batang { flex: 1; min-width: 70px; }
+.sb-ak b { min-width: 3.2em; text-align: right; font-variant-numeric: tabular-nums; }
+.sb-ak.baik .batang i { background: var(--hadir); } .sb-ak.baik b { color: var(--hadir-tua); }
+.sb-ak.emas .batang i { background: var(--emas); } .sb-ak.emas b { color: var(--emas-teks); }
+.sb-ak.buruk .batang i { background: var(--absen); } .sb-ak.buruk b { color: var(--absen-tua); }
+.sb-catatan { margin: 0; padding: var(--j2) var(--j4) var(--j3) calc(var(--j4) + 4px); font-size: var(--h-xs); color: var(--tinta-3); line-height: 1.5; }
+.sb-titik { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin: 0 4px 0 2px; }
+.sb-titik.baik { background: var(--hadir); } .sb-titik.emas { background: var(--emas); } .sb-titik.buruk { background: var(--absen); }
+@media (max-width: 560px) { .sb-kepala { padding: var(--j3); } .sb-panel .gulir { margin: var(--j2) var(--j2) 0; } .sb-tabel td.sb-nama { min-width: 150px; } }
+.sb-level small { white-space: normal; max-width: 260px; }
 td.posisi { min-width: 200px; } td.posisi .pos-nm { display: block; font-weight: 600; line-height: 1.35; } td.posisi .pos-lv { display: block; font-size: var(--h-xs); color: var(--tinta-2); }
 .massal .m-kepala { display: flex; align-items: center; gap: var(--j3); flex-wrap: wrap; }
 .massal .m-baris { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: var(--j3); align-items: start; }
@@ -922,6 +960,7 @@ select.jl-bagian.diisi { border-color: var(--emas); background: var(--emas-kabut
         <h2>Sebaran posisi siswa</h2>
         <p class="redup kecil" style="margin-top:0">Banyak siswa yang sedang berada di tiap tahap.</p>
         <div class="grafik" id="g-sebaran"></div>
+        <div id="g-sebaran-daftar"></div>
       </div>
       <div class="kartu"><h2>Perbandingan rombel</h2><div class="gulir"><table class="tabel" id="t-perkelompok" data-beku="1"></table></div>
         <p class="redup kecil">Ketuk baris rombel untuk menampilkan ringkasan dan sebarannya di atas. Macet: satu sub level dicoba 3 kali atau lebih dalam 30 hari tanpa mencapai 80%. Tidak aktif: tidak berlatih dalam 7 hari terakhir.</p></div>
@@ -1190,7 +1229,7 @@ select.jl-bagian.diisi { border-color: var(--emas); background: var(--emas-kabut
 <script src="assets/excel.js?v=5"></script>
 <script src="assets/arsip.js?v=2"></script>
 <script src="assets/rekap.js?v=3"></script>
-<script src="guru.js?v=31"></script>
+<script src="guru.js?v=32"></script>
 <script>
 /* Tombol mata di kotak PIN (13 Okt 2026): ketuk untuk melihat PIN yang diketik, ketuk lagi untuk menyembunyikan.
    Berdiri sendiri (gaya disisipkan di sini) supaya sama di semua aplikasi. Kotak PIN ditandai data-lihat. */
