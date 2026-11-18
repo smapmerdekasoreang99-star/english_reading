@@ -603,7 +603,7 @@ function gambarSesi() {
           : `<span class="lencana">Ditutup</span><small>${(G.umum || {}).mandiri === false ? "siswa tidak bisa masuk" : "siswa hanya bisa latihan mandiri"}${k.aktif ? ` · ${k.aktif} berlatih mandiri` : ""}</small>`}</div>
         <div class="sesi-kode">${buka ? `<small>Kode akses</small><b>${esc(k.sesi.kode)}</b>` : ""}</div>
         <div class="sesi-aksi${buka ? " buka" : ""}">${buka
-          ? `<button class="garis kecil sesi-layar" data-layar="${esc(k.kelas)}">${IKON_QR}QR &amp; kode masuk</button><button class="garis kecil sesi-layar" data-teratas="${esc(k.kelas)}">${IKON_TERATAS}Tampilkan teratas</button><button class="kecil bahaya" data-tutup="${esc(k.kelas)}">Tutup sekarang</button><div class="ubah-waktu" role="group" aria-label="Ubah waktu sesi ${esc(k.kelas)}"><button type="button" class="uw-kurang" data-uw="-1" data-kel="${esc(k.kelas)}" ${sisaSesi(k) <= 1 ? 'disabled title="Sisa waktu kurang dari 2 menit. Untuk mengakhiri, pakai Tutup sekarang."' : 'title="Mempersingkat sesi ini; siswa yang sedang berlatih ikut selesai lebih cepat"'}><b aria-hidden="true">−</b>Kurangi</button><label class="uw-isi"><input type="number" data-uw-menit="${esc(k.kelas)}" min="1" max="300" step="1" inputmode="numeric" value="${esc(MENIT_TAMBAH[k.kelas] || 15)}" aria-label="Jumlah menit"><span>menit</span></label><button type="button" class="uw-tambah" data-uw="1" data-kel="${esc(k.kelas)}" title="Memperpanjang sesi ini; kode akses tetap"><b aria-hidden="true">+</b>Tambah</button></div>`
+          ? `<button class="garis kecil sesi-layar" data-layar="${esc(k.kelas)}">${IKON_QR}QR &amp; kode masuk</button><button class="garis kecil sesi-layar" data-teratas="${esc(k.kelas)}">${IKON_TERATAS}Peringkat teratas</button><button class="kecil bahaya" data-tutup="${esc(k.kelas)}">Tutup sekarang</button><div class="ubah-waktu" role="group" aria-label="Ubah waktu sesi ${esc(k.kelas)}"><button type="button" class="uw-kurang" data-uw="-1" data-kel="${esc(k.kelas)}" ${sisaSesi(k) <= 1 ? 'disabled title="Sisa waktu kurang dari 2 menit. Untuk mengakhiri, pakai Tutup sekarang."' : 'title="Mempersingkat sesi ini; siswa yang sedang berlatih ikut selesai lebih cepat"'}><b aria-hidden="true">−</b>Kurangi</button><label class="uw-isi"><input type="number" data-uw-menit="${esc(k.kelas)}" min="1" max="300" step="1" inputmode="numeric" value="${esc(MENIT_TAMBAH[k.kelas] || 15)}" aria-label="Jumlah menit"><span>menit</span></label><button type="button" class="uw-tambah" data-uw="1" data-kel="${esc(k.kelas)}" title="Memperpanjang sesi ini; kode akses tetap"><b aria-hidden="true">+</b>Tambah</button></div>`
           : `${pilihMenit(k.kelas)}<button class="kecil" data-buka="${esc(k.kelas)}">Buka sesi</button>`}</div></div>`;
     }).join("");
   const cari = (kel) => G.rombel.find((x) => x.kelas === kel);
@@ -683,7 +683,9 @@ document.addEventListener("fullscreenchange", () => {
   if (TR) tutupTeratas();
 });
 
-/* ---- Papan 10 teratas: sejak sesi dibuka, urut sub level lulus → rata-rata nilai → banyak kegiatan. */
+/* ---- Papan Peringkat Teratas: sejak sesi dibuka, urut sub level lulus → rata-rata nilai → banyak kegiatan.
+   18 Nov 2026 (disamakan dengan Matdas 11 Nov): semua siswa rombel tampil; podium 1–5, peringkat 6..n bergulir,
+   siswa yang belum lulus satu sub level pun di bawah tanpa nomor. */
 const TR_JEDA_PILIH = [8, 15, 30, 60];
 const trJedaSimpan = () => { try { const v = +localStorage.getItem("er_teratas_jeda"); return TR_JEDA_PILIH.includes(v) ? v : 30; } catch (e) { return 30; } };
 let TR_JEDA = trJedaSimpan(), TR = null;
@@ -704,6 +706,7 @@ async function tampilTeratas(kel, sim = false) {
   gambarDetak();
   await muatTeratas();
   if (!TR) return;
+  gulirTeratas();
   TR.waktu = setInterval(() => { if (!TR) return; TR.sisa -= 1; if (TR.sisa <= 0) { TR.sisa = TR.jeda; muatTeratas(); } gambarDetak(); }, 1000);
 }
 async function muatTeratas() {
@@ -732,32 +735,64 @@ function gambarTeratas(d) {
     [`${d.n_berlatih}<small> / ${d.n_siswa}</small>`, "siswa sudah berlatih"], [d.total_lulus, "sub level lulus"],
     [d.total_kegiatan, "kegiatan selesai"], [`${d.rata || 0}<small>%</small>`, "rata-rata nilai rombel"],
   ].map(([b, s]) => `<div class="tr-kartu"><b>${b}</b><span>${s}</span></div>`).join("");
-  const T = d.teratas || [];
+  const T = d.teratas || [], LN = d.lain || [];
+  // Naik peringkat dibanding pembaruan sebelumnya (atau baru mendapat peringkat)
   const naik = (r) => TR.lalu.size && (!TR.lalu.has(r.nisn) || TR.lalu.get(r.nisn) > r.peringkat);
   const selisihNaik = (r) => TR.lalu.has(r.nisn) ? TR.lalu.get(r.nisn) - r.peringkat : 0;
-  if (!T.length) {
+  // Posisi gulir daftar dijaga saat isi diganti tiap pembaruan
+  const gulirLama = $("tr-isi").querySelector(".tr-daftar")?.scrollTop || 0;
+  const posisi = (r) => { const b = levelDari(r.level); return b ? `${labelLevel(b)}${r.sub ? " · sub " + r.sub : ""}` : ""; };
+  if (!T.length && !LN.some((r) => r.kegiatan)) {
     $("tr-isi").innerHTML = `<div class="tr-kosong-daftar" style="grid-column:1/-1"><div><b>Siapa yang pertama?</b>
       Belum ada kegiatan yang selesai dalam sesi ini. Peringkat muncul begitu siswa menuntaskan kegiatan pertamanya.</div></div>`;
   } else {
-    const posisi = (r) => { const b = levelDari(r.level); return b ? `${labelLevel(b)}${r.sub ? " · sub " + r.sub : ""}` : ""; };
     const tiang = (r, j) => r
       ? `<div class="tr-tiang j${j}${naik(r) ? " naik" : ""}"><span class="tr-mahkota">${j === 1 ? "★" : ""}</span>
           <span class="tr-ava">${esc(inisialPapan(r.nama))}</span><span class="tr-nama-p" title="${esc(r.nama)}">${esc(namaPapan(r.nama))}</span>
-          <span class="tr-meta-p"><b>${r.lulus}</b> sub lulus · rata <b>${r.rata ?? 0}%</b></span><div class="tr-alas">${j}</div></div>`
-      : `<div class="tr-tiang j${j} kosong"><span class="tr-mahkota"></span><span class="tr-ava">–</span><span class="tr-nama-p">&nbsp;</span><span class="tr-meta-p">&nbsp;</span><div class="tr-alas">${j}</div></div>`;
+          <span class="tr-meta-p"><span><b>${r.lulus}</b> sub lulus</span><span>rata <b>${r.rata ?? 0}%</b></span></span><div class="tr-alas">${j}</div></div>`
+      : `<div class="tr-tiang j${j} kosong"><span class="tr-mahkota"></span><span class="tr-ava">–</span><span class="tr-nama-p">&nbsp;</span>
+          <span class="tr-meta-p"><span>&nbsp;</span><span>&nbsp;</span></span><div class="tr-alas">${j}</div></div>`;
     const maks = Math.max(1, ...T.map((r) => r.lulus));
-    $("tr-isi").innerHTML = `<div class="tr-podium">${tiang(T[1], 2)}${tiang(T[0], 1)}${tiang(T[2], 3)}</div>
-      <div class="tr-daftar" style="grid-template-rows: repeat(7, minmax(0, 1fr))">${T.slice(3).map((r) => `
+    const ketLain = (r) => r.kegiatan ? `sudah ${r.kegiatan} kegiatan, belum ada sub level lulus` : "belum mulai";
+    const daftarLain = LN.length ? `<div class="tr-pisah">Belum lulus sub level (${LN.length} siswa)</div>` + LN.map((r) => `
+        <div class="tr-baris lain"><span class="tr-no">–</span>
+          <span class="tr-siswa"><b title="${esc(r.nama)}">${esc(namaPapan(r.nama))}</b><small>${esc(posisi(r))}</small></span>
+          <span class="tr-ket-lain">${ketLain(r)}</span><span></span></div>`).join("") : "";
+    $("tr-isi").innerHTML = `<div class="tr-podium">${tiang(T[3], 4)}${tiang(T[1], 2)}${tiang(T[0], 1)}${tiang(T[2], 3)}${tiang(T[4], 5)}</div>
+      <div class="tr-daftar" aria-label="Peringkat 6 dan seterusnya">${T.slice(5).map((r) => `
         <div class="tr-baris${naik(r) ? " naik" : ""}"><span class="tr-no">${r.peringkat}</span>
           <span class="tr-siswa"><b title="${esc(r.nama)}">${esc(namaPapan(r.nama))}${selisihNaik(r) > 0 ? `<span class="tr-naik">▲${selisihNaik(r)}</span>` : ""}</b><small>${esc(posisi(r))}</small></span>
           <span class="tr-batang"><span class="tr-jalur"><i style="width:${(100 * r.lulus) / maks}%"></i></span><b>${r.lulus}<small> lulus</small></b></span>
-          <span class="tr-lvl">rata ${r.rata ?? 0}%</span></div>`).join("") || '<div class="tr-kosong-daftar"><div>Peringkat 4–10 menunggu penantang berikutnya.</div></div>'}</div>`;
+          <span class="tr-lvl">rata ${r.rata ?? 0}%</span></div>`).join("") || (LN.length ? "" : '<div class="tr-kosong-daftar"><div>Peringkat 6 dan seterusnya menunggu penantang berikutnya.</div></div>')}${daftarLain}</div>`;
+    const dft = $("tr-isi").querySelector(".tr-daftar"); if (dft) dft.scrollTop = gulirLama;
   }
   TR.lalu = new Map(T.map((r) => [r.nisn, r.peringkat]));
 }
+/* Daftar peringkat 6..n bergulir sendiri pelan-pelan bila tidak muat (papan diproyeksikan, tidak ada
+   yang menggeser): diam 4 detik di atas, turun ±25 px/detik, diam 4 detik di bawah, kembali ke atas.
+   Guru menggeser sendiri (roda/sentuh/klik) → guliran otomatis berhenti 10 detik. (Sama dengan Matdas.) */
+function gulirTeratas() {
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const G = { henti: Date.now() + 4000, akhir: performance.now(), pos: 0 };
+  TR.gulir = G;
+  const isi = $("tr-isi"), tahan = () => { G.henti = Date.now() + 10000; };
+  isi.onwheel = tahan; isi.onpointerdown = tahan; isi.ontouchstart = tahan;
+  const langkah = (t) => {
+    if (!TR || TR.gulir !== G) return;
+    const el = isi.querySelector(".tr-daftar"), dt = Math.min(100, t - G.akhir); G.akhir = t;
+    if (el && el.scrollHeight > el.clientHeight + 4) {
+      const maks = el.scrollHeight - el.clientHeight;
+      if (Date.now() < G.henti) G.pos = el.scrollTop;
+      else if (G.pos >= maks - 1) { el.scrollTo({ top: 0, behavior: "smooth" }); G.pos = 0; G.henti = Date.now() + 4000; }
+      else { G.pos = Math.min(maks, G.pos + dt * 0.025); el.scrollTop = G.pos; if (G.pos >= maks - 1) G.henti = Date.now() + 4000; }
+    }
+    G.raf = requestAnimationFrame(langkah);
+  };
+  G.raf = requestAnimationFrame(langkah);
+}
 function tutupTeratas() {
   if (!TR) return;
-  clearInterval(TR.waktu); TR = null;
+  clearInterval(TR.waktu); if (TR.gulir) cancelAnimationFrame(TR.gulir.raf); TR = null;
   $("teratas-layar").classList.add("hidden");
   if (document.fullscreenElement === $("teratas-layar")) document.exitFullscreen().catch(() => {});
 }
@@ -794,7 +829,9 @@ function langkahSimulasi() {
     dari: new Date(SIM.mulai).toISOString(), sampai: new Date(SIM.mulai + 30 * 60000).toISOString(),
     n_siswa: SIM.siswa.length, n_berlatih: aktif.length, total_lulus: aktif.reduce((t, s) => t + s.lulus, 0), total_kegiatan: aktif.reduce((t, s) => t + s.kegiatan, 0),
     rata: aktif.length ? Math.round(aktif.reduce((t, s) => t + s.rata, 0) / aktif.length) : 0,
-    teratas: aktif.slice(0, 10).map((s, i) => ({ peringkat: i + 1, nisn: s.nisn, nama: s.nama, lulus: s.lulus, kegiatan: s.kegiatan, rata: s.rata, level: s.level, sub: s.sub })) };
+    teratas: aktif.filter((s) => s.lulus > 0).map((s, i) => ({ peringkat: i + 1, nisn: s.nisn, nama: s.nama, lulus: s.lulus, kegiatan: s.kegiatan, rata: s.rata, level: s.level, sub: s.sub })),
+    lain: SIM.siswa.filter((s) => s.lulus === 0).sort((a, b) => (a.kegiatan === 0) - (b.kegiatan === 0) || a.nama.localeCompare(b.nama, "id"))
+      .map((s) => ({ nisn: s.nisn, nama: s.nama, kegiatan: s.kegiatan, level: s.kegiatan ? s.level : null, sub: s.kegiatan ? s.sub : null })) };
 }
 if (new URLSearchParams(location.search).get("simulasi") === "teratas") tampilTeratas("Simulasi", true);
 
