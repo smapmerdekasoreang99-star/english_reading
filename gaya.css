@@ -823,3 +823,40 @@ a.tombol.utama { color: var(--utama-teks); }
 .tips-rekam ul { margin: 8px 0; padding-left: 22px; }
 .tips-rekam li { margin: 3px 0; }
 .tips-rekam .gagal-bukan { padding: 10px 12px; border-radius: var(--r1); background: var(--biru-muda); color: var(--biru-tua); font-size: 13.5px; margin: 0; }
+
+/* ---------- Beranda berurutan + peta level (24 Nov 2026, seperti Literasi Indonesia) ---------- */
+.ur-posisi { display: flex; align-items: center; gap: 12px; margin-top: 18px; font-size: 13px; font-weight: 700; color: var(--tinta-2); }
+.ur-posisi span { white-space: nowrap; }
+.ur-batang { flex: 1; height: 8px; border-radius: 99px; background: var(--garis); overflow: hidden; }
+.ur-batang i { display: block; height: 100%; background: var(--hijau); border-radius: inherit; }
+.ur-kini { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; padding: 18px 20px; border-radius: 16px; text-decoration: none; color: inherit;
+  background: var(--kertas); border: 2px solid var(--emas); box-shadow: var(--bayang); }
+.ur-kini:hover { border-color: var(--emas-tua); }
+.ur-label { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--emas-teks); }
+.ur-kini-tahap { font-size: 14px; font-weight: 700; color: var(--tinta-2); }
+.ur-judul { font-family: var(--huruf-judul); font-size: 24px; font-weight: 700; line-height: 1.25; color: var(--gelap); }
+.ur-tombol { align-self: flex-start; margin-top: 10px; pointer-events: none; }
+.ur-tamat { margin-top: 12px; }
+.ur-peta { margin-top: 26px; }
+.ur-peta h2 { font-size: 21px; color: var(--gelap); }
+.ur-ket { margin: 4px 0 10px; font-size: 14px; color: var(--tinta-2); }
+details.ur-tahap { margin-top: 8px; background: var(--kertas); border: 1px solid var(--garis); border-radius: 14px; padding: 10px 14px; }
+details.ur-tahap summary { display: flex; align-items: center; gap: 12px; cursor: pointer; list-style: none; }
+details.ur-tahap summary::-webkit-details-marker { display: none; }
+details.ur-tahap .tahap-no { width: 36px; height: 36px; font-size: 18px; }
+details.ur-tahap.selesai .tahap-no { background: var(--hijau); color: #fff; }
+details.ur-tahap.selesai .tahap-progres { color: var(--hijau-tua); }
+.ur-tahap-nama { display: flex; flex-direction: column; min-width: 0; }
+.ur-tahap-nama b { color: var(--gelap); }
+.ur-tahap-nama small { font-size: 12px; color: var(--tinta-2); font-weight: 700; }
+details.ur-tahap ol { list-style: none; padding: 0; margin: 10px 0 2px; }
+details.ur-tahap li { display: flex; align-items: center; gap: 12px; padding: 7px 0; border-top: 1px solid var(--garis); font-size: 15px; }
+details.ur-tahap li .st { flex: none; width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800; background: var(--garis); color: var(--tinta-2); }
+details.ur-tahap li.tuntas .st { background: var(--hijau); color: #fff; }
+details.ur-tahap li.sekarang { font-weight: 800; }
+details.ur-tahap li.sekarang .st { background: var(--emas); color: #fff; }
+details.ur-tahap li.belum .ur-nm { color: var(--tinta-2); }
+.ur-nm { min-width: 0; }
+details.ur-tahap li .nl { margin-left: auto; font-size: 12px; color: var(--tinta-2); white-space: nowrap; }
+details.ur-tahap li.sekarang .nl { color: var(--emas-teks); font-weight: 800; }

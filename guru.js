@@ -855,7 +855,8 @@ const ATUR_KHUSUS = [
     { k: "harusDengar", l: "Dengar teks dulu", t: "ya", on: "Harus Dengar", off: "Tanpa Dengar", s: "Teks dibacakan sampai selesai sebelum sub level pertama yang dipakai (sub level 1, atau mis. sub level 6 bila tahapan hanya memakai 6–10)." },
     { k: "harusBaca", l: "Baca teks dulu", t: "ya", on: "Harus Baca", off: "Tanpa Baca", s: "Siswa membaca keras teks sebelum sub level pertama yang dipakai. Berlaku per level: bisa dimatikan untuk tahap/level tertentu lewat aturan per bagian tahapan." },
     { k: "syaratBaca", l: "Akurasi membaca minimal", t: "angka", sat: "%", min: 50, maks: 100, s: "50–100%. Dipakai bila Harus Baca." },
-    { k: "urut", l: "Urutan level", t: "ya", on: "Berurutan", off: "Bebas", s: "Berurutan: level berikut terbuka setelah level sebelumnya tuntas (seperti Matematika Dasar)." } ] },
+    { k: "urut", l: "Urutan level", t: "ya", on: "Berurutan", off: "Bebas", s: "Berurutan: siswa hanya melihat level yang sedang dikerjakan, level lain di peta (seperti Literasi Indonesia). Bebas: siswa memilih dari daftar level." },
+    { k: "terjemahan", l: "Terjemahan di halaman materi", t: "ya", on: "Ada terjemahan", off: "Tanpa terjemahan", s: "Tanpa terjemahan: arti kata dan kalimat tidak tampil di halaman level, sehingga soal sub level menilai kosakata siswa." } ] },
   { g: "Pengawasan keluar halaman", d: "Hanya saat sesi di sekolah; latihan mandiri tidak diawasi.", kol: 1, f: [
     { k: "maks_keluar", l: "Batas keluar halaman", t: "angka", sat: "kali", min: 0, maks: 20, s: "Saat tercapai, latihan dikunci sampai dibuka guru. 0 = tanpa batas." },
     { k: "toleransi_keluar", l: "Abaikan keluar di bawah", t: "angka", sat: "detik", min: 0, maks: 120, s: "Keluar sesingkat ini hanya dicatat, tidak dihitung." },
@@ -865,7 +866,7 @@ const ATUR_KHUSUS = [
       s: "Lama bawaan saat guru membuka sesi di sekolah (5–300 menit). Latihan mandiri tidak terpengaruh: lamanya mengikuti Pengaturan Umum." } ] },
 ];
 const SEMUA_KHUSUS = ATUR_KHUSUS.flatMap((g) => g.f);
-const BAWAAN = { jumlahSoal: 10, harusDengar: true, harusBaca: true, syaratBaca: 75, tampilJawaban: true, bilaSalah: "akhir", batasSalah: 0, urut: false,
+const BAWAAN = { jumlahSoal: 10, harusDengar: true, harusBaca: true, syaratBaca: 75, tampilJawaban: true, bilaSalah: "akhir", batasSalah: 0, urut: true, terjemahan: true,
   mandiri: true, durasi_menit: 180, maks_keluar: 0, toleransi_keluar: 10, kode_buka: "" };
 const umumNilai = (k) => (G.umum && G.umum[k] != null ? G.umum[k] : BAWAAN[k]);
 const nilaiAturTeks = (x, v) => x.t === "kode" ? (v ? String(v) : "PIN guru") : x.t === "ya" ? (v ? x.on : x.off) : x.t === "pilih" ? ((x.opsi.find((o) => o[0] === v) || [])[1] || v)
@@ -1747,10 +1748,11 @@ const SEKSI = [
   { ikon: "tangga", judul: "Aturan naik sub level", ket: "Kapan siswa tuntas satu sub level dan apa syarat sebelum mulai.", baris: [
     { k: "jumlahSoal", jenis: "angka", satuan: "soal", min: 5, maks: 50, l: "Jumlah soal per sub level", s: "Bawaan 10. Sub level lulus bila nilainya paling sedikit 80%." },
     { k: "batasSalah", jenis: "angka", satuan: "kali", maks: 50, l: "Batas salah per sub level", s: "Lebih dari batas ini, sub level diulang dari nomor 1 dengan soal lain. 0 = tanpa batas." },
-    { k: "harusDengar", jenis: "ya", l: "Dengarkan teks dulu sebelum sub level pertama", s: "Teks level dibacakan sampai selesai lebih dulu.", on: "Harus Dengar", off: "Tanpa Dengar" },
-    { k: "harusBaca", jenis: "ya", l: "Baca teks dulu sebelum sub level pertama", s: "Siswa membaca keras teks level (Baca & Koreksi) sampai akurasi minimal.", on: "Harus Baca", off: "Tanpa Baca" },
+    { k: "harusDengar", jenis: "ya", l: "Dengarkan teks dulu sebelum sub level pertama", s: "Teks level dibacakan sampai selesai lebih dulu. Tanpa Dengar: tombol ▶ Dengarkan (serta pilihan kecepatan dan suara) tidak tampil di halaman level.", on: "Harus Dengar", off: "Tanpa Dengar" },
+    { k: "harusBaca", jenis: "ya", l: "Baca teks dulu sebelum sub level pertama", s: "Siswa membaca keras teks level (Baca & Koreksi) sampai akurasi minimal. Tanpa Baca: tombol 🎤 Baca & Koreksi tidak tampil di halaman level.", on: "Harus Baca", off: "Tanpa Baca" },
     { k: "syaratBaca", jenis: "angka", satuan: "%", min: 50, maks: 100, l: "Akurasi membaca minimal", s: "Dipakai bila Harus Baca." },
-    { k: "urut", jenis: "ya", l: "Urutan level", s: "Berurutan: level berikut terbuka setelah level sebelumnya tuntas; level yang sudah tuntas atau sudah dikerjakan tetap terbuka. Bebas: siswa boleh memilih level mana saja (seperti sebelumnya).", on: "Berurutan", off: "Bebas" },
+    { k: "urut", jenis: "ya", l: "Urutan level", s: "Berurutan (bawaan, seperti Literasi Indonesia): siswa hanya melihat level yang sedang dikerjakan, yaitu level pertama di tahapannya yang belum tuntas; level lain tampil di peta untuk dilihat saja. Bebas: siswa memilih level dari daftar. Latihan mandiri \"Bebas memilih materi\" selalu Bebas.", on: "Berurutan", off: "Bebas" },
+    { k: "terjemahan", jenis: "ya", l: "Terjemahan di halaman materi", s: "Arti kata dan arti kalimat bahasa Indonesia di halaman level. Tanpa terjemahan: siswa tidak melihat artinya, sehingga soal sub level yang menanyakan arti benar-benar menilai kosakatanya.", on: "Ada terjemahan", off: "Tanpa terjemahan" },
   ] },
   { ikon: "jam", judul: "Sesi", ket: "Lama bawaan sesi kelas dan lama satu kali latihan mandiri.", baris: [
     { k: "durasi_menit", jenis: "angka", satuan: "menit", min: 15, maks: 720, l: "Lama satu sesi", s: "Lama bawaan saat guru membuka sesi kelas di Sesi Kegiatan (paling lama 300 menit; bisa diganti saat membuka), dan lama satu kali latihan mandiri (15–720 menit). Waktu dihitung ulang setiap siswa menyimpan kemajuan; setelah tidak aktif selama itu, siswa diminta masuk lagi dengan NISN. Kemajuannya tetap tersimpan." },
