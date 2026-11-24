@@ -1789,9 +1789,17 @@
     const urut = b.pola ? Array.from({ length: N }, (_, i) => i) : !b.kosakata ? urutBacaan(b, n, N)
       : isiSampai((n === 3 ? b.situasi : b.kosakata).map((_, i) => i), N);
     latih = { b, n, antre: urut.map((w, i) => ({ ...buatSoal(b, n, w), no: i + 1 })), i: 0, benar: 0, salah: 0, awal: urut.length, sudah: false, rec: null };
+    laporBerjalan(latih, 0);
+  }
+  // Sub level yang sedang dikerjakan (24 Nov 2026): guru melihat "6 benar dari 10 soal" sebelum sub level selesai.
+  // Nilai resmi tetap dicatat di selesaiLatih; ini hanya laporan sementara (er_sesi.berjalan).
+  function laporBerjalan(L, no) {
+    if (!window.ER_SINKRON || !window.ER_SINKRON.berjalan) return;
+    window.ER_SINKRON.berjalan(L ? { level: L.b.id, sub: L.n, no, soal: L.awal, benar: L.benar, salah: L.salah } : null);
   }
   function batalLatih() {
     if (latih && latih.rec) { try { latih.rec.abort(); } catch (e) { /* abaikan */ } latih.rec = null; }
+    if (latih) laporBerjalan(null);
     latih = null;
   }
   function ucapLatih(teks) {
@@ -2063,6 +2071,7 @@
     const buka = ok || atur.tampilJawaban;
     L.dengar = buka ? q.suaraKunci || q.target || q.tulisSesudah || q.putar || '' : '';
     L.dariAwal = !ok && batasSalah() > 0 && L.salah > batasSalah();
+    laporBerjalan(L, L.i + 1);
     const lanjutan = ok ? '' : L.dariAwal ? `<p class="lt-batas">Sudah ${L.salah} kali salah (batas ${batasSalah()}). Sub level ini dimulai lagi dari nomor 1 dengan soal yang berbeda.</p>`
       : atur.bilaSalah === 'ulang' ? '<p class="lt-kecil">Nomor ini diulang dengan soal lain.</p>'
       : atur.bilaSalah === 'lanjut' ? '' : '<p class="lt-kecil">Soal ini diulang di akhir sesi dengan soal lain.</p>';
@@ -2086,6 +2095,7 @@
     const d = dataSub(b);
     const rekor = !(d.s[n - 1] >= persen);
     catatHasil({ level: b.id, sub: n, jenis: 'sub', nilai: persen, rincian: { benar: L.benar, soal: L.awal, salah: L.salah, jawab: !!atur.tampilJawaban } });
+    laporBerjalan(null);
     if (rekor) { d.s[n - 1] = persen; simpanSub(); }
     const lulus = persen >= TUNTAS;
     const SB = daftarSub(b);

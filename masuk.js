@@ -143,6 +143,24 @@
   window.addEventListener('pagehide', () => { if (akun && !akun.coba && antreRekam.length) { clearTimeout(jadwalRekam); kirimRekam(true); } });
   window.addEventListener('online', () => { if (akun) kirimRekam(); });
 
+  // ---------- Sub level yang sedang dikerjakan (24 Nov 2026) ----------
+  // Tiap soal dinilai → er_lapor_berjalan (paling sering sekali per 4 detik; yang dikirim selalu keadaan terbaru).
+  // Hanya laporan untuk halaman guru: gagal kirim diabaikan, soal berikutnya mengirim lagi. null = sub selesai/ditinggal.
+  let brjIsi = null, brjJadwal = null, brjPada = 0, brjJalan = false;
+  function laporBerjalan(d) {
+    if (!akun || akun.coba || !akun.token) return;
+    brjIsi = d || null;
+    clearTimeout(brjJadwal);
+    brjJadwal = setTimeout(kirimBerjalan, brjIsi ? Math.max(300, 4000 - (Date.now() - brjPada)) : 300);
+  }
+  async function kirimBerjalan() {
+    if (brjJalan) { brjJadwal = setTimeout(kirimBerjalan, 1000); return; }
+    brjJalan = true; brjPada = Date.now();
+    try { await rpc('er_lapor_berjalan', { p_token: akun.token, p_data: brjIsi }); }
+    catch (e) { /* abaikan */ }
+    finally { brjJalan = false; }
+  }
+
   // Antarmuka untuk app.js
   async function keluar() {
     clearTimeout(jadwal);
@@ -161,6 +179,7 @@
       antreRekam.push(d); antreRekam = antreRekam.slice(-40); tulis('er_antre_rekam', antreRekam);
       clearTimeout(jadwalRekam); jadwalRekam = setTimeout(kirimRekam, 2000);
     },
+    berjalan: laporBerjalan,
     keluar
   };
 

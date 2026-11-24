@@ -201,7 +201,13 @@ const posisiHtml = (r) => { const k = lengkapi(r);
     ? `<span class="pos-nm">Tahap ${k.posisi.tahap} · ${esc(tahapNama(k.posisi.tahap))}</span><span class="pos-lv">Level ${nomorLevel(k.posisi)}: ${esc(k.posisi.judul)}</span>`
     : '<span class="redup">–</span>'; };
 // Yang sedang latihan mandiri: kolom Posisi menampilkan posisi mandirinya, lalu posisi resmi (4 Nov 2026).
-const posisiKolom = (r) => { const ss = r.sesi || {};
+// Sub level yang sedang dikerjakan, sebelum nilainya tercatat (24 Nov 2026, er_sesi.berjalan lewat er_rekap).
+const berjalanHtml = (r) => { const ss = r.sesi || {}, j = ss.online && ss.berjalan, b = j && levelDari(j.level);
+  if (!b) return "";
+  const sb = daftarSub(b)[(j.sub || 0) - 1], judul = `Level ${nomorLevel(b)} (${b.judul})${sb ? ` · sub ${j.sub} ${sb[0]}` : ""}`;
+  return `<span class="pos-lv berjalan" title="Sedang dikerjakan: ${esc(judul)}. Nilai tercatat setelah sub level selesai.">✏️ Sedang sub ${esc(j.sub || "?")}${sb ? ` ${esc(sb[0])}` : ""}: ${j.no ? `<b>${esc(j.benar || 0)} benar</b>, ${esc(j.salah || 0)} salah dari ${esc(j.soal || "?")} soal` : `mulai, ${esc(j.soal || "?")} soal`}</span>`; };
+const posisiKolom = (r) => posisiKolomDasar(r) + berjalanHtml(r);
+const posisiKolomDasar = (r) => { const ss = r.sesi || {};
   if (!(ss.online && ss.mode === "mandiri")) return posisiHtml(r);
   const k = mandiriHitung(r.pilihan_mandiri, r.kemajuan, r.kemajuan_mandiri, pmMati(r));
   return `<span class="pos-nm">${k.selesai ? "Semua tuntas" : k.posisi ? `Tahap ${k.posisi.tahap}` : "Belum mulai"}</span><span class="pos-lv">${k.posisi ? `Level ${nomorLevel(k.posisi)} · ` : ""}latihan mandiri</span><span class="pos-lv">Resmi: ${esc(posisiTeks(r))}</span>`; };
