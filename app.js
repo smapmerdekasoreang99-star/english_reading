@@ -1728,7 +1728,18 @@
   }
 
   // Satu soal untuk kata ke-w (sub level 3: situasi ke-w).
+  // Tanpa terjemahan (24 Nov 2026): petunjuk terjemahan di bawah kalimat soal (q.kecil) dibuang, karena justru
+  // membocorkan jawabannya. Petunjuk berbahasa Inggris selalu bertanda kutip “…” dan tetap tampil; "Petunjuk: <bentuk
+  // dasar>" pada soal pola tetap. Teks Indonesia yang menjadi soal itu sendiri (kalimat/besar/pilihan) tidak disentuh.
   function buatSoal(b, n, w) {
+    const q = buatSoalIsi(b, n, w);
+    if (q && q.kecil && !adaTerjemahan(b) && !q.kecil.startsWith('“')) {
+      const i = q.kecil.indexOf('Petunjuk:');
+      q.kecil = i >= 0 ? q.kecil.slice(i) : '';
+    }
+    return q;
+  }
+  function buatSoalIsi(b, n, w) {
     if (b.pola) return buatSoalPola(b, n, w);
     if (!b.kosakata) return buatSoalBacaan(b, n, w);
     const kk = b.kosakata, k = kk[w];
