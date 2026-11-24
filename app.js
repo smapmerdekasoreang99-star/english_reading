@@ -2282,13 +2282,16 @@
   function tampilDaftar() {
     kini = null;
     const p = profilAktif();
+    // Sesi kelas (resmi, 24 Nov 2026): aturan & tahapan sepenuhnya dari guru, jadi kotak tahapan "Atur ›" dan pintu
+    // "Aturan & Tahapan latihanmu" tidak ditampilkan (seperti Literasi Indonesia). Latihan mandiri dan uji coba tetap.
+    const resmi = !!(AKUN && AKUN.mode === 'kelas' && !AKUN.coba);
     layar.innerHTML = (AKUN ? `<div class="er-akun"><span class="er-akun-ikon" aria-hidden="true">👤</span>
         <span class="er-akun-isi"><b>${esc(AKUN.siswa.nama || AKUN.siswa.nisn)}</b>
           <small>${esc(AKUN.siswa.kelas || '')}${AKUN.siswa.kelas ? ' · ' : ''}${AKUN.coba ? '🧪 Uji coba guru' : AKUN.mode === 'kelas' ? '🏫 Sesi kelas' : '🏠 Latihan mandiri'}</small></span>
         <span class="er-sinkron" id="er-sinkron" role="status"></span></div>` : '') + `<header class="judul-app"><h1>📖 English Reading</h1>
         <p>Dengarkan bacaan, lalu baca sendiri dan lihat koreksinya. Mulai dari tahap yang sesuai, tuntaskan tiap level
           (skor terbaik ≥ ${TUNTAS}%), lalu naik ke tahap berikutnya.</p></header>` +
-      (p ? `<a class="at-banner" href="#pengaturan/khusus"><span class="at-banner-ikon" aria-hidden="true">🎯</span>
+      (p && !resmi ? `<a class="at-banner" href="#pengaturan/khusus"><span class="at-banner-ikon" aria-hidden="true">🎯</span>
         <span class="at-banner-isi"><small>${p.saran ? 'Saran latihan dari guru' : 'Sedang memakai tahapan khusus'}</small><b>${esc(p.nama)}</b>
           <span>${teksRingkas(ringkasTahapan(p.mati))}${p.catatan ? ' · ' + esc(p.catatan) : ''}${lepasTahapan() ? ' · ✓ tuntas, kamu melanjutkan Tahapan Level' : ''}</span></span>
         <span class="at-banner-aksi">Atur ›</span></a>` : '') + pesanDaftar() + kartuMandiri() + kartuUlang() + (modeUrut() ? berandaUrut() :
@@ -2317,9 +2320,9 @@
           }).join('')}</div></section>`;
       }).join('')) +
       (bisaSuara ? '' : '<div class="pesan">Browser ini tidak bisa membacakan teks. Gunakan Google Chrome versi terbaru.</div>') +
-      `<a class="at-pintu" href="#pengaturan"><span class="at-ikon" aria-hidden="true">⚙️</span>
+      (resmi ? '' : `<a class="at-pintu" href="#pengaturan"><span class="at-ikon" aria-hidden="true">⚙️</span>
         <span class="at-pintu-isi"><b>${AKUN ? 'Aturan &amp; Tahapan latihanmu' : 'Pengaturan &amp; Tahapan'}</b><small>${AKUN ? 'Diatur guru: jumlah soal, syarat dengar/baca, bila jawaban salah, dan tahapan' : `Jumlah soal, syarat dengar/baca, bila jawaban salah, dan tahapan khusus${khusus.daftar.length ? ` · ${khusus.daftar.length} tersimpan` : ''}`}</small></span>
-        <span class="at-panah-kanan" aria-hidden="true">›</span></a>`;
+        <span class="at-panah-kanan" aria-hidden="true">›</span></a>`);
     ikatMandiri();
   }
 
