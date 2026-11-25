@@ -974,6 +974,9 @@
   }
 
   // ---------- Ulang kosakata (pengulangan terjadwal, sistem kotak) ----------
+  // 25 Nov 2026 (keputusan user): DISEMBUNYIKAN dari siswa — hanya latihan mengucapkan kata, tanpa membaca & mendengar,
+  // dan kosakata sudah diuji di sub level. Kartu di beranda dan halaman #ulang dilepas; data kotak (er_dek) tetap
+  // dikumpulkan & disimpan agar fitur bisa dipasang lagi (kembalikan kartuUlang() di beranda dan rute #ulang).
   // Kata baru masuk kotak 1. Diucapkan baik (≥ 85%) saat jatuh tempo → naik kotak,
   // jeda sampai diulang lagi makin panjang. Belum tepat → kembali ke kotak 1, diulang besok.
   const JEDA = [0, 1, 2, 4, 7, 14];           // hari, per kotak 1–5
@@ -2133,7 +2136,7 @@
     $('#lt-kotak').innerHTML = `<div class="hasil">
       <h2>Hasil sub level ${n}</h2>
       <div class="skor ${kelas}"><b>${persen}%</b><span>${L.benar} dari ${L.awal} benar pada percobaan pertama${rekor ? ' · 🏅 skor terbaik' : ''}</span></div>
-      <p>${lulus ? (berikut ? `🎉 Lulus! Sub level ${berikut} sudah terbuka.` : b.kosakata && n === SB.length ? '🎉 Lulus! Semua kata level ini masuk Ulang kosakata.' : '🎉 Lulus!') : `Perlu ${TUNTAS}% untuk lulus. Soalnya akan berbeda saat diulang.`}</p>
+      <p>${lulus ? (berikut ? `🎉 Lulus! Sub level ${berikut} sudah terbuka.` : '🎉 Lulus!') : `Perlu ${TUNTAS}% untuk lulus. Soalnya akan berbeda saat diulang.`}</p>
       ${!berikut && tuntas(b) ? statusLevelHTML(b) : ''}
       <div class="kendali">
         ${berikut ? `<a class="tombol utama" href="#latih/${encodeURIComponent(b.id)}/${berikut}">Lanjut: ${SB[berikut - 1].ikon} ${esc(SB[berikut - 1].nama)} →</a>` : ''}
@@ -2305,7 +2308,7 @@
       (p && !resmi ? `<a class="at-banner" href="#pengaturan/khusus"><span class="at-banner-ikon" aria-hidden="true">🎯</span>
         <span class="at-banner-isi"><small>${p.saran ? 'Saran latihan dari guru' : 'Sedang memakai tahapan khusus'}</small><b>${esc(p.nama)}</b>
           <span>${teksRingkas(ringkasTahapan(p.mati))}${p.catatan ? ' · ' + esc(p.catatan) : ''}${lepasTahapan() ? ' · ✓ tuntas, kamu melanjutkan Tahapan Level' : ''}</span></span>
-        <span class="at-banner-aksi">Atur ›</span></a>` : '') + pesanDaftar() + kartuMandiri() + kartuUlang() + (modeUrut() ? berandaUrut() :
+        <span class="at-banner-aksi">Atur ›</span></a>` : '') + pesanDaftar() + kartuMandiri() + (modeUrut() ? berandaUrut() :
       window.TAHAP.map(t => {
         const semua = window.BACAAN.filter(b => b.tahap === t.no);
         const isi = semua.filter(levelAktif);
@@ -3279,7 +3282,7 @@
     const id = m ? decodeURIComponent(m[1]) : '';
     const b = window.BACAAN.find(x => x.id === id);
     if (b && !terbukaLevel(b)) { pesanKunci = b; location.replace('#'); return; }
-    if (b) tampilBaca(b); else if (location.hash === '#ulang') tampilUlang(); else tampilDaftar();
+    if (b) tampilBaca(b); else tampilDaftar();
     window.scrollTo(0, 0);
   }
   // Level kosakata: teks = "kata. contoh kalimat." berurutan; arti mengikuti pola yang sama.

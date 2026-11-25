@@ -79,7 +79,7 @@ Mikrofon tidak diizinkan dari `file://`. Jalankan server lokal, misalnya
   teksnya dibentuk otomatis menjadi "kata. contoh kalimat." agar bisa didengar dan dikoreksi.
 - **Pola kalimat** (Tahap 1–3): `pola` (rumus), `catatan` (penjelasan), lalu contoh kalimat.
 - **Bacaan**: paragraf biasa.
-- **Ulang kosakata** (`#ulang`): sistem kotak 1–5. Kata masuk saat level kosakata dibaca
+- **Ulang kosakata** (`#ulang`) — **disembunyikan dari siswa sejak 25 Nov 2026** (hanya latihan ucap, tanpa membaca & mendengar; kosakata sudah diuji di sub level). Data kotak tetap dikumpulkan. Cara kerjanya: sistem kotak 1–5. Kata masuk saat level kosakata dibaca
   utuh, atau saat kata di bacaan bernilai < 60%. Diucapkan ≥ 85% saat jatuh tempo → naik
   kotak (diulang lagi 1, 2, 4, 7, 14 hari); belum tepat → kotak 1, diulang besok.
   Disimpan di perangkat (`localStorage`, kunci `er_dek`).
