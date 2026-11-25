@@ -329,7 +329,7 @@ Halaman guru dibangun ulang dari `Matematika_Dasar/guru.html` (CSS disalin apa a
 - **Sesi Kegiatan:** saringan rombel/tingkat/status/cari, kotak sesi per rombel (buka 30–120 menit, **+ Tambah n menit**,
   **Tutup sekarang**, **QR & kode masuk** layar penuh, **Tampilkan teratas**), kotak aturan dan tahapan yang berlaku,
   ubin ringkasan, centang siswa → **Atur tahapan** / **Hapus data latihan**, **Unduh daftar** (.xlsx berkop).
-- **Papan 10 teratas** (`er_teratas`): sejak sesi dibuka, urut sub level lulus → rata-rata nilai → banyak kegiatan;
+- **Papan 10 teratas** (`er_teratas`): sejak sesi dibuka, urut sub level lulus → jawaban benar (termasuk sub level yang sedang dikerjakan, per soal sejak 25 Nov 2026) → ketepatan → banyak kegiatan;
   `guru.html?simulasi=teratas` untuk melihat tampilannya tanpa PIN.
 - **Perkembangan Siswa:** Per Siswa (posisi, kemajuan, lulus 7 hari, rata-rata, waktu latihan, catatan Macet/Tidak aktif/
   Nilai rendah) dan Per Rombel (ubin, sebaran per tahap, perbandingan rombel), **Unduh rekap** (.xlsx).

@@ -689,7 +689,9 @@ document.addEventListener("fullscreenchange", () => {
   if (TR) tutupTeratas();
 });
 
-/* ---- Papan Peringkat Teratas: sejak sesi dibuka, urut sub level lulus → rata-rata nilai → banyak kegiatan.
+/* ---- Papan Peringkat Teratas: sejak sesi dibuka, urut sub level lulus → jawaban benar → ketepatan → banyak kegiatan.
+   25 Nov 2026: bergerak per soal — jawaban benar di sub level yang sedang dikerjakan (er_sesi.berjalan) ikut dihitung,
+   siswa masuk peringkat sejak jawaban benar pertama (sebelumnya menunggu satu sub level tuntas, ±8 menit).
    18 Nov 2026 (disamakan dengan Matdas 11 Nov): semua siswa rombel tampil; podium 1–5, peringkat 6..n bergulir,
    siswa yang belum lulus satu sub level pun di bawah tanpa nomor. */
 const TR_JEDA_PILIH = [8, 15, 30, 60];
@@ -739,7 +741,7 @@ function gambarTeratas(d) {
     (d.kode ? `<span class="tr-pil">Kode masuk <b>${esc(d.kode)}</b></span>` : "") + `<span class="tr-pil">Sejak pukul ${jamTeks(d.dari)}</span>`;
   $("tr-angka").innerHTML = [
     [`${d.n_berlatih}<small> / ${d.n_siswa}</small>`, "siswa sudah berlatih"], [d.total_lulus, "sub level lulus"],
-    [d.total_kegiatan, "kegiatan selesai"], [`${d.rata || 0}<small>%</small>`, "rata-rata nilai rombel"],
+    [d.total_benar || 0, "jawaban benar"], [`${d.total_jawab ? Math.round((100 * d.total_benar) / d.total_jawab) : 0}<small>%</small>`, "ketepatan rombel"],
   ].map(([b, s]) => `<div class="tr-kartu"><b>${b}</b><span>${s}</span></div>`).join("");
   const T = d.teratas || [], LN = d.lain || [];
   // Naik peringkat dibanding pembaruan sebelumnya (atau baru mendapat peringkat)
@@ -747,20 +749,20 @@ function gambarTeratas(d) {
   const selisihNaik = (r) => TR.lalu.has(r.nisn) ? TR.lalu.get(r.nisn) - r.peringkat : 0;
   // Posisi gulir daftar dijaga saat isi diganti tiap pembaruan
   const gulirLama = $("tr-isi").querySelector(".tr-daftar")?.scrollTop || 0;
-  const posisi = (r) => { const b = levelDari(r.level); return b ? `${labelLevel(b)}${r.sub ? " · sub " + r.sub : ""}` : ""; };
-  if (!T.length && !LN.some((r) => r.kegiatan)) {
+  const posisi = (r) => { const b = levelDari(r.level); return b ? `${labelLevel(b)}${r.sub ? " · sub " + r.sub : ""}${r.no > 0 && r.no <= r.soal ? ` · soal ${r.no}/${r.soal}` : r.no > r.soal ? " · soal ulangan" : ""}` : ""; };
+  if (!T.length && !LN.some((r) => r.kegiatan || r.jawab)) {
     $("tr-isi").innerHTML = `<div class="tr-kosong-daftar" style="grid-column:1/-1"><div><b>Siapa yang pertama?</b>
-      Belum ada kegiatan yang selesai dalam sesi ini. Peringkat muncul begitu siswa menuntaskan kegiatan pertamanya.</div></div>`;
+      Belum ada jawaban dalam sesi ini. Peringkat muncul begitu siswa menjawab benar soal pertamanya.</div></div>`;
   } else {
     const tiang = (r, j) => r
       ? `<div class="tr-tiang j${j}${naik(r) ? " naik" : ""}"><span class="tr-mahkota">${j === 1 ? "★" : ""}</span>
           <span class="tr-ava">${esc(inisialPapan(r.nama))}</span><span class="tr-nama-p" title="${esc(r.nama)}">${esc(namaPapan(r.nama))}</span>
-          <span class="tr-meta-p"><span><b>${r.lulus}</b> sub lulus</span><span>rata <b>${r.rata ?? 0}%</b></span></span><div class="tr-alas">${j}</div></div>`
+          <span class="tr-meta-p"><span><b>${r.lulus}</b> sub lulus</span><span><b>${r.benar}</b> benar · ${r.akurasi ?? 0}%</span></span><div class="tr-alas">${j}</div></div>`
       : `<div class="tr-tiang j${j} kosong"><span class="tr-mahkota"></span><span class="tr-ava">–</span><span class="tr-nama-p">&nbsp;</span>
           <span class="tr-meta-p"><span>&nbsp;</span><span>&nbsp;</span></span><div class="tr-alas">${j}</div></div>`;
-    const maks = Math.max(1, ...T.map((r) => r.lulus));
-    const ketLain = (r) => r.kegiatan ? `sudah ${r.kegiatan} kegiatan, belum ada sub level lulus` : "belum mulai";
-    const daftarLain = LN.length ? `<div class="tr-pisah">Belum lulus sub level (${LN.length} siswa)</div>` + LN.map((r) => `
+    const maks = Math.max(1, ...T.map((r) => r.benar));
+    const ketLain = (r) => r.jawab ? `sudah menjawab ${r.jawab}, belum ada yang benar` : r.kegiatan ? `sudah ${r.kegiatan} kegiatan, belum menjawab soal` : "belum mulai";
+    const daftarLain = LN.length ? `<div class="tr-pisah">Belum ada jawaban benar (${LN.length} siswa)</div>` + LN.map((r) => `
         <div class="tr-baris lain"><span class="tr-no">–</span>
           <span class="tr-siswa"><b title="${esc(r.nama)}">${esc(namaPapan(r.nama))}</b><small>${esc(posisi(r))}</small></span>
           <span class="tr-ket-lain">${ketLain(r)}</span><span></span></div>`).join("") : "";
@@ -768,8 +770,8 @@ function gambarTeratas(d) {
       <div class="tr-daftar" aria-label="Peringkat 6 dan seterusnya">${T.slice(5).map((r) => `
         <div class="tr-baris${naik(r) ? " naik" : ""}"><span class="tr-no">${r.peringkat}</span>
           <span class="tr-siswa"><b title="${esc(r.nama)}">${esc(namaPapan(r.nama))}${selisihNaik(r) > 0 ? `<span class="tr-naik">▲${selisihNaik(r)}</span>` : ""}</b><small>${esc(posisi(r))}</small></span>
-          <span class="tr-batang"><span class="tr-jalur"><i style="width:${(100 * r.lulus) / maks}%"></i></span><b>${r.lulus}<small> lulus</small></b></span>
-          <span class="tr-lvl">rata ${r.rata ?? 0}%</span></div>`).join("") || (LN.length ? "" : '<div class="tr-kosong-daftar"><div>Peringkat 6 dan seterusnya menunggu penantang berikutnya.</div></div>')}${daftarLain}</div>`;
+          <span class="tr-batang"><span class="tr-jalur"><i style="width:${(100 * r.benar) / maks}%"></i></span><b>${r.benar}<small> benar</small></b></span>
+          <span class="tr-lvl">${r.lulus} sub lulus</span></div>`).join("") || (LN.length ? "" : '<div class="tr-kosong-daftar"><div>Peringkat 6 dan seterusnya menunggu penantang berikutnya.</div></div>')}${daftarLain}</div>`;
     const dft = $("tr-isi").querySelector(".tr-daftar"); if (dft) dft.scrollTop = gulirLama;
   }
   TR.lalu = new Map(T.map((r) => [r.nisn, r.peringkat]));
@@ -819,25 +821,34 @@ function mulaiSimulasi() {
     "Dewi Sartika", "Farhan Maulana", "Intan Permatasari", "Rizal Fauzi", "Siti Nurjanah", "Raka Aditya", "Nayla Zahira", "Galih Saputra"];
   const L = window.BACAAN.filter((b) => b.tahap === 2);
   SIM = { mulai: Date.now(), langkah: 0, siswa: nama.map((n, i) => ({ nisn: "SIM" + i, nama: n, mampu: 0.55 + Math.random() * 0.4, masuk: Math.floor(Math.random() * 5),
-    lulus: 0, kegiatan: 0, total: 0, level: L[Math.floor(Math.random() * 3)].id, sub: 1 })) };
+    lulus: 0, kegiatan: 0, total: 0, benar: 0, salah: 0, no: 0, level: L[Math.floor(Math.random() * 3)].id, sub: 1 })) };
 }
 function langkahSimulasi() {
   SIM.langkah += 1;
   for (const s of SIM.siswa) {
     if (SIM.langkah < s.masuk || Math.random() < 0.4) continue;
-    const nilai = Math.round(Math.min(100, Math.max(30, (s.mampu + (Math.random() - 0.5) * 0.4) * 100)));
-    s.kegiatan += 1; s.total += nilai;
-    if (nilai >= 80) { s.lulus += 1; s.sub = s.sub >= 10 ? 1 : s.sub + 1; }
+    // Satu langkah = 1–2 soal dijawab; tiap 10 soal satu sub level selesai.
+    for (let k = 0; k < 1 + (Math.random() < 0.5); k++) {
+      if (Math.random() < s.mampu) s.benar += 1, s.sb = (s.sb || 0) + 1; else s.salah += 1;
+      s.no += 1;
+      if (s.no >= 10) {
+        const nilai = (s.sb || 0) * 10; s.kegiatan += 1; s.total += nilai; s.no = 0; s.sb = 0;
+        if (nilai >= 80) { s.lulus += 1; s.sub = s.sub >= 10 ? 1 : s.sub + 1; }
+      }
+    }
   }
-  const aktif = SIM.siswa.filter((s) => s.kegiatan > 0).map((s) => ({ ...s, rata: Math.round(s.total / s.kegiatan) }));
-  aktif.sort((a, b) => b.lulus - a.lulus || b.rata - a.rata || b.kegiatan - a.kegiatan || a.nama.localeCompare(b.nama, "id"));
+  const aktif = SIM.siswa.filter((s) => s.benar + s.salah > 0)
+    .map((s) => ({ ...s, rata: s.kegiatan ? Math.round(s.total / s.kegiatan) : null, akurasi: Math.round((100 * s.benar) / (s.benar + s.salah)) }));
+  aktif.sort((a, b) => b.lulus - a.lulus || b.benar - a.benar || b.akurasi - a.akurasi || b.kegiatan - a.kegiatan || a.nama.localeCompare(b.nama, "id"));
   return { simulasi: true, buka: true, kode: null, sekarang: new Date().toISOString(), selisih: 0,
     dari: new Date(SIM.mulai).toISOString(), sampai: new Date(SIM.mulai + 30 * 60000).toISOString(),
     n_siswa: SIM.siswa.length, n_berlatih: aktif.length, total_lulus: aktif.reduce((t, s) => t + s.lulus, 0), total_kegiatan: aktif.reduce((t, s) => t + s.kegiatan, 0),
+    total_benar: aktif.reduce((t, s) => t + s.benar, 0), total_jawab: aktif.reduce((t, s) => t + s.benar + s.salah, 0),
     rata: aktif.length ? Math.round(aktif.reduce((t, s) => t + s.rata, 0) / aktif.length) : 0,
-    teratas: aktif.filter((s) => s.lulus > 0).map((s, i) => ({ peringkat: i + 1, nisn: s.nisn, nama: s.nama, lulus: s.lulus, kegiatan: s.kegiatan, rata: s.rata, level: s.level, sub: s.sub })),
-    lain: SIM.siswa.filter((s) => s.lulus === 0).sort((a, b) => (a.kegiatan === 0) - (b.kegiatan === 0) || a.nama.localeCompare(b.nama, "id"))
-      .map((s) => ({ nisn: s.nisn, nama: s.nama, kegiatan: s.kegiatan, level: s.kegiatan ? s.level : null, sub: s.kegiatan ? s.sub : null })) };
+    teratas: aktif.filter((s) => s.benar > 0).map((s, i) => ({ peringkat: i + 1, nisn: s.nisn, nama: s.nama, lulus: s.lulus, kegiatan: s.kegiatan, rata: s.rata,
+      benar: s.benar, jawab: s.benar + s.salah, akurasi: s.akurasi, level: s.level, sub: s.sub, no: s.no + 1, soal: 10 })),
+    lain: SIM.siswa.filter((s) => s.benar === 0).sort((a, b) => (a.salah === 0) - (b.salah === 0) || a.nama.localeCompare(b.nama, "id"))
+      .map((s) => ({ nisn: s.nisn, nama: s.nama, kegiatan: s.kegiatan, jawab: s.salah, level: s.salah ? s.level : null, sub: s.salah ? s.sub : null })) };
 }
 if (new URLSearchParams(location.search).get("simulasi") === "teratas") tampilTeratas("Simulasi", true);
 
